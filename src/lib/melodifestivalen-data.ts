@@ -7,11 +7,11 @@ export interface MelodiArtist {
 }
 
 export const HEAT_DATES: Record<string, string> = {
-  "Deltävling 1": "2026-02-01",
-  "Deltävling 2": "2026-02-08",
-  "Deltävling 3": "2026-02-15",
-  "Deltävling 4": "2026-02-22",
-  "Deltävling 5": "2026-03-01",
+  "Deltävling 1": "2026-01-31",
+  "Deltävling 2": "2026-02-07",
+  "Deltävling 3": "2026-02-14",
+  "Deltävling 4": "2026-02-21",
+  "Deltävling 5": "2026-02-28",
   "Andra chansen": "2026-03-07",
   "Final": "2026-03-14",
 };
@@ -69,10 +69,10 @@ export function getHeatCity(heat: string): string {
   const cities: Record<string, string> = {
     "Deltävling 1": "Linköping",
     "Deltävling 2": "Göteborg",
-    "Deltävling 3": "Malmö",
-    "Deltävling 4": "Örnsköldsvik",
-    "Deltävling 5": "Skellefteå",
-    "Andra chansen": "Karlstad",
+    "Deltävling 3": "Kristianstad",
+    "Deltävling 4": "Malmö",
+    "Deltävling 5": "Sundsvall",
+    "Andra chansen": "Stockholm",
     "Final": "Stockholm",
   };
   return cities[heat] || "";
@@ -82,11 +82,11 @@ export function getHeatVenue(heat: string): string {
   const venues: Record<string, string> = {
     "Deltävling 1": "Saab Arena",
     "Deltävling 2": "Scandinavium",
-    "Deltävling 3": "Malmö Arena",
-    "Deltävling 4": "Fjällräven Center",
-    "Deltävling 5": "Skellefteå Kraft Arena",
-    "Andra chansen": "Löfbergs Arena",
-    "Final": "Friends Arena",
+    "Deltävling 3": "Kristianstad Arena",
+    "Deltävling 4": "Malmö Arena",
+    "Deltävling 5": "Gärdehov Arena",
+    "Andra chansen": "Strawberry Arena",
+    "Final": "Strawberry Arena",
   };
   return venues[heat] || "";
 }
@@ -108,4 +108,29 @@ export function getMellopediaUrl(text: string): string {
     .replace(/Ö/g, 'Ö');
   
   return `https://mellopedia.svt.se/index.php/${normalized}`;
+}
+
+export interface TimeRemaining {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+  totalMs: number;
+}
+
+export function getTimeUntilHeat(heatDate: string): TimeRemaining {
+  const heatDateTime = new Date(heatDate + 'T20:00:00').getTime();
+  const now = Date.now();
+  const diff = heatDateTime - now;
+  
+  if (diff <= 0) {
+    return { days: 0, hours: 0, minutes: 0, seconds: 0, totalMs: 0 };
+  }
+  
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+  
+  return { days, hours, minutes, seconds, totalMs: diff };
 }

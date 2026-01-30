@@ -6,7 +6,8 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { StarRating } from './StarRating';
-import { ArrowLeft, Sparkle, MusicNotes, Palette, Television, Microphone, TextAa, Star, Users, CalendarBlank, Info, LinkSimple, Trash, ChatCircleText } from '@phosphor-icons/react';
+import { Countdown } from './Countdown';
+import { ArrowLeft, Sparkle, MusicNotes, Palette, Television, Microphone, TextAa, Star, Users, CalendarBlank, Clock, LinkSimple, Trash, ChatCircleText } from '@phosphor-icons/react';
 import { motion } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { isHeatToday, getHeatCity, getHeatVenue, getMellopediaUrl } from '@/lib/melodifestivalen-data';
@@ -190,24 +191,27 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
                 transition={{ duration: 0.4 }}
               >
                 <Card className="p-6 border-2 border-accent/30 bg-gradient-to-br from-accent/10 via-accent/5 to-transparent">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center shrink-0">
-                      <Info size={28} weight="duotone" className="text-accent" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-heading font-bold text-lg text-foreground mb-1">
-                        Deltävlingen är inte idag
-                      </h3>
-                      <p className="text-muted-foreground font-body">
-                        Detta bidrag tävlar {formatDate(entry.heatDate)}
-                      </p>
-                      {heatCity && heatVenue && (
-                        <p className="text-muted-foreground font-body text-sm mt-1">
-                          Deltävlingen sänds från {heatVenue} i {heatCity}
+                  <div className="mb-4">
+                    <div className="flex items-start gap-3 mb-4">
+                      <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center shrink-0">
+                        <Clock size={24} weight="duotone" className="text-accent" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-heading font-bold text-lg text-foreground mb-1">
+                          Nedräkning till deltävlingen
+                        </h3>
+                        <p className="text-muted-foreground font-body text-sm">
+                          {formatDate(entry.heatDate)} kl. 20:00
                         </p>
-                      )}
+                        {heatCity && heatVenue && (
+                          <p className="text-muted-foreground font-body text-sm">
+                            {heatVenue}, {heatCity}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
+                  <Countdown heatDate={entry.heatDate} />
                 </Card>
               </motion.div>
             )}
