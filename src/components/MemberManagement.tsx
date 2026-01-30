@@ -149,14 +149,14 @@ export function MemberManagement({
             </Card>
           )}
 
-          <div className="flex-1 overflow-hidden flex flex-col">
+          <div className="flex-1 min-h-0 flex flex-col">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-heading font-semibold text-lg text-foreground">
                 Medlemslista ({(group.members || []).length})
               </h3>
             </div>
             
-            <ScrollArea className="flex-1 -mx-2 px-2">
+            <ScrollArea className="h-[300px] -mx-2 px-2">
               <div className="space-y-2 pr-4">
                 {(group.members || []).length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 px-6">
