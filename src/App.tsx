@@ -234,7 +234,7 @@ function App() {
   
   const getUserRating = (entry: Entry) => {
     if (!selectedProfile) return;
-    return entry.userRatings.find((ur) => ur.profileId === selectedProfile?.id);
+    if (!selectedProfile) return;
   };
 
   if (!currentUser) {
@@ -243,10 +243,9 @@ function App() {
         <SSOLoginScreen onSSOLogin={handleSSOLogin} />
         <Toaster position="top-center" />
       </>
-    );
+  }
   }
 
-  if (!selectedProfile) {
     return (
       <>
         <ProfileSelector
@@ -260,10 +259,10 @@ function App() {
     );
   }
 
+  }f (selectedEntry) {
+
   if (selectedEntry) {
     return (
-      <>
-        <RatingView
           entry={selectedEntry}
           onBack={() => setSelectedEntry(null)}
           onUpdateRating={(category, rating, comment) => handleRating(selectedEntry.id, category, rating, comment)}
