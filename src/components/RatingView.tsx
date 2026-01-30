@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { StarRating } from './StarRating';
-import { ArrowLeft, Sparkle, MusicNotes, Palette, Television, Microphone, TextAa, Star, Users, CalendarBlank, Info, LinkSimple, Trash } from '@phosphor-icons/react';
+import { ArrowLeft, Sparkle, MusicNotes, Palette, Television, Microphone, TextAa, Star, Users, CalendarBlank, Info, LinkSimple, Trash, ChatCircleText } from '@phosphor-icons/react';
 import { motion } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { isHeatToday, getHeatCity, getHeatVenue, getMellopediaUrl } from '@/lib/melodifestivalen-data';
@@ -21,7 +21,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 interface RatingViewProps {
   entry: Entry;
@@ -43,12 +43,19 @@ const iconMap = {
 export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateRating, onDeleteRating }: RatingViewProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [focusedComment, setFocusedComment] = useState<string | null>(null);
+  const textareaRefs = useRef<{ [key: string]: HTMLTextAreaElement | null }>({});
   const totalScore = userRating?.totalScore || 0;
   const otherUserRatings = entry.userRatings.filter(ur => ur.userId !== currentUserId);
   const heatIsToday = isHeatToday(entry.heatDate);
   const heatCity = getHeatCity(entry.heat);
   const heatVenue = getHeatVenue(entry.heat);
   const hasRatings = userRating && Object.values(userRating.ratings).some(r => r.rating > 0 || r.comment.length > 0);
+
+  useEffect(() => {
+    if (focusedComment && textareaRefs.current[focusedComment]) {
+      textareaRefs.current[focusedComment]?.focus();
+    }
+  }, [focusedComment]);
 
   const getRating = (category: CategoryKey) => {
     return userRating?.ratings[category] || { rating: 0, comment: '' };
@@ -243,25 +250,40 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
                             />
                           </div>
 
-                          <div className="space-y-1.5">
-                            <Label htmlFor={`comment-${category.key}`} className="font-body text-xs text-muted-foreground">
-                              Kommentar
-                            </Label>
-                            <Textarea
-                              id={`comment-${category.key}`}
-                              value={categoryRating.comment}
-                              onChange={(e) =>
-                                onUpdateRating(category.key as CategoryKey, categoryRating.rating, e.target.value)
-                              }
-                              onFocus={() => setFocusedComment(category.key)}
-                              onBlur={() => setFocusedComment(null)}
-                              placeholder="Skriv dina tankar här..."
-                              className={`font-body resize-none text-sm transition-all duration-300 ease-in-out ${
-                                focusedComment === category.key ? 'min-h-[140px]' : 'min-h-[70px]'
-                              }`}
-                              disabled={false}
-                            />
-                          </div>
+                          {categoryRating.comment || focusedComment === category.key ? (
+                            <div className="space-y-1.5">
+                              <Label htmlFor={`comment-${category.key}`} className="font-body text-xs text-muted-foreground">
+                                Kommentar
+                              </Label>
+                              <Textarea
+                                ref={(el) => {
+                                  textareaRefs.current[category.key] = el;
+                                }}
+                                id={`comment-${category.key}`}
+                                value={categoryRating.comment}
+                                onChange={(e) =>
+                                  onUpdateRating(category.key as CategoryKey, categoryRating.rating, e.target.value)
+                                }
+                                onFocus={() => setFocusedComment(category.key)}
+                                onBlur={() => setFocusedComment(null)}
+                                placeholder="Skriv dina tankar här..."
+                                className={`font-body resize-none text-sm transition-all duration-300 ease-in-out ${
+                                  focusedComment === category.key ? 'min-h-[140px]' : 'min-h-[70px]'
+                                }`}
+                                disabled={false}
+                              />
+                            </div>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setFocusedComment(category.key)}
+                              className="gap-2 text-muted-foreground hover:text-foreground font-body w-full justify-start -ml-2"
+                            >
+                              <ChatCircleText size={16} weight="duotone" />
+                              Lägg till kommentar
+                            </Button>
+                          )}
                         </div>
                       </Card>
                     </motion.div>
