@@ -73,8 +73,6 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
         logging: false,
         useCORS: true,
         allowTaint: true,
-        windowWidth: exportRef.current.scrollWidth,
-        windowHeight: exportRef.current.scrollHeight,
       });
 
       canvas.toBlob((blob) => {
@@ -108,6 +106,7 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
       toast.error('Kunde inte exportera bild', {
         description: 'Försök igen eller använd PDF-export',
       });
+      setIsExporting(false);
     }
   };
 
@@ -169,7 +168,7 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
         <DialogHeader>
           <DialogTitle className="font-heading text-2xl">Exportera dina betyg</DialogTitle>
           <DialogDescription className="font-body">
-            Ladda ner din topplista som bild eller PDF för att dela på sociala medier
+            Ladda ner din topplista som bild eller PDF
           </DialogDescription>
         </DialogHeader>
 
