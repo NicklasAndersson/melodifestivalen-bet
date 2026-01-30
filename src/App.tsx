@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useKV } from '@github/spark/hooks';
-import { Entry, Group, CategoryKey, UserRating, HEATS, CATEGORIES } from '@/lib/types';
+import { Entry, Group, CategoryKey, UserRating, HEATS, CATEGORIES, User } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
@@ -26,7 +26,9 @@ const iconMap = {
 };
 
 function App() {
-  const [user, setUser] = useState<{ login: string; avatarUrl: string; id: string } | null>(null);
+  const [user, setUser] = useState<{ id: string; email: string; name: string } | null>(null);
+  const [users, setUsers] = useKV<User[]>('mello-users', []);
+  const [currentUserId, setCurrentUserId] = useKV<string | null>('mello-current-user', null);
   const [groups, setGroups] = useKV<Group[]>('mello-groups', []);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [entries, setEntries] = useKV<Entry[]>('mello-entries', []);
@@ -43,22 +45,23 @@ function App() {
       setViewOnlyGroupId(groupParam);
     }
 
-    const initUser = async () => {
-      try {
-        const userData = await window.spark.user();
-        if (userData) {
+    const loadCurrentUser = async () => {
+      if (currentUserId) {
+        const storedUsers = users || [];
+        const foundUser = storedUsers.find((u) => u.id === currentUserId);
+        if (foundUser) {
           setUser({
-            login: userData.login,
-            avatarUrl: userData.avatarUrl,
-            id: String(userData.id),
+            id: foundUser.id,
+            email: foundUser.email,
+            name: foundUser.name,
           });
+        } else {
+          setCurrentUserId(null);
         }
-      } catch (error) {
-        console.error('Failed to load user:', error);
       }
     };
 
-    initUser();
+    loadCurrentUser();
   }, []);
 
   useEffect(() => {
@@ -109,28 +112,64 @@ function App() {
     setEntries(initialEntries);
   };
 
-  const handleLogin = async () => {
-    try {
-      const userData = await window.spark.user();
-      if (userData) {
-        setUser({
-          login: userData.login,
-          avatarUrl: userData.avatarUrl,
-          id: String(userData.id),
-        });
-        toast.success('Välkommen!', {
-          description: `Inloggad som ${userData.login}`,
-        });
-      }
-    } catch (error) {
-      toast.error('Kunde inte logga in', {
-        description: 'Försök igen senare',
+  const handleLogin = async (email: string, password: string) => {
+    const storedUsers = users || [];
+    const foundUser = storedUsers.find(
+      (u) => u.email === email && u.password === password
+    );
+
+    if (foundUser) {
+      setUser({
+        id: foundUser.id,
+        email: foundUser.email,
+        name: foundUser.name,
       });
+      setCurrentUserId(foundUser.id);
+      toast.success('Välkommen!', {
+        description: `Inloggad som ${foundUser.name}`,
+      });
+    } else {
+      toast.error('Fel e-post eller lösenord', {
+        description: 'Kontrollera dina uppgifter och försök igen',
+      });
+      throw new Error('Invalid credentials');
     }
+  };
+
+  const handleRegister = async (email: string, password: string, name: string) => {
+    const storedUsers = users || [];
+    
+    if (storedUsers.find((u) => u.email === email)) {
+      toast.error('E-posten är redan registrerad', {
+        description: 'Använd en annan e-postadress eller logga in',
+      });
+      throw new Error('Email already exists');
+    }
+
+    const newUser: User = {
+      id: `user-${Date.now()}`,
+      email,
+      password,
+      name,
+      createdAt: Date.now(),
+    };
+
+    setUsers((current) => [...(current || []), newUser]);
+    setUser({
+      id: newUser.id,
+      email: newUser.email,
+      name: newUser.name,
+    });
+    setCurrentUserId(newUser.id);
+    
+    toast.success('Konto skapat!', {
+      description: `Välkommen ${name}`,
+    });
   };
 
   const handleLogout = () => {
     setUser(null);
+    setCurrentUserId(null);
     setSelectedGroupId(null);
     toast.success('Utloggad');
   };
@@ -142,9 +181,9 @@ function App() {
       id: `group-${Date.now()}`,
       name,
       ownerId: user.id,
-      ownerName: user.login,
+      ownerName: user.name,
       memberIds: [user.id],
-      members: [{ id: user.id, name: user.login }],
+      members: [{ id: user.id, name: user.name }],
       createdAt: Date.now(),
     };
 
@@ -182,7 +221,7 @@ function App() {
           ? { 
               ...g, 
               memberIds: [...g.memberIds, user.id],
-              members: [...(g.members || []), { id: user.id, name: user.login }]
+              members: [...(g.members || []), { id: user.id, name: user.name }]
             }
           : g
       );
@@ -242,7 +281,7 @@ function App() {
               ...entry.userRatings,
               {
                 userId: user.id,
-                userName: user.login,
+                userName: user.name,
                 ratings: newRatings,
                 totalScore,
               },
@@ -317,7 +356,7 @@ function App() {
   if (!user && !viewOnlyGroupId) {
     return (
       <>
-        <LoginScreen onLogin={handleLogin} />
+        <LoginScreen onLogin={handleLogin} onRegister={handleRegister} />
         <Toaster position="top-center" />
       </>
     );
@@ -358,13 +397,6 @@ function App() {
                     <p className="font-body text-foreground text-center">
                       <span className="font-semibold">Logga in för att betygsätta</span> · Du kan se gruppens betyg nedan
                     </p>
-                    <Button
-                      onClick={handleLogin}
-                      className="w-full mt-3 font-body gap-2"
-                      size="lg"
-                    >
-                      Logga in med GitHub
-                    </Button>
                   </div>
                 </div>
               </div>
@@ -501,13 +533,6 @@ function App() {
                         {selectedGroup?.memberIds.length} {selectedGroup?.memberIds.length === 1 ? 'medlem' : 'medlemmar'}
                       </p>
                     </div>
-                    <Button
-                      onClick={handleLogin}
-                      size="lg"
-                      className="font-body gap-2"
-                    >
-                      Logga in för att betygsätta
-                    </Button>
                   </div>
 
                   <Tabs value={selectedHeat} onValueChange={setSelectedHeat} className="w-full">
@@ -665,11 +690,11 @@ function App() {
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <img
-                      src={user!.avatarUrl}
-                      alt={user!.login}
-                      className="w-10 h-10 rounded-full border-2 border-border"
-                    />
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center border-2 border-border">
+                      <span className="font-heading font-bold text-foreground text-sm">
+                        {user!.name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
                     <div className="hidden sm:flex gap-2">
                       {selectedGroup && selectedGroup.ownerId === user!.id && (
                         <Button

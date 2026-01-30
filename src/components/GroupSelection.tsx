@@ -11,7 +11,7 @@ import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 
 interface GroupSelectionProps {
-  user: { login: string; avatarUrl: string; id: string };
+  user: { id: string; email: string; name: string };
   groups: Group[];
   onCreateGroup: (name: string) => void;
   onSelectGroup: (groupId: string) => void;
@@ -78,13 +78,13 @@ export function GroupSelection({
             
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-3">
-                <img
-                  src={user.avatarUrl}
-                  alt={user.login}
-                  className="w-10 h-10 rounded-full border-2 border-border"
-                />
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center border-2 border-border">
+                  <span className="font-heading font-bold text-foreground text-sm">
+                    {user.name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
                 <span className="font-body text-foreground hidden sm:block">
-                  {user.login}
+                  {user.name}
                 </span>
               </div>
               <Button

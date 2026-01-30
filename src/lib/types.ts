@@ -40,6 +40,14 @@ export interface Group {
   createdAt: number;
 }
 
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  password: string;
+  createdAt: number;
+}
+
 export const CATEGORIES = [
   { key: 'song', label: 'Låt', icon: 'MusicNotes' },
   { key: 'clothes', label: 'Kläder', icon: 'Palette' },
