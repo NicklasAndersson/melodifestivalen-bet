@@ -69,10 +69,10 @@ export function GroupSelection({
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="font-display text-4xl sm:text-5xl text-foreground mb-2 tracking-tight">
-                Dina grupper
+                Grupper
               </h1>
               <p className="font-body text-muted-foreground text-lg">
-                Välj en grupp för att börja betygsätta
+                Skapa eller gå med i en grupp för att dela betyg
               </p>
             </div>
             
@@ -147,7 +147,7 @@ export function GroupSelection({
                 Inga grupper än
               </h2>
               <p className="font-body text-muted-foreground text-center mb-6 max-w-md">
-                Skapa en ny grupp eller gå med i en befintlig för att börja betygsätta tillsammans
+                Grupper är helt valfria! Du kan betygsätta själv, eller skapa/gå med i en grupp för att dela betyg med andra
               </p>
             </div>
           </motion.div>

@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Users, SignOut, ArrowLeft, Sparkle, Star, MusicNotes, Palette, Television, Microphone, TextAa, UsersThree, Trophy, Heart, LinkSimple } from '@phosphor-icons/react';
+import { Users, SignOut, ArrowLeft, Sparkle, Star, MusicNotes, Palette, Television, Microphone, TextAa, UsersThree, Trophy, Heart, LinkSimple, User as UserIcon } from '@phosphor-icons/react';
 import { LoginScreen } from '@/components/LoginScreen';
 import { GroupSelection } from '@/components/GroupSelection';
 import { EntryCard } from '@/components/EntryCard';
@@ -41,6 +41,7 @@ function App() {
   const [memberManagementOpen, setMemberManagementOpen] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showPersonalLeaderboard, setShowPersonalLeaderboard] = useState(false);
+  const [showGroupSelection, setShowGroupSelection] = useState(false);
   
   const CURRENT_DATA_VERSION = 2026;
 
@@ -239,6 +240,7 @@ function App() {
     setUser(null);
     setCurrentUserId(null);
     setSelectedGroupId(null);
+    setShowGroupSelection(false);
     toast.success('Utloggad');
   };
 
@@ -301,11 +303,18 @@ function App() {
 
   const handleSelectGroup = (groupId: string) => {
     setSelectedGroupId(groupId);
+    setShowGroupSelection(false);
   };
 
   const handleBackToGroups = () => {
     setSelectedGroupId(null);
     setSelectedEntry(null);
+    setShowGroupSelection(true);
+  };
+
+  const handleBackToEntries = () => {
+    setShowGroupSelection(false);
+    setSelectedGroupId(null);
   };
 
   const handleUpdateRating = (entryId: string, category: CategoryKey, rating: number, comment: string) => {
@@ -743,17 +752,29 @@ function App() {
     );
   }
 
-  if (!selectedGroupId) {
+  if (showGroupSelection) {
     return (
       <>
-        <GroupSelection
-          user={user!}
-          groups={groups || []}
-          onCreateGroup={handleCreateGroup}
-          onSelectGroup={handleSelectGroup}
-          onJoinGroup={handleJoinGroup}
-          onLogout={handleLogout}
-        />
+        <div className="min-h-screen bg-background">
+          <div className="max-w-4xl mx-auto px-6 py-8">
+            <Button
+              variant="ghost"
+              onClick={handleBackToEntries}
+              className="mb-6 font-body gap-2 -ml-2"
+            >
+              <ArrowLeft size={20} />
+              Tillbaka till bidragen
+            </Button>
+            <GroupSelection
+              user={user!}
+              groups={groups || []}
+              onCreateGroup={handleCreateGroup}
+              onSelectGroup={handleSelectGroup}
+              onJoinGroup={handleJoinGroup}
+              onLogout={handleLogout}
+            />
+          </div>
+        </div>
         <Toaster position="top-center" />
       </>
     );
@@ -794,15 +815,22 @@ function App() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h1 className="font-display text-4xl sm:text-5xl text-foreground mb-2 tracking-tight">
-                      {selectedGroup?.name}
+                      {selectedGroup ? selectedGroup.name : 'Melodifestivalen 2026'}
                     </h1>
-                    <p 
-                      className="font-body text-muted-foreground text-lg cursor-pointer hover:text-foreground transition-colors flex items-center gap-2"
-                      onClick={() => selectedGroup && selectedGroup.ownerId === user!.id && setMemberManagementOpen(true)}
-                    >
-                      <UsersThree size={20} weight="duotone" />
-                      {selectedGroup?.memberIds.length} {selectedGroup?.memberIds.length === 1 ? 'medlem' : 'medlemmar'}
-                    </p>
+                    {selectedGroup ? (
+                      <p 
+                        className="font-body text-muted-foreground text-lg cursor-pointer hover:text-foreground transition-colors flex items-center gap-2"
+                        onClick={() => selectedGroup && selectedGroup.ownerId === user!.id && setMemberManagementOpen(true)}
+                      >
+                        <UsersThree size={20} weight="duotone" />
+                        {selectedGroup?.memberIds.length} {selectedGroup?.memberIds.length === 1 ? 'medlem' : 'medlemmar'}
+                      </p>
+                    ) : (
+                      <p className="font-body text-muted-foreground text-lg flex items-center gap-2">
+                        <UserIcon size={20} weight="duotone" />
+                        Mina betyg
+                      </p>
+                    )}
                   </div>
                   <div className="flex items-center gap-3">
                     {user!.avatarUrl ? (
@@ -833,11 +861,11 @@ function App() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={handleBackToGroups}
+                        onClick={() => setShowGroupSelection(true)}
                         className="gap-2"
                       >
                         <Users size={18} />
-                        Byt grupp
+                        {selectedGroup ? 'Byt grupp' : 'Grupper'}
                       </Button>
                       <Button
                         variant="outline"
@@ -847,6 +875,24 @@ function App() {
                       >
                         <SignOut size={18} />
                         Logga ut
+                      </Button>
+                    </div>
+                    <div className="sm:hidden flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowGroupSelection(true)}
+                        className="gap-2"
+                      >
+                        <Users size={18} />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleLogout}
+                        className="gap-2"
+                      >
+                        <SignOut size={18} />
                       </Button>
                     </div>
                   </div>
@@ -865,7 +911,7 @@ function App() {
                     setSelectedHeat(value);
                   }
                 }} className="w-full">
-                  <TabsList className="w-full grid grid-cols-3 sm:grid-cols-6 h-auto p-1 gap-1">
+                  <TabsList className={`w-full ${selectedGroup ? 'grid grid-cols-3 sm:grid-cols-6' : 'grid grid-cols-2 sm:grid-cols-5'} h-auto p-1 gap-1`}>
                     {HEATS.map((heat) => (
                       <TabsTrigger
                         key={heat}
@@ -875,13 +921,15 @@ function App() {
                         {heat}
                       </TabsTrigger>
                     ))}
-                    <TabsTrigger
-                      value="leaderboard"
-                      className="font-body text-xs sm:text-sm md:text-base py-2.5 sm:py-3 px-2 gap-1.5"
-                    >
-                      <Trophy size={16} weight="duotone" className="shrink-0" />
-                      <span className="truncate">Grupp</span>
-                    </TabsTrigger>
+                    {selectedGroup && (
+                      <TabsTrigger
+                        value="leaderboard"
+                        className="font-body text-xs sm:text-sm md:text-base py-2.5 sm:py-3 px-2 gap-1.5"
+                      >
+                        <Trophy size={16} weight="duotone" className="shrink-0" />
+                        <span className="truncate">Grupp</span>
+                      </TabsTrigger>
+                    )}
                     <TabsTrigger
                       value="personal"
                       className="font-body text-xs sm:text-sm md:text-base py-2.5 sm:py-3 px-2 gap-1.5"
@@ -894,7 +942,7 @@ function App() {
               </div>
             </motion.div>
 
-            {showLeaderboard ? (
+            {showLeaderboard && selectedGroup ? (
               <div className="max-w-4xl mx-auto">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
