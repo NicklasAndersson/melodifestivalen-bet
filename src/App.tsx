@@ -51,26 +51,24 @@ function App() {
     if (groupParam) {
       setViewOnlyGroupId(groupParam);
     }
-
-    const loadCurrentUser = async () => {
-      if (currentUserId) {
-        const storedUsers = users || [];
-        const foundUser = storedUsers.find((u) => u.id === currentUserId);
-        if (foundUser) {
-          setUser({
-            id: foundUser.id,
-            email: foundUser.email,
-            name: foundUser.name,
-            avatarUrl: foundUser.avatarUrl,
-          });
-        } else {
-          setCurrentUserId(null);
-        }
-      }
-    };
-
-    loadCurrentUser();
   }, []);
+
+  useEffect(() => {
+    if (currentUserId && users) {
+      const storedUsers = users || [];
+      const foundUser = storedUsers.find((u) => u.id === currentUserId);
+      if (foundUser) {
+        setUser({
+          id: foundUser.id,
+          email: foundUser.email,
+          name: foundUser.name,
+          avatarUrl: foundUser.avatarUrl,
+        });
+      } else {
+        setCurrentUserId(null);
+      }
+    }
+  }, [currentUserId, users]);
 
   useEffect(() => {
     if (viewOnlyGroupId && user) {
