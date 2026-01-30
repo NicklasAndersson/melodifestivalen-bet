@@ -34,12 +34,15 @@ function App() {
   const [groups, setGroups] = useKV<Group[]>('mello-groups', []);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [entries, setEntries] = useKV<Entry[]>('mello-entries', []);
+  const [dataVersion, setDataVersion] = useKV<number>('mello-data-version', 0);
   const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
   const [selectedHeat, setSelectedHeat] = useState<string>(HEATS[0]);
   const [viewOnlyGroupId, setViewOnlyGroupId] = useState<string | null>(null);
   const [memberManagementOpen, setMemberManagementOpen] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showPersonalLeaderboard, setShowPersonalLeaderboard] = useState(false);
+  
+  const CURRENT_DATA_VERSION = 2026;
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -78,8 +81,14 @@ function App() {
   }, [user, viewOnlyGroupId]);
 
   useEffect(() => {
-    if ((entries || []).length === 0) {
+    if ((entries || []).length === 0 || dataVersion !== CURRENT_DATA_VERSION) {
       initializeEntries();
+      setDataVersion(CURRENT_DATA_VERSION);
+      if (dataVersion !== CURRENT_DATA_VERSION && dataVersion !== 0) {
+        toast.success('Data uppdaterad!', {
+          description: 'Melodifestivalen 2026-bidrag har laddats',
+        });
+      }
     }
   }, []);
 
