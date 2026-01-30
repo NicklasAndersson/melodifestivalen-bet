@@ -26,7 +26,7 @@ const iconMap = {
 };
 
 function App() {
-  const [user, setUser] = useState<{ id: string; email: string; name: string } | null>(null);
+  const [user, setUser] = useState<{ id: string; email: string; name: string; avatarUrl?: string } | null>(null);
   const [users, setUsers] = useKV<User[]>('mello-users', []);
   const [currentUserId, setCurrentUserId] = useKV<string | null>('mello-current-user', null);
   const [groups, setGroups] = useKV<Group[]>('mello-groups', []);
@@ -54,6 +54,7 @@ function App() {
             id: foundUser.id,
             email: foundUser.email,
             name: foundUser.name,
+            avatarUrl: foundUser.avatarUrl,
           });
         } else {
           setCurrentUserId(null);
@@ -123,6 +124,7 @@ function App() {
         id: foundUser.id,
         email: foundUser.email,
         name: foundUser.name,
+        avatarUrl: foundUser.avatarUrl,
       });
       setCurrentUserId(foundUser.id);
       toast.success('Välkommen!', {
@@ -151,6 +153,7 @@ function App() {
       email,
       password,
       name,
+      authProvider: 'email',
       createdAt: Date.now(),
     };
 
@@ -165,6 +168,59 @@ function App() {
     toast.success('Konto skapat!', {
       description: `Välkommen ${name}`,
     });
+  };
+
+  const handleSSOLogin = async () => {
+    try {
+      const githubUser = await window.spark.user();
+      
+      if (!githubUser || !githubUser.email) {
+        throw new Error('Kunde inte hämta GitHub-information');
+      }
+      
+      const storedUsers = users || [];
+      let foundUser = storedUsers.find((u) => u.email === githubUser.email);
+
+      if (foundUser) {
+        setUser({
+          id: foundUser.id,
+          email: foundUser.email,
+          name: foundUser.name,
+          avatarUrl: foundUser.avatarUrl,
+        });
+        setCurrentUserId(foundUser.id);
+        toast.success('Välkommen tillbaka!', {
+          description: `Inloggad som ${foundUser.name}`,
+        });
+      } else {
+        const newUser: User = {
+          id: `user-${Date.now()}`,
+          email: githubUser.email,
+          name: githubUser.login,
+          authProvider: 'github',
+          avatarUrl: githubUser.avatarUrl,
+          createdAt: Date.now(),
+        };
+
+        setUsers((current) => [...(current || []), newUser]);
+        setUser({
+          id: newUser.id,
+          email: newUser.email,
+          name: newUser.name,
+          avatarUrl: newUser.avatarUrl,
+        });
+        setCurrentUserId(newUser.id);
+        
+        toast.success('Konto skapat!', {
+          description: `Välkommen ${newUser.name}`,
+        });
+      }
+    } catch (error) {
+      toast.error('Kunde inte logga in med GitHub', {
+        description: 'Försök igen eller använd e-post och lösenord',
+      });
+      throw error;
+    }
   };
 
   const handleLogout = () => {
@@ -356,7 +412,7 @@ function App() {
   if (!user && !viewOnlyGroupId) {
     return (
       <>
-        <LoginScreen onLogin={handleLogin} onRegister={handleRegister} />
+        <LoginScreen onLogin={handleLogin} onRegister={handleRegister} onSSOLogin={handleSSOLogin} />
         <Toaster position="top-center" />
       </>
     );
@@ -690,11 +746,19 @@ function App() {
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center border-2 border-border">
-                      <span className="font-heading font-bold text-foreground text-sm">
-                        {user!.name.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
+                    {user!.avatarUrl ? (
+                      <img 
+                        src={user!.avatarUrl} 
+                        alt={user!.name}
+                        className="w-10 h-10 rounded-full border-2 border-border object-cover"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center border-2 border-border">
+                        <span className="font-heading font-bold text-foreground text-sm">
+                          {user!.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
                     <div className="hidden sm:flex gap-2">
                       {selectedGroup && selectedGroup.ownerId === user!.id && (
                         <Button

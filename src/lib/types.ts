@@ -44,7 +44,9 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  password: string;
+  password?: string;
+  authProvider?: 'email' | 'github';
+  avatarUrl?: string;
   createdAt: number;
 }
 

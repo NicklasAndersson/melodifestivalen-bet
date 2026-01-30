@@ -2,20 +2,23 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { MusicNotes, SignIn, UserPlus } from '@phosphor-icons/react';
+import { MusicNotes, SignIn, UserPlus, GithubLogo } from '@phosphor-icons/react';
 import { motion } from 'framer-motion';
+import { Separator } from '@/components/ui/separator';
 
 interface LoginScreenProps {
   onLogin: (email: string, password: string) => Promise<void>;
   onRegister: (email: string, password: string, name: string) => Promise<void>;
+  onSSOLogin: () => Promise<void>;
 }
 
-export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
+export function LoginScreen({ onLogin, onRegister, onSSOLogin }: LoginScreenProps) {
   const [isRegistering, setIsRegistering] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [ssoLoading, setSSOLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +32,15 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSSOLogin = async () => {
+    setSSOLoading(true);
+    try {
+      await onSSOLogin();
+    } finally {
+      setSSOLoading(false);
     }
   };
 
@@ -57,7 +69,30 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-4">
+            <Button
+              type="button"
+              size="lg"
+              variant="outline"
+              className="w-full font-heading gap-3 border-2 hover:bg-accent/10 hover:border-accent"
+              onClick={handleSSOLogin}
+              disabled={ssoLoading}
+            >
+              <GithubLogo size={24} weight="fill" />
+              {ssoLoading ? 'Loggar in...' : 'Fortsätt med GitHub'}
+            </Button>
+
+            <div className="relative">
+              <Separator className="my-6" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="bg-card px-3 text-xs font-body text-muted-foreground uppercase">
+                  eller
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4 mt-6">
             {isRegistering && (
               <div className="space-y-2">
                 <Label htmlFor="name" className="font-body">
