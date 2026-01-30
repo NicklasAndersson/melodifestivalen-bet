@@ -108,7 +108,6 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
       toast.error('Kunde inte exportera bild', {
         description: 'Försök igen eller använd PDF-export',
       });
-      setIsExporting(false);
     }
   };
 
