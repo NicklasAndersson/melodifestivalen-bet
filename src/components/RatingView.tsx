@@ -46,7 +46,7 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
   const [focusedComment, setFocusedComment] = useState<string | null>(null);
   const textareaRefs = useRef<{ [key: string]: HTMLTextAreaElement | null }>({});
   const totalScore = userRating?.totalScore || 0;
-  const otherUserRatings = entry.userRatings.filter(ur => ur.userId !== currentUserId);
+  const otherUserRatings = entry.userRatings.filter(ur => ur.profileId !== currentUserId);
   const heatIsToday = isHeatToday(entry.heatDate);
   const heatCity = getHeatCity(entry.heat);
   const heatVenue = getHeatVenue(entry.heat);
@@ -312,7 +312,7 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
                   <div className="space-y-6">
                     {otherUserRatings.map((rating, index) => (
                       <motion.div
-                        key={rating.userId}
+                        key={rating.profileId}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.3, delay: index * 0.1 }}
@@ -322,12 +322,12 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent/20 to-primary/20 flex items-center justify-center">
                                 <span className="font-heading font-bold text-foreground">
-                                  {rating.userName.charAt(0).toUpperCase()}
+                                  {rating.profileName.charAt(0).toUpperCase()}
                                 </span>
                               </div>
                               <div>
                                 <p className="font-heading font-semibold text-lg text-foreground">
-                                  {rating.userName}
+                                  {rating.profileName}
                                 </p>
                                 <p className="text-xs text-muted-foreground font-body">
                                   Totalt: {rating.totalScore} / 30 poäng

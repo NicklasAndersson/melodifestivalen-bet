@@ -29,7 +29,7 @@ export function SharedRatingsView({ userName, userAvatar, entries, userId }: Sha
   const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
 
   const getUserRatings = (entry: Entry): UserRating | undefined => {
-    return entry.userRatings.find((ur) => ur.userId === userId);
+    return entry.userRatings.find((ur) => ur.profileId === userId);
   };
 
   const ratedEntries = entries.filter((entry) => {

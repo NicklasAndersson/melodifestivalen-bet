@@ -14,7 +14,7 @@ export function Leaderboard({ entries, groupMemberIds }: LeaderboardProps) {
   const entriesWithGroupAverage = entries
     .map((entry) => {
       const groupRatings = entry.userRatings.filter((ur) =>
-        groupMemberIds.includes(ur.userId)
+        groupMemberIds.includes(ur.profileId)
       );
 
       if (groupRatings.length === 0) {

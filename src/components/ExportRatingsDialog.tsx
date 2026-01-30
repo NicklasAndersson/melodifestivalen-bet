@@ -19,7 +19,7 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
 
   const entriesWithUserRating = entries
     .map((entry) => {
-      const userRating = entry.userRatings.find((ur) => ur.userId === userId);
+      const userRating = entry.userRatings.find((ur) => ur.profileId === userId);
       
       if (!userRating) {
         return null;

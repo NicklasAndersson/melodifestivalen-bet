@@ -4,8 +4,8 @@ export interface CategoryRating {
 }
 
 export interface UserRating {
-  userId: string;
-  userName: string;
+  profileId: string;
+  profileName: string;
   ratings: {
     song: CategoryRating;
     clothes: CategoryRating;
@@ -27,29 +27,20 @@ export interface Entry {
   userRatings: UserRating[];
 }
 
-export interface GroupMember {
+export interface Profile {
   id: string;
-  name: string;
-}
-
-export interface Group {
-  id: string;
-  name: string;
-  ownerId: string;
-  ownerName: string;
-  memberIds: string[];
-  members?: GroupMember[];
+  userId: string;
+  nickname: string;
   createdAt: number;
 }
 
 export interface User {
   id: string;
   email: string;
-  name: string;
-  password?: string;
-  authProvider?: 'email' | 'github';
+  githubLogin: string;
   avatarUrl?: string;
   createdAt: number;
+  profiles: Profile[];
 }
 
 export const CATEGORIES = [
