@@ -7,13 +7,14 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Users, SignOut, ArrowLeft, Sparkle, Star, MusicNotes, Palette, Television, Microphone, TextAa, UsersThree, Trophy } from '@phosphor-icons/react';
+import { Users, SignOut, ArrowLeft, Sparkle, Star, MusicNotes, Palette, Television, Microphone, TextAa, UsersThree, Trophy, Heart } from '@phosphor-icons/react';
 import { LoginScreen } from '@/components/LoginScreen';
 import { GroupSelection } from '@/components/GroupSelection';
 import { EntryCard } from '@/components/EntryCard';
 import { RatingView } from '@/components/RatingView';
 import { MemberManagement } from '@/components/MemberManagement';
 import { Leaderboard } from '@/components/Leaderboard';
+import { PersonalLeaderboard } from '@/components/PersonalLeaderboard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster, toast } from 'sonner';
 import { MELODIFESTIVALEN_2026, isVotingAllowed } from '@/lib/melodifestivalen-data';
@@ -38,6 +39,7 @@ function App() {
   const [viewOnlyGroupId, setViewOnlyGroupId] = useState<string | null>(null);
   const [memberManagementOpen, setMemberManagementOpen] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showPersonalLeaderboard, setShowPersonalLeaderboard] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -821,15 +823,20 @@ function App() {
                   </div>
                 </div>
 
-                <Tabs value={showLeaderboard ? 'leaderboard' : selectedHeat} onValueChange={(value) => {
+                <Tabs value={showLeaderboard ? 'leaderboard' : showPersonalLeaderboard ? 'personal' : selectedHeat} onValueChange={(value) => {
                   if (value === 'leaderboard') {
                     setShowLeaderboard(true);
+                    setShowPersonalLeaderboard(false);
+                  } else if (value === 'personal') {
+                    setShowLeaderboard(false);
+                    setShowPersonalLeaderboard(true);
                   } else {
                     setShowLeaderboard(false);
+                    setShowPersonalLeaderboard(false);
                     setSelectedHeat(value);
                   }
                 }} className="w-full">
-                  <TabsList className="w-full grid grid-cols-5 h-auto p-1">
+                  <TabsList className="w-full grid grid-cols-6 h-auto p-1">
                     {HEATS.map((heat) => (
                       <TabsTrigger
                         key={heat}
@@ -844,7 +851,14 @@ function App() {
                       className="font-body text-sm sm:text-base py-3 gap-2"
                     >
                       <Trophy size={18} weight="duotone" />
-                      Topplista
+                      Grupp
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="personal"
+                      className="font-body text-sm sm:text-base py-3 gap-2"
+                    >
+                      <Heart size={18} weight="duotone" />
+                      Mina
                     </TabsTrigger>
                   </TabsList>
                 </Tabs>
@@ -868,6 +882,25 @@ function App() {
                     </p>
                   </div>
                   <Leaderboard entries={entries || []} groupMemberIds={selectedGroup?.memberIds || []} />
+                </motion.div>
+              </div>
+            ) : showPersonalLeaderboard ? (
+              <div className="max-w-4xl mx-auto">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <div className="mb-6">
+                    <h2 className="font-heading font-bold text-3xl text-foreground mb-2 flex items-center gap-3">
+                      <Heart size={32} weight="duotone" className="text-accent" />
+                      Mina favoriter
+                    </h2>
+                    <p className="font-body text-muted-foreground">
+                      Dina bäst betygsatta bidrag
+                    </p>
+                  </div>
+                  <PersonalLeaderboard entries={entries || []} userId={user!.id} />
                 </motion.div>
               </div>
             ) : (
