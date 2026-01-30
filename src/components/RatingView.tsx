@@ -229,17 +229,16 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <Card className="p-4 border-2">
-                        <div className="flex items-center gap-2.5 mb-3">
-                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                            <Icon size={18} weight="duotone" className="text-primary" />
+                      <Card className="p-3 border">
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                              <Icon size={16} weight="duotone" className="text-primary" />
+                            </div>
+                            <Label className="font-heading font-semibold text-sm tracking-wide uppercase">
+                              {category.label}
+                            </Label>
                           </div>
-                          <Label className="font-heading font-semibold text-base tracking-wide uppercase">
-                            {category.label}
-                          </Label>
-                        </div>
-
-                        <div className="space-y-3">
                           <div>
                             <StarRating
                               value={categoryRating.rating}
@@ -249,42 +248,46 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
                               disabled={false}
                             />
                           </div>
-
-                          {categoryRating.comment || focusedComment === category.key ? (
-                            <div className="space-y-1.5">
-                              <Label htmlFor={`comment-${category.key}`} className="font-body text-xs text-muted-foreground">
-                                Kommentar
-                              </Label>
-                              <Textarea
-                                ref={(el) => {
-                                  textareaRefs.current[category.key] = el;
-                                }}
-                                id={`comment-${category.key}`}
-                                value={categoryRating.comment}
-                                onChange={(e) =>
-                                  onUpdateRating(category.key as CategoryKey, categoryRating.rating, e.target.value)
-                                }
-                                onFocus={() => setFocusedComment(category.key)}
-                                onBlur={() => setFocusedComment(null)}
-                                placeholder="Skriv dina tankar här..."
-                                className={`font-body resize-none text-sm transition-all duration-300 ease-in-out ${
-                                  focusedComment === category.key ? 'min-h-[140px]' : 'min-h-[70px]'
-                                }`}
-                                disabled={false}
-                              />
-                            </div>
-                          ) : (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setFocusedComment(category.key)}
-                              className="gap-2 text-muted-foreground hover:text-foreground font-body w-full justify-start -ml-2"
-                            >
-                              <ChatCircleText size={16} weight="duotone" />
-                              Lägg till kommentar
-                            </Button>
-                          )}
                         </div>
+
+                        {categoryRating.comment || focusedComment === category.key ? (
+                          <div className="space-y-1.5 mt-3">
+                            <Label htmlFor={`comment-${category.key}`} className="font-body text-xs text-muted-foreground">
+                              Kommentar
+                            </Label>
+                            <Textarea
+                              ref={(el) => {
+                                textareaRefs.current[category.key] = el;
+                              }}
+                              id={`comment-${category.key}`}
+                              value={categoryRating.comment}
+                              onChange={(e) =>
+                                onUpdateRating(category.key as CategoryKey, categoryRating.rating, e.target.value)
+                              }
+                              onFocus={() => setFocusedComment(category.key)}
+                              onBlur={() => {
+                                if (!categoryRating.comment) {
+                                  setFocusedComment(null);
+                                }
+                              }}
+                              placeholder="Skriv dina tankar här..."
+                              className={`font-body resize-none text-sm transition-all duration-300 ease-in-out ${
+                                focusedComment === category.key ? 'min-h-[120px]' : 'min-h-[60px]'
+                              }`}
+                              disabled={false}
+                            />
+                          </div>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setFocusedComment(category.key)}
+                            className="gap-2 text-muted-foreground hover:text-foreground font-body w-full justify-start -ml-2 mt-1 h-8"
+                          >
+                            <ChatCircleText size={16} weight="duotone" />
+                            Lägg till kommentar
+                          </Button>
+                        )}
                       </Card>
                     </motion.div>
                   );
