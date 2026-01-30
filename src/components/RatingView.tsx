@@ -6,10 +6,10 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { StarRating } from './StarRating';
-import { ArrowLeft, Sparkle, MusicNotes, Palette, Television, Microphone, TextAa, Star, Users, LockKey, CalendarBlank } from '@phosphor-icons/react';
+import { ArrowLeft, Sparkle, MusicNotes, Palette, Television, Microphone, TextAa, Star, Users, CalendarBlank, Info } from '@phosphor-icons/react';
 import { motion } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { isVotingAllowed, getVotingOpensDate } from '@/lib/melodifestivalen-data';
+import { isVotingAllowed } from '@/lib/melodifestivalen-data';
 
 interface RatingViewProps {
   entry: Entry;
@@ -31,21 +31,19 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
   const totalScore = userRating?.totalScore || 0;
   const otherUserRatings = entry.userRatings.filter(ur => ur.userId !== currentUserId);
   const votingAllowed = isVotingAllowed(entry.heatDate);
-  const votingOpensDate = getVotingOpensDate(entry.heatDate);
 
   const getRating = (category: CategoryKey) => {
     return userRating?.ratings[category] || { rating: 0, comment: '' };
   };
 
-  const formatDate = (date: Date) => {
+  const formatDate = (date: string) => {
+    const heatDate = new Date(date);
     return new Intl.DateTimeFormat('sv-SE', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(date);
+    }).format(heatDate);
   };
 
   return (
@@ -96,24 +94,18 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                <Card className="p-8 border-2 border-accent/30 bg-gradient-to-br from-accent/10 via-accent/5 to-transparent">
-                  <div className="flex flex-col items-center text-center gap-4">
-                    <div className="w-20 h-20 rounded-full bg-accent/20 flex items-center justify-center">
-                      <LockKey size={40} weight="duotone" className="text-accent" />
+                <Card className="p-6 border-2 border-accent/30 bg-gradient-to-br from-accent/10 via-accent/5 to-transparent">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center shrink-0">
+                      <Info size={28} weight="duotone" className="text-accent" />
                     </div>
-                    <div>
-                      <h3 className="font-heading font-bold text-2xl text-foreground mb-2">
-                        Röstningen är inte öppen än
+                    <div className="flex-1">
+                      <h3 className="font-heading font-bold text-lg text-foreground mb-1">
+                        Deltävlingen är inte idag
                       </h3>
-                      <p className="text-muted-foreground font-body text-lg mb-4">
-                        Du kan börja betygsätta detta bidrag en dag innan deltävlingen
+                      <p className="text-muted-foreground font-body">
+                        Detta bidrag tävlar {formatDate(entry.heatDate)}
                       </p>
-                      <div className="flex items-center justify-center gap-2 text-accent">
-                        <CalendarBlank size={24} weight="duotone" />
-                        <span className="font-heading font-semibold text-lg">
-                          Öppnar: {formatDate(votingOpensDate)}
-                        </span>
-                      </div>
                     </div>
                   </div>
                 </Card>
@@ -124,9 +116,6 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
               <h3 className="font-heading font-bold text-2xl text-foreground mb-6 flex items-center gap-2">
                 <Users size={28} weight="duotone" className="text-primary" />
                 Dina betyg
-                {!votingAllowed && (
-                  <LockKey size={24} weight="duotone" className="text-muted-foreground" />
-                )}
               </h3>
               <div className="space-y-6">
                 {CATEGORIES.map((category) => {
@@ -140,7 +129,7 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <Card className={`p-6 border-2 ${!votingAllowed ? 'opacity-60' : ''}`}>
+                      <Card className="p-6 border-2">
                         <div className="flex items-center gap-3 mb-4">
                           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                             <Icon size={24} weight="duotone" className="text-primary" />
@@ -155,9 +144,9 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
                             <StarRating
                               value={categoryRating.rating}
                               onChange={(rating) => 
-                                votingAllowed && onUpdateRating(category.key as CategoryKey, rating, categoryRating.comment)
+                                onUpdateRating(category.key as CategoryKey, rating, categoryRating.comment)
                               }
-                              disabled={!votingAllowed}
+                              disabled={false}
                             />
                           </div>
 
@@ -169,11 +158,11 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
                               id={`comment-${category.key}`}
                               value={categoryRating.comment}
                               onChange={(e) =>
-                                votingAllowed && onUpdateRating(category.key as CategoryKey, categoryRating.rating, e.target.value)
+                                onUpdateRating(category.key as CategoryKey, categoryRating.rating, e.target.value)
                               }
-                              placeholder={votingAllowed ? "Skriv dina tankar här..." : "Röstningen öppnas snart..."}
+                              placeholder="Skriv dina tankar här..."
                               className="font-body min-h-[100px] resize-none"
-                              disabled={!votingAllowed}
+                              disabled={false}
                             />
                           </div>
                         </div>

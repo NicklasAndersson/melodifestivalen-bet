@@ -823,7 +823,7 @@ function App() {
                   </div>
                 </div>
 
-                <Tabs value={selectedHeat} onValueChange={(value) => {
+                <Tabs value={showLeaderboard ? 'leaderboard' : showPersonalLeaderboard ? 'personal' : selectedHeat} onValueChange={(value) => {
                   if (value === 'leaderboard') {
                     setShowPersonalLeaderboard(false);
                     setShowLeaderboard(true);
