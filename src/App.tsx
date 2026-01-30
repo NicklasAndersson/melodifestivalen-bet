@@ -211,9 +211,8 @@ function App() {
 
     setEntries((currentEntries) => {
       return (currentEntries || []).map((entry) => {
-        if (entry.id === entryId) {
           const updatedEntry = {
-            ...entry,
+          const updatedEntry = {
             userRatings: entry.userRatings.filter((ur) => ur.profileId !== selectedProfile.id),
           };
 
@@ -233,17 +232,17 @@ function App() {
   const heatEntries = (entries || []).filter((e) => e.heat === selectedHeat).sort((a, b) => a.number - b.number);
   
   const getUserRating = (entry: Entry) => {
+  const getUserRating = (entry: Entry) => {
     if (!selectedProfile) return;
     return entry.userRatings.find((ur) => ur.profileId === selectedProfile?.id);
   };
 
-  if (!currentUser) {
     return (
       <>
         <SSOLoginScreen onSSOLogin={handleSSOLogin} />
         <Toaster position="top-center" />
       </>
-    );
+      </>
   }
 
   if (!selectedProfile) {
@@ -259,6 +258,7 @@ function App() {
       </>
     );
   }
+  }
 
   if (selectedEntry) {
     return (
@@ -266,10 +266,9 @@ function App() {
         <RatingView
           entry={selectedEntry}
           onBack={() => setSelectedEntry(null)}
-          onUpdateRating={(category, rating, comment) => handleRating(selectedEntry.id, category, rating, comment)}
+          onRate={handleRating}
           userRating={getUserRating(selectedEntry)}
-          currentUserId={selectedProfile.id}
-          onDeleteRating={() => handleDeleteRating(selectedEntry.id)}
+          onDeleteRating={handleDeleteRating}
         />
         <Toaster position="top-center" />
       </>
