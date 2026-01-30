@@ -209,7 +209,7 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
                 <Users size={28} weight="duotone" className="text-primary" />
                 Dina betyg
               </h3>
-              <div className="space-y-6">
+              <div className="space-y-3">
                 {CATEGORIES.map((category) => {
                   const Icon = iconMap[category.icon as keyof typeof iconMap];
                   const categoryRating = getRating(category.key as CategoryKey);
@@ -221,17 +221,17 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <Card className="p-6 border-2">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                            <Icon size={24} weight="duotone" className="text-primary" />
+                      <Card className="p-4 border-2">
+                        <div className="flex items-center gap-2.5 mb-3">
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                            <Icon size={18} weight="duotone" className="text-primary" />
                           </div>
-                          <Label className="font-heading font-semibold text-lg tracking-wide uppercase">
+                          <Label className="font-heading font-semibold text-base tracking-wide uppercase">
                             {category.label}
                           </Label>
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="space-y-3">
                           <div>
                             <StarRating
                               value={categoryRating.rating}
@@ -242,8 +242,8 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
                             />
                           </div>
 
-                          <div className="space-y-2">
-                            <Label htmlFor={`comment-${category.key}`} className="font-body text-sm text-muted-foreground">
+                          <div className="space-y-1.5">
+                            <Label htmlFor={`comment-${category.key}`} className="font-body text-xs text-muted-foreground">
                               Kommentar
                             </Label>
                             <Textarea
@@ -253,7 +253,7 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
                                 onUpdateRating(category.key as CategoryKey, categoryRating.rating, e.target.value)
                               }
                               placeholder="Skriv dina tankar här..."
-                              className="font-body min-h-[100px] resize-none"
+                              className="font-body min-h-[70px] resize-none text-sm"
                               disabled={false}
                             />
                           </div>
