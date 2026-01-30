@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { useKV } from '@github/spark/hooks';
 import { Entry, CategoryKey } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Plus, MusicNotes, SortAscending, SortDescending } from '@phosphor-icons/react';
+import { Plus, MusicNotes, SortAscending, SortDescending, Sparkle } from '@phosphor-icons/react';
 import { AddEntryDialog } from '@/components/AddEntryDialog';
 import { EntryCard } from '@/components/EntryCard';
 import { RatingView } from '@/components/RatingView';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster, toast } from 'sonner';
+import { MELODIFESTIVALEN_2025 } from '@/lib/melodifestivalen-data';
 
 function App() {
   const [entries, setEntries] = useKV<Entry[]>('melodifestivalen-entries', []);
@@ -65,6 +66,48 @@ function App() {
     );
   };
 
+  const handleLoadMelodifestivalen = () => {
+    const currentEntries = entries || [];
+    let addedCount = 0;
+
+    MELODIFESTIVALEN_2025.forEach((melodiEntry) => {
+      const exists = currentEntries.some(
+        (entry) => entry.artist === melodiEntry.artist && entry.song === melodiEntry.song
+      );
+
+      if (!exists) {
+        const newEntry: Entry = {
+          id: `${Date.now()}-${Math.random()}`,
+          artist: melodiEntry.artist,
+          song: melodiEntry.song,
+          heat: melodiEntry.heat,
+          ratings: {
+            song: { rating: 0, comment: '' },
+            clothes: { rating: 0, comment: '' },
+            scenography: { rating: 0, comment: '' },
+            vocals: { rating: 0, comment: '' },
+            lyrics: { rating: 0, comment: '' },
+            postcard: { rating: 0, comment: '' },
+          },
+          totalScore: 0,
+        };
+        currentEntries.push(newEntry);
+        addedCount++;
+      }
+    });
+
+    if (addedCount > 0) {
+      setEntries(currentEntries);
+      toast.success(`${addedCount} bidrag tillagda!`, {
+        description: 'Melodifestivalen 2025 är nu laddad',
+      });
+    } else {
+      toast.info('Alla bidrag finns redan', {
+        description: 'Inga nya bidrag att lägga till',
+      });
+    }
+  };
+
   const sortedEntries = [...(entries || [])].sort((a, b) => {
     if (sortDescending) {
       return b.totalScore - a.totalScore;
@@ -108,14 +151,25 @@ function App() {
                     Betygsätt alla bidrag
                   </p>
                 </div>
-                <Button
-                  onClick={() => setDialogOpen(true)}
-                  size="lg"
-                  className="font-body gap-2 bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg"
-                >
-                  <Plus size={24} weight="bold" />
-                  Lägg till bidrag
-                </Button>
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    onClick={handleLoadMelodifestivalen}
+                    size="lg"
+                    variant="outline"
+                    className="font-body gap-2 border-2 border-primary/30 hover:bg-primary/5"
+                  >
+                    <Sparkle size={24} weight="fill" />
+                    Ladda Mello 2025
+                  </Button>
+                  <Button
+                    onClick={() => setDialogOpen(true)}
+                    size="lg"
+                    className="font-body gap-2 bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg"
+                  >
+                    <Plus size={24} weight="bold" />
+                    Lägg till bidrag
+                  </Button>
+                </div>
               </div>
             </motion.div>
 
@@ -135,14 +189,25 @@ function App() {
                   <p className="font-body text-muted-foreground text-center mb-6 max-w-md">
                     Börja med att lägga till dina första Melodifestivalen-bidrag för att börja betygsätta
                   </p>
-                  <Button
-                    onClick={() => setDialogOpen(true)}
-                    size="lg"
-                    className="font-body gap-2 bg-accent hover:bg-accent/90"
-                  >
-                    <Plus size={24} weight="bold" />
-                    Lägg till första bidraget
-                  </Button>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button
+                      onClick={handleLoadMelodifestivalen}
+                      size="lg"
+                      variant="outline"
+                      className="font-body gap-2 border-2 border-primary/30 hover:bg-primary/5"
+                    >
+                      <Sparkle size={24} weight="fill" />
+                      Ladda Mello 2025
+                    </Button>
+                    <Button
+                      onClick={() => setDialogOpen(true)}
+                      size="lg"
+                      className="font-body gap-2 bg-accent hover:bg-accent/90"
+                    >
+                      <Plus size={24} weight="bold" />
+                      Lägg till eget bidrag
+                    </Button>
+                  </div>
                 </div>
               </motion.div>
             ) : (

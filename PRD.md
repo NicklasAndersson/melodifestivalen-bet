@@ -12,9 +12,16 @@ This is a content management app where users create, rate, and organize multiple
 
 ## Essential Features
 
+### Load Melodifestivalen 2025 Entries
+- **Functionality**: Automatically populate the app with all official entries from Melodifestivalen 2025 (all 28 artists and songs across 4 heats)
+- **Purpose**: Save time by not requiring manual entry of official competition songs
+- **Trigger**: User clicks "Ladda Mello 2025" button
+- **Progression**: Click button → System checks for duplicates → New entries added automatically → Toast notification confirms how many added → Entries appear in list
+- **Success criteria**: All 28 official entries are added without duplicates, organized by their respective heats (Deltävling 1-4)
+
 ### Add New Entry
 - **Functionality**: Create a new song entry with artist name, song title, and heat/semifinal information
-- **Purpose**: Build the collection of songs to evaluate throughout the competition
+- **Purpose**: Add custom entries or songs from future years not yet in the system
 - **Trigger**: User clicks "Add Entry" button
 - **Progression**: Click add button → Dialog opens → Fill in entry details (song, artist, heat) → Save → Entry appears in list
 - **Success criteria**: New entry appears immediately in the entries list with default ratings
@@ -42,9 +49,10 @@ This is a content management app where users create, rate, and organize multiple
 
 ## Edge Case Handling
 
-- **Empty State**: Show welcoming message with large "Add First Entry" prompt when no entries exist
+- **Empty State**: Show welcoming message with two CTAs - "Load Mello 2025" for quick start or "Add Custom Entry" for manual addition
+- **Duplicate Prevention**: When loading official entries, system checks if artist+song combination already exists to prevent duplicates
 - **Incomplete Ratings**: Display entries with partial ratings clearly, showing which categories still need evaluation
-- **Duplicate Entries**: Allow duplicates (same song/artist might appear multiple times intentionally in different heats)
+- **Manual Duplicates**: Allow manual duplicates (same song/artist might appear multiple times intentionally in different heats or for comparison)
 - **Long Text Comments**: Implement text truncation with expand option for lengthy comments
 - **Data Persistence**: All entries, ratings, and comments automatically saved using useKV
 
