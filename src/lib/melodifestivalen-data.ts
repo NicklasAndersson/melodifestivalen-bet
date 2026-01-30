@@ -63,13 +63,25 @@ export function isHeatToday(heatDate: string): boolean {
 export function getHeatCity(heat: string): string {
   const cities: Record<string, string> = {
     "Deltävling 1": "Linköping",
-    "Deltävling 2": "TBA",
-    "Deltävling 3": "TBA",
-    "Deltävling 4": "TBA",
-    "Andra chansen": "TBA",
-    "Final": "TBA",
+    "Deltävling 2": "Göteborg",
+    "Deltävling 3": "Malmö",
+    "Deltävling 4": "Örnsköldsvik",
+    "Andra chansen": "Karlstad",
+    "Final": "Stockholm",
   };
   return cities[heat] || "";
+}
+
+export function getHeatVenue(heat: string): string {
+  const venues: Record<string, string> = {
+    "Deltävling 1": "Saab Arena",
+    "Deltävling 2": "Scandinavium",
+    "Deltävling 3": "Malmö Arena",
+    "Deltävling 4": "Fjällräven Center",
+    "Andra chansen": "Löfbergs Arena",
+    "Final": "Friends Arena",
+  };
+  return venues[heat] || "";
 }
 
 export function getVotingOpensDate(heatDate: string): Date {

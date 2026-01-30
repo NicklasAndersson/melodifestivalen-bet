@@ -9,7 +9,7 @@ import { StarRating } from './StarRating';
 import { ArrowLeft, Sparkle, MusicNotes, Palette, Television, Microphone, TextAa, Star, Users, CalendarBlank, Info } from '@phosphor-icons/react';
 import { motion } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { isHeatToday, getHeatCity } from '@/lib/melodifestivalen-data';
+import { isHeatToday, getHeatCity, getHeatVenue } from '@/lib/melodifestivalen-data';
 
 interface RatingViewProps {
   entry: Entry;
@@ -32,6 +32,7 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
   const otherUserRatings = entry.userRatings.filter(ur => ur.userId !== currentUserId);
   const heatIsToday = isHeatToday(entry.heatDate);
   const heatCity = getHeatCity(entry.heat);
+  const heatVenue = getHeatVenue(entry.heat);
 
   const getRating = (category: CategoryKey) => {
     return userRating?.ratings[category] || { rating: 0, comment: '' };
@@ -108,9 +109,9 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
                       <p className="text-muted-foreground font-body">
                         Detta bidrag tävlar {formatDate(entry.heatDate)}
                       </p>
-                      {heatCity && (
+                      {heatCity && heatVenue && (
                         <p className="text-muted-foreground font-body text-sm mt-1">
-                          Deltävlingen sänds från {heatCity === "Linköping" ? "Saab Arena i Linköping" : heatCity}
+                          Deltävlingen sänds från {heatVenue} i {heatCity}
                         </p>
                       )}
                     </div>
