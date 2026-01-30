@@ -450,3 +450,12 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
     </Dialog>
   );
 }
+                Skapad med Melodifestivalen 2026 Gruppbetyg
+              </p>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
