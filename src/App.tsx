@@ -7,12 +7,13 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Users, SignOut, ArrowLeft, Sparkle, Star, MusicNotes, Palette, Television, Microphone, TextAa, UsersThree } from '@phosphor-icons/react';
+import { Users, SignOut, ArrowLeft, Sparkle, Star, MusicNotes, Palette, Television, Microphone, TextAa, UsersThree, Trophy } from '@phosphor-icons/react';
 import { LoginScreen } from '@/components/LoginScreen';
 import { GroupSelection } from '@/components/GroupSelection';
 import { EntryCard } from '@/components/EntryCard';
 import { RatingView } from '@/components/RatingView';
 import { MemberManagement } from '@/components/MemberManagement';
+import { Leaderboard } from '@/components/Leaderboard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster, toast } from 'sonner';
 import { MELODIFESTIVALEN_2026, isVotingAllowed } from '@/lib/melodifestivalen-data';
@@ -36,6 +37,7 @@ function App() {
   const [selectedHeat, setSelectedHeat] = useState<string>(HEATS[0]);
   const [viewOnlyGroupId, setViewOnlyGroupId] = useState<string | null>(null);
   const [memberManagementOpen, setMemberManagementOpen] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -608,78 +610,99 @@ function App() {
                 </div>
               </motion.div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <AnimatePresence mode="popLayout">
-                  {heatEntries.map((entry, index) => {
-                    const groupAverage = entry.userRatings.length > 0
-                      ? entry.userRatings.reduce((sum, ur) => sum + ur.totalScore, 0) / entry.userRatings.length
-                      : 0;
+              {showLeaderboard ? (
+                <div className="max-w-4xl mx-auto">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4 }}
+                  >
+                    <div className="mb-6">
+                      <h2 className="font-heading font-bold text-3xl text-foreground mb-2 flex items-center gap-3">
+                        <Trophy size={32} weight="duotone" className="text-gold" />
+                        Topplista
+                      </h2>
+                      <p className="font-body text-muted-foreground">
+                        De bäst betygsatta bidragen i gruppen
+                      </p>
+                    </div>
+                    <Leaderboard entries={entries || []} groupMemberIds={selectedGroup?.memberIds || []} />
+                  </motion.div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <AnimatePresence mode="popLayout">
+                    {heatEntries.map((entry, index) => {
+                      const groupAverage = entry.userRatings.length > 0
+                        ? entry.userRatings.reduce((sum, ur) => sum + ur.totalScore, 0) / entry.userRatings.length
+                        : 0;
 
-                    return (
-                      <motion.div
-                        key={entry.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ duration: 0.3, delay: index * 0.05 }}
-                      >
+                      return (
                         <motion.div
-                          whileHover={{ y: -4, transition: { type: 'spring', stiffness: 400, damping: 25 } }}
-                          whileTap={{ scale: 0.98 }}
+                          key={entry.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          transition={{ duration: 0.3, delay: index * 0.05 }}
                         >
-                          <Card
-                            className="p-6 cursor-pointer border-2 hover:border-primary/50 transition-colors relative overflow-hidden"
-                            onClick={() => setSelectedEntry(entry)}
+                          <motion.div
+                            whileHover={{ y: -4, transition: { type: 'spring', stiffness: 400, damping: 25 } }}
+                            whileTap={{ scale: 0.98 }}
                           >
-                            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
-                            
-                            <div className="relative">
-                              <div className="flex items-start justify-between gap-4 mb-3">
-                                <div className="flex-1 min-w-0">
-                                  <h3 className="font-heading font-bold text-xl text-foreground mb-1 truncate">
-                                    {entry.song}
-                                  </h3>
-                                  <p className="text-muted-foreground font-body text-sm truncate">
-                                    {entry.artist}
-                                  </p>
-                                </div>
-                                <Badge variant="secondary" className="shrink-0 font-body">
-                                  {entry.heat}
-                                </Badge>
-                              </div>
-
-                              <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
-                                <div className="flex items-center gap-2">
-                                  <div className="flex">
-                                    {[...Array(5)].map((_, i) => (
-                                      <Star
-                                        key={i}
-                                        size={16}
-                                        weight={i < Math.round(groupAverage / 6) ? 'fill' : 'regular'}
-                                        className={i < Math.round(groupAverage / 6) ? 'text-gold' : 'text-muted-foreground/40'}
-                                      />
-                                    ))}
+                            <Card
+                              className="p-6 cursor-pointer border-2 hover:border-primary/50 transition-colors relative overflow-hidden"
+                              onClick={() => setSelectedEntry(entry)}
+                            >
+                              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
+                              
+                              <div className="relative">
+                                <div className="flex items-start justify-between gap-4 mb-3">
+                                  <div className="flex-1 min-w-0">
+                                    <h3 className="font-heading font-bold text-xl text-foreground mb-1 truncate">
+                                      {entry.song}
+                                    </h3>
+                                    <p className="text-muted-foreground font-body text-sm truncate">
+                                      {entry.artist}
+                                    </p>
                                   </div>
-                                  <span className="text-xs text-muted-foreground font-body">
-                                    {entry.userRatings.length} {entry.userRatings.length === 1 ? 'betyg' : 'betyg'}
-                                  </span>
+                                  <Badge variant="secondary" className="shrink-0 font-body">
+                                    {entry.heat}
+                                  </Badge>
                                 </div>
-                                
-                                <div className="flex items-center gap-1.5">
-                                  <Sparkle size={20} weight="fill" className="text-gold" />
-                                  <span className="font-heading font-bold text-2xl text-foreground">
-                                    {groupAverage > 0 ? groupAverage.toFixed(1) : '0'}
-                                  </span>
+
+                                <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
+                                  <div className="flex items-center gap-2">
+                                    <div className="flex">
+                                      {[...Array(5)].map((_, i) => (
+                                        <Star
+                                          key={i}
+                                          size={16}
+                                          weight={i < Math.round(groupAverage / 6) ? 'fill' : 'regular'}
+                                          className={i < Math.round(groupAverage / 6) ? 'text-gold' : 'text-muted-foreground/40'}
+                                        />
+                                      ))}
+                                    </div>
+                                    <span className="text-xs text-muted-foreground font-body">
+                                      {entry.userRatings.length} {entry.userRatings.length === 1 ? 'betyg' : 'betyg'}
+                                    </span>
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-1.5">
+                                    <Sparkle size={20} weight="fill" className="text-gold" />
+                                    <span className="font-heading font-bold text-2xl text-foreground">
+                                      {groupAverage > 0 ? groupAverage.toFixed(1) : '0'}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </Card>
+                            </Card>
+                          </motion.div>
                         </motion.div>
-                      </motion.div>
-                    );
-                  })}
-                </AnimatePresence>
-              </div>
+                      );
+                    })}
+                  </AnimatePresence>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -798,8 +821,15 @@ function App() {
                   </div>
                 </div>
 
-                <Tabs value={selectedHeat} onValueChange={setSelectedHeat} className="w-full">
-                  <TabsList className="w-full grid grid-cols-4 h-auto p-1">
+                <Tabs value={showLeaderboard ? 'leaderboard' : selectedHeat} onValueChange={(value) => {
+                  if (value === 'leaderboard') {
+                    setShowLeaderboard(true);
+                  } else {
+                    setShowLeaderboard(false);
+                    setSelectedHeat(value);
+                  }
+                }} className="w-full">
+                  <TabsList className="w-full grid grid-cols-5 h-auto p-1">
                     {HEATS.map((heat) => (
                       <TabsTrigger
                         key={heat}
@@ -809,34 +839,62 @@ function App() {
                         {heat}
                       </TabsTrigger>
                     ))}
+                    <TabsTrigger
+                      value="leaderboard"
+                      className="font-body text-sm sm:text-base py-3 gap-2"
+                    >
+                      <Trophy size={18} weight="duotone" />
+                      Topplista
+                    </TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>
             </motion.div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <AnimatePresence mode="popLayout">
-                {heatEntries.map((entry, index) => {
-                  const userRating = getUserRating(entry);
+            {showLeaderboard ? (
+              <div className="max-w-4xl mx-auto">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <div className="mb-6">
+                    <h2 className="font-heading font-bold text-3xl text-foreground mb-2 flex items-center gap-3">
+                      <Trophy size={32} weight="duotone" className="text-gold" />
+                      Topplista
+                    </h2>
+                    <p className="font-body text-muted-foreground">
+                      De bäst betygsatta bidragen i gruppen
+                    </p>
+                  </div>
+                  <Leaderboard entries={entries || []} groupMemberIds={selectedGroup?.memberIds || []} />
+                </motion.div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <AnimatePresence mode="popLayout">
+                  {heatEntries.map((entry, index) => {
+                    const userRating = getUserRating(entry);
 
-                  return (
-                    <motion.div
-                      key={entry.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.3, delay: index * 0.05 }}
-                    >
-                      <EntryCard
-                        entry={entry}
-                        userRating={userRating}
-                        onClick={() => setSelectedEntry(entry)}
-                      />
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
-            </div>
+                    return (
+                      <motion.div
+                        key={entry.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                      >
+                        <EntryCard
+                          entry={entry}
+                          userRating={userRating}
+                          onClick={() => setSelectedEntry(entry)}
+                        />
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+              </div>
+            )}
           </div>
         </div>
       </div>
