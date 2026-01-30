@@ -49,7 +49,7 @@ export const MELODIFESTIVALEN_2026: MelodiArtist[] = [
 ];
 
 export function isVotingAllowed(heatDate: string): boolean {
-  const heatDateTime = new Date(heatDate).getTime();
+  const heatDateTime = new Date(heatDate + 'T20:00:00+01:00').getTime();
   const oneDayBefore = heatDateTime - (24 * 60 * 60 * 1000);
   const now = Date.now();
   
@@ -57,6 +57,6 @@ export function isVotingAllowed(heatDate: string): boolean {
 }
 
 export function getVotingOpensDate(heatDate: string): Date {
-  const heatDateTime = new Date(heatDate).getTime();
+  const heatDateTime = new Date(heatDate + 'T20:00:00+01:00').getTime();
   return new Date(heatDateTime - (24 * 60 * 60 * 1000));
 }
