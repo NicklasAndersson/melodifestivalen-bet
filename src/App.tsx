@@ -976,32 +976,29 @@ function App() {
                     <TabsTrigger
                       value="global"
                       className="font-body text-xs sm:text-sm md:text-base py-2.5 sm:py-3 px-2 gap-1.5"
-                    >
-                      <Globe size={16} weight="duotone" className="shrink-0" />
                       <span className="truncate">Alla</span>
                     </TabsTrigger>
-                    <TabsTrigger
+                      <span className="truncate">Alla</span>
+                    </TabsTrigger>
+                      className="font-body text-xs sm:text-sm md:text-base py-2.5 sm:py-3 px-2 gap-1.5"
                       value="personal"
                       className="font-body text-xs sm:text-sm md:text-base py-2.5 sm:py-3 px-2 gap-1.5"
-                    >
-                      <Heart size={16} weight="duotone" className="shrink-0" />
                       <span className="truncate">Mina</span>
                     </TabsTrigger>
                   </TabsList>
                 </Tabs>
-              </div>
-            </motion.div>
+                  </TabsList>
+                </Tabs>
 
             {showLeaderboard && selectedGroup ? (
-              <div className="max-w-4xl mx-auto">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
+lassName="max-w-4xl mx-auto">
+            <div className="max-w-4xl mx-auto">
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4 }}
                 >
+                  initial={{ opacity: 0, y: 20 }}
+                >xl text-foreground mb-2 flex items-center gap-3">
                   <div className="mb-6">
-                    <h2 className="font-heading font-bold text-3xl text-foreground mb-2 flex items-center gap-3">
-                      <Trophy size={32} weight="duotone" className="text-gold" />
                       Topplista
                     </h2>
                     <p className="font-body text-muted-foreground">
