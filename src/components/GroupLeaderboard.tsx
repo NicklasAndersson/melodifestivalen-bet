@@ -186,21 +186,7 @@ export function GroupLeaderboard({ entries, users }: GroupLeaderboardProps) {
                     <div className="flex items-start justify-between gap-4 mb-2">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 mb-1">
-                          <h3 className="font-heading font-bold text-xl text-foreground truncate">
-                            {item.entry.song}
-                          </h3>
-                          <a
-                            href={getMellopediaUrl(item.entry.song)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-primary hover:text-primary/80 transition-colors shrink-0"
-                            title="Öppna på Mellopedia"
-                          >
-                            <LinkSimple size={18} weight="bold" />
-                          </a>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <p className="text-muted-foreground font-body text-sm truncate">
+                          <p className="text-muted-foreground font-body text-sm font-semibold">
                             {item.entry.artist}
                           </p>
                           <a
@@ -211,6 +197,20 @@ export function GroupLeaderboard({ entries, users }: GroupLeaderboardProps) {
                             title="Öppna artist på Mellopedia"
                           >
                             <LinkSimple size={16} weight="bold" />
+                          </a>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <h3 className="font-heading font-bold text-xl text-foreground">
+                            {item.entry.song}
+                          </h3>
+                          <a
+                            href={getMellopediaUrl(item.entry.song)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:text-primary/80 transition-colors shrink-0"
+                            title="Öppna på Mellopedia"
+                          >
+                            <LinkSimple size={18} weight="bold" />
                           </a>
                         </div>
                       </div>
