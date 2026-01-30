@@ -1,4 +1,5 @@
 export interface MelodiArtist {
+  number: number;
   artist: string;
   song: string;
   heat: string;
@@ -15,37 +16,37 @@ export const HEAT_DATES: Record<string, string> = {
 };
 
 export const MELODIFESTIVALEN_2026: MelodiArtist[] = [
-  { artist: "Greczula", song: "Half of Me", heat: "Deltävling 1", heatDate: HEAT_DATES["Deltävling 1"] },
-  { artist: "Jacqline", song: "Starkare", heat: "Deltävling 1", heatDate: HEAT_DATES["Deltävling 1"] },
-  { artist: "Mr. Pimp Music", song: "Heja Sverige", heat: "Deltävling 1", heatDate: HEAT_DATES["Deltävling 1"] },
-  { artist: "Rake", song: "Spela upp", heat: "Deltävling 1", heatDate: HEAT_DATES["Deltävling 1"] },
-  { artist: "Scarlet", song: "Photographs", heat: "Deltävling 1", heatDate: HEAT_DATES["Deltävling 1"] },
-  { artist: "Sonia", song: "Le Freak", heat: "Deltävling 1", heatDate: HEAT_DATES["Deltävling 1"] },
-  { artist: "Willjam Lemoin", song: "Aldrig ensam", heat: "Deltävling 1", heatDate: HEAT_DATES["Deltävling 1"] },
+  { number: 1, artist: "Greczula", song: "Half of Me", heat: "Deltävling 1", heatDate: HEAT_DATES["Deltävling 1"] },
+  { number: 2, artist: "Jacqline", song: "Starkare", heat: "Deltävling 1", heatDate: HEAT_DATES["Deltävling 1"] },
+  { number: 3, artist: "Scarlet", song: "Photographs", heat: "Deltävling 1", heatDate: HEAT_DATES["Deltävling 1"] },
+  { number: 4, artist: "Rake", song: "Spela upp", heat: "Deltävling 1", heatDate: HEAT_DATES["Deltävling 1"] },
+  { number: 5, artist: "Sonia", song: "Le Freak", heat: "Deltävling 1", heatDate: HEAT_DATES["Deltävling 1"] },
+  { number: 6, artist: "Mr. Pimp Music", song: "Heja Sverige", heat: "Deltävling 1", heatDate: HEAT_DATES["Deltävling 1"] },
+  { number: 7, artist: "Willjam", song: "Aldrig ensam", heat: "Deltävling 1", heatDate: HEAT_DATES["Deltävling 1"] },
   
-  { artist: "Andreas Halldén", song: "Hearts Go First", heat: "Deltävling 2", heatDate: HEAT_DATES["Deltävling 2"] },
-  { artist: "Colaboyz", song: "Leva livet", heat: "Deltävling 2", heatDate: HEAT_DATES["Deltävling 2"] },
-  { artist: "Emilléa", song: "Svart å vitt", heat: "Deltävling 2", heatDate: HEAT_DATES["Deltävling 2"] },
-  { artist: "Irene Kärnebro", song: "Beautiful Stranger", heat: "Deltävling 2", heatDate: HEAT_DATES["Deltävling 2"] },
-  { artist: "Janne Bark", song: "Alla vi som rör oss", heat: "Deltävling 2", heatDate: HEAT_DATES["Deltävling 2"] },
-  { artist: "Medina", song: "Utan strid", heat: "Deltävling 2", heatDate: HEAT_DATES["Deltävling 2"] },
-  { artist: "Robert Skog", song: "Tycka om", heat: "Deltävling 2", heatDate: HEAT_DATES["Deltävling 2"] },
+  { number: 1, artist: "Andreas Halldén", song: "Hearts Go First", heat: "Deltävling 2", heatDate: HEAT_DATES["Deltävling 2"] },
+  { number: 2, artist: "Colaboyz", song: "Leva livet", heat: "Deltävling 2", heatDate: HEAT_DATES["Deltävling 2"] },
+  { number: 3, artist: "Emilléa", song: "Svart å vitt", heat: "Deltävling 2", heatDate: HEAT_DATES["Deltävling 2"] },
+  { number: 4, artist: "Irene Kärnebro", song: "Beautiful Stranger", heat: "Deltävling 2", heatDate: HEAT_DATES["Deltävling 2"] },
+  { number: 5, artist: "Janne Bark", song: "Alla vi som rör oss", heat: "Deltävling 2", heatDate: HEAT_DATES["Deltävling 2"] },
+  { number: 6, artist: "Medina", song: "Utan strid", heat: "Deltävling 2", heatDate: HEAT_DATES["Deltävling 2"] },
+  { number: 7, artist: "Robert Skog", song: "Tycka om", heat: "Deltävling 2", heatDate: HEAT_DATES["Deltävling 2"] },
   
-  { artist: "The Boppers & Tess Merkel", song: "Vacker värld (Come On Get Happy)", heat: "Deltävling 3", heatDate: HEAT_DATES["Deltävling 3"] },
-  { artist: "Carsten Lindberg", song: "Kom och vänd det upp och ner", heat: "Deltävling 3", heatDate: HEAT_DATES["Deltävling 3"] },
-  { artist: "Deliah", song: "Hush Hush", heat: "Deltävling 3", heatDate: HEAT_DATES["Deltävling 3"] },
-  { artist: "Eva Eastwood", song: "Man blir mä världen", heat: "Deltävling 3", heatDate: HEAT_DATES["Deltävling 3"] },
-  { artist: "Hanna Hedlund", song: "Vinden vänder", heat: "Deltävling 3", heatDate: HEAT_DATES["Deltävling 3"] },
-  { artist: "Lancelot", song: "När tiden står stilla", heat: "Deltävling 3", heatDate: HEAT_DATES["Deltävling 3"] },
-  { artist: "Lovad", song: "Ingen som jag vill ha", heat: "Deltävling 3", heatDate: HEAT_DATES["Deltävling 3"] },
+  { number: 1, artist: "The Boppers & Tess Merkel", song: "Vacker värld (Come On Get Happy)", heat: "Deltävling 3", heatDate: HEAT_DATES["Deltävling 3"] },
+  { number: 2, artist: "Carsten Lindberg", song: "Kom och vänd det upp och ner", heat: "Deltävling 3", heatDate: HEAT_DATES["Deltävling 3"] },
+  { number: 3, artist: "Deliah", song: "Hush Hush", heat: "Deltävling 3", heatDate: HEAT_DATES["Deltävling 3"] },
+  { number: 4, artist: "Eva Eastwood", song: "Man blir mä världen", heat: "Deltävling 3", heatDate: HEAT_DATES["Deltävling 3"] },
+  { number: 5, artist: "Hanna Hedlund", song: "Vinden vänder", heat: "Deltävling 3", heatDate: HEAT_DATES["Deltävling 3"] },
+  { number: 6, artist: "Lancelot", song: "När tiden står stilla", heat: "Deltävling 3", heatDate: HEAT_DATES["Deltävling 3"] },
+  { number: 7, artist: "Lovad", song: "Ingen som jag vill ha", heat: "Deltävling 3", heatDate: HEAT_DATES["Deltävling 3"] },
   
-  { artist: "Bror Gunnar Jansson", song: "Allt ligger bakom oss", heat: "Deltävling 4", heatDate: HEAT_DATES["Deltävling 4"] },
-  { artist: "Conny Bloom", song: "Det jag ger", heat: "Deltävling 4", heatDate: HEAT_DATES["Deltävling 4"] },
-  { artist: "Frida Öhrn", song: "Dansa dansa", heat: "Deltävling 4", heatDate: HEAT_DATES["Deltävling 4"] },
-  { artist: "LŪ LŪ", song: "Down Low", heat: "Deltävling 4", heatDate: HEAT_DATES["Deltävling 4"] },
-  { artist: "Nöd & lust", song: "Oh mammy", heat: "Deltävling 4", heatDate: HEAT_DATES["Deltävling 4"] },
-  { artist: "Showan", song: "Hål i gardinen", heat: "Deltävling 4", heatDate: HEAT_DATES["Deltävling 4"] },
-  { artist: "Tenori", song: "Vilken dag!", heat: "Deltävling 4", heatDate: HEAT_DATES["Deltävling 4"] },
+  { number: 1, artist: "Bror Gunnar Jansson", song: "Allt ligger bakom oss", heat: "Deltävling 4", heatDate: HEAT_DATES["Deltävling 4"] },
+  { number: 2, artist: "Conny Bloom", song: "Det jag ger", heat: "Deltävling 4", heatDate: HEAT_DATES["Deltävling 4"] },
+  { number: 3, artist: "Frida Öhrn", song: "Dansa dansa", heat: "Deltävling 4", heatDate: HEAT_DATES["Deltävling 4"] },
+  { number: 4, artist: "LŪ LŪ", song: "Down Low", heat: "Deltävling 4", heatDate: HEAT_DATES["Deltävling 4"] },
+  { number: 5, artist: "Nöd & lust", song: "Oh mammy", heat: "Deltävling 4", heatDate: HEAT_DATES["Deltävling 4"] },
+  { number: 6, artist: "Showan", song: "Hål i gardinen", heat: "Deltävling 4", heatDate: HEAT_DATES["Deltävling 4"] },
+  { number: 7, artist: "Tenori", song: "Vilken dag!", heat: "Deltävling 4", heatDate: HEAT_DATES["Deltävling 4"] },
 ];
 
 export function isVotingAllowed(heatDate: string): boolean {

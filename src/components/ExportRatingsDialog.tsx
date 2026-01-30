@@ -112,13 +112,17 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
           ctx.fillText(`${index + 1}`, x + 30, y + 40);
         }
 
+        ctx.font = 'bold 18px Quicksand, sans-serif';
+        ctx.fillStyle = '#7a6b98';
+        ctx.fillText(`#${item.entry.number}`, x + 90, y + 28);
+
         ctx.font = 'bold 24px Quicksand, sans-serif';
         ctx.fillStyle = '#3a2d5c';
-        ctx.fillText(item.entry.song, x + 90, y + 35);
+        ctx.fillText(item.entry.song, x + 90, y + 55);
 
         ctx.font = '18px Quicksand, sans-serif';
         ctx.fillStyle = '#7a6b98';
-        ctx.fillText(item.entry.artist, x + 90, y + 62);
+        ctx.fillText(item.entry.artist, x + 90, y + 82);
 
         ctx.font = '500 14px Quicksand, sans-serif';
         ctx.fillStyle = '#3a2d5c';

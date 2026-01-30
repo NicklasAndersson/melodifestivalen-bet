@@ -88,69 +88,77 @@ export function Leaderboard({ entries, groupMemberIds }: LeaderboardProps) {
                 {getPositionIcon(index)}
               </div>
 
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-4 mb-2">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <h3 className="font-heading font-bold text-xl text-foreground truncate">
-                        {item.entry.song}
-                      </h3>
-                      <a
-                        href={getMellopediaUrl(item.entry.song)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:text-primary/80 transition-colors shrink-0"
-                        title="Öppna på Mellopedia"
-                      >
-                        <LinkSimple size={18} weight="bold" />
-                      </a>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <p className="text-muted-foreground font-body text-sm truncate">
-                        {item.entry.artist}
-                      </p>
-                      <a
-                        href={getMellopediaUrl(item.entry.artist)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:text-primary/80 transition-colors shrink-0"
-                        title="Öppna artist på Mellopedia"
-                      >
-                        <LinkSimple size={16} weight="bold" />
-                      </a>
-                    </div>
-                  </div>
-                  <Badge variant="secondary" className="shrink-0 font-body">
-                    {item.entry.heat}
-                  </Badge>
+              <div className="flex gap-3 flex-1 min-w-0">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center shrink-0">
+                  <span className="font-heading font-bold text-foreground text-base">
+                    {item.entry.number}
+                  </span>
                 </div>
-
-                <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50">
-                  <div className="flex items-center gap-2">
-                    <div className="flex">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          size={16}
-                          weight={i < Math.round(item.average / 6) ? 'fill' : 'regular'}
-                          className={
-                            i < Math.round(item.average / 6)
-                              ? 'text-gold'
-                              : 'text-muted-foreground/40'
-                          }
-                        />
-                      ))}
+                
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-4 mb-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <h3 className="font-heading font-bold text-xl text-foreground truncate">
+                          {item.entry.song}
+                        </h3>
+                        <a
+                          href={getMellopediaUrl(item.entry.song)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:text-primary/80 transition-colors shrink-0"
+                          title="Öppna på Mellopedia"
+                        >
+                          <LinkSimple size={18} weight="bold" />
+                        </a>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-muted-foreground font-body text-sm truncate">
+                          {item.entry.artist}
+                        </p>
+                        <a
+                          href={getMellopediaUrl(item.entry.artist)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:text-primary/80 transition-colors shrink-0"
+                          title="Öppna artist på Mellopedia"
+                        >
+                          <LinkSimple size={16} weight="bold" />
+                        </a>
+                      </div>
                     </div>
-                    <span className="text-xs text-muted-foreground font-body">
-                      {item.ratingsCount} {item.ratingsCount === 1 ? 'betyg' : 'betyg'}
-                    </span>
+                    <Badge variant="secondary" className="shrink-0 font-body">
+                      {item.entry.heat}
+                    </Badge>
                   </div>
 
-                  <div className="flex items-center gap-1.5">
-                    <Sparkle size={20} weight="fill" className="text-gold" />
-                    <span className="font-heading font-bold text-2xl text-foreground">
-                      {item.average.toFixed(1)}
-                    </span>
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50">
+                    <div className="flex items-center gap-2">
+                      <div className="flex">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            size={16}
+                            weight={i < Math.round(item.average / 6) ? 'fill' : 'regular'}
+                            className={
+                              i < Math.round(item.average / 6)
+                                ? 'text-gold'
+                                : 'text-muted-foreground/40'
+                            }
+                          />
+                        ))}
+                      </div>
+                      <span className="text-xs text-muted-foreground font-body">
+                        {item.ratingsCount} {item.ratingsCount === 1 ? 'betyg' : 'betyg'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <Sparkle size={20} weight="fill" className="text-gold" />
+                      <span className="font-heading font-bold text-2xl text-foreground">
+                        {item.average.toFixed(1)}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>

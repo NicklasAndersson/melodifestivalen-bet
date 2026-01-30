@@ -48,7 +48,7 @@ function App() {
   const [showGroupSelection, setShowGroupSelection] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   
-  const CURRENT_DATA_VERSION = 2026;
+  const CURRENT_DATA_VERSION = 2027;
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -112,6 +112,7 @@ function App() {
   const initializeEntries = () => {
     const initialEntries: Entry[] = MELODIFESTIVALEN_2026.map((entry) => ({
       id: `${entry.artist}-${entry.song}`.toLowerCase().replace(/\s+/g, '-'),
+      number: entry.number,
       artist: entry.artist,
       song: entry.song,
       heat: entry.heat,

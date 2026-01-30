@@ -19,6 +19,7 @@ export interface UserRating {
 
 export interface Entry {
   id: string;
+  number: number;
   artist: string;
   song: string;
   heat: string;

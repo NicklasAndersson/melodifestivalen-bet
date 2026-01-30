@@ -118,34 +118,41 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
           </div>
           
           <div className="flex items-start justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <h2 className="font-heading font-bold text-3xl text-foreground">
-                  {entry.song}
-                </h2>
-                <a
-                  href={getMellopediaUrl(entry.song)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:text-primary/80 transition-colors"
-                  title="Öppna på Mellopedia"
-                >
-                  <LinkSimple size={24} weight="bold" />
-                </a>
+            <div className="flex gap-4">
+              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center shrink-0">
+                <span className="font-heading font-bold text-foreground text-3xl">
+                  {entry.number}
+                </span>
               </div>
-              <div className="flex items-center gap-2">
-                <p className="text-muted-foreground font-body text-lg">
-                  {entry.artist}
-                </p>
-                <a
-                  href={getMellopediaUrl(entry.artist)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:text-primary/80 transition-colors"
-                  title="Öppna artist på Mellopedia"
-                >
-                  <LinkSimple size={20} weight="bold" />
-                </a>
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <h2 className="font-heading font-bold text-3xl text-foreground">
+                    {entry.song}
+                  </h2>
+                  <a
+                    href={getMellopediaUrl(entry.song)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:text-primary/80 transition-colors"
+                    title="Öppna på Mellopedia"
+                  >
+                    <LinkSimple size={24} weight="bold" />
+                  </a>
+                </div>
+                <div className="flex items-center gap-2">
+                  <p className="text-muted-foreground font-body text-lg">
+                    {entry.artist}
+                  </p>
+                  <a
+                    href={getMellopediaUrl(entry.artist)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:text-primary/80 transition-colors"
+                    title="Öppna artist på Mellopedia"
+                  >
+                    <LinkSimple size={20} weight="bold" />
+                  </a>
+                </div>
               </div>
             </div>
             <Badge variant="secondary" className="font-body text-base px-3 py-1.5">
