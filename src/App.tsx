@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Users, SignOut, ArrowLeft, Sparkle, Star, MusicNotes, Palette, Television, Microphone, TextAa, UsersThree, Trophy, Heart, LinkSimple, User as UserIcon } from '@phosphor-icons/react';
+import { Users, SignOut, ArrowLeft, Sparkle, Star, MusicNotes, Palette, Television, Microphone, TextAa, UsersThree, Trophy, Heart, LinkSimple, User as UserIcon, ShareNetwork } from '@phosphor-icons/react';
 import { LoginScreen } from '@/components/LoginScreen';
 import { GroupSelection } from '@/components/GroupSelection';
 import { EntryCard } from '@/components/EntryCard';
@@ -15,6 +15,7 @@ import { RatingView } from '@/components/RatingView';
 import { MemberManagement } from '@/components/MemberManagement';
 import { Leaderboard } from '@/components/Leaderboard';
 import { PersonalLeaderboard } from '@/components/PersonalLeaderboard';
+import { SharedRatingsView } from '@/components/SharedRatingsView';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster, toast } from 'sonner';
 import { MELODIFESTIVALEN_2026, getMellopediaUrl } from '@/lib/melodifestivalen-data';
@@ -38,6 +39,7 @@ function App() {
   const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
   const [selectedHeat, setSelectedHeat] = useState<string>(HEATS[0]);
   const [viewOnlyGroupId, setViewOnlyGroupId] = useState<string | null>(null);
+  const [viewOnlyUserId, setViewOnlyUserId] = useState<string | null>(null);
   const [memberManagementOpen, setMemberManagementOpen] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showPersonalLeaderboard, setShowPersonalLeaderboard] = useState(false);
@@ -48,9 +50,14 @@ function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const groupParam = params.get('group');
+    const userParam = params.get('user');
     
     if (groupParam) {
       setViewOnlyGroupId(groupParam);
+    }
+    
+    if (userParam) {
+      setViewOnlyUserId(userParam);
     }
   }, []);
 
@@ -428,12 +435,68 @@ function App() {
     return entry.userRatings.find((ur) => ur.userId === user?.id);
   };
 
-  const isViewOnly = !user && viewOnlyGroupId && selectedGroup;
+  const handleShareRatings = () => {
+    if (!user) return;
+    
+    const shareUrl = `${window.location.origin}${window.location.pathname}?user=${user.id}`;
+    
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      toast.success('Länk kopierad!', {
+        description: 'Dela länken för att visa dina betyg',
+      });
+    }).catch(() => {
+      toast.error('Kunde inte kopiera länk');
+    });
+  };
 
-  if (!user && !viewOnlyGroupId) {
+  const isViewOnly = !user && viewOnlyGroupId && selectedGroup;
+  const isViewOnlyUser = !user && viewOnlyUserId;
+  
+  const viewOnlyUserData = isViewOnlyUser ? users?.find((u) => u.id === viewOnlyUserId) : null;
+
+  if (!user && !viewOnlyGroupId && !viewOnlyUserId) {
     return (
       <>
         <LoginScreen onLogin={handleLogin} onRegister={handleRegister} onSSOLogin={handleSSOLogin} />
+        <Toaster position="top-center" />
+      </>
+    );
+  }
+  
+  if (isViewOnlyUser && viewOnlyUserData) {
+    return (
+      <>
+        <SharedRatingsView
+          userName={viewOnlyUserData.name}
+          userAvatar={viewOnlyUserData.avatarUrl}
+          entries={entries || []}
+          userId={viewOnlyUserId!}
+        />
+        <Toaster position="top-center" />
+      </>
+    );
+  }
+  
+  if (isViewOnlyUser && !viewOnlyUserData) {
+    return (
+      <>
+        <div className="min-h-screen bg-background flex items-center justify-center px-6">
+          <div className="max-w-md text-center">
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-destructive/20 to-destructive/10 flex items-center justify-center mb-6 mx-auto">
+              <UserIcon size={48} weight="duotone" className="text-destructive" />
+            </div>
+            <h2 className="font-heading font-bold text-3xl text-foreground mb-3">
+              Användaren hittades inte
+            </h2>
+            <p className="font-body text-muted-foreground mb-6">
+              Denna delningslänk är ogiltig eller användaren har tagit bort sitt konto.
+            </p>
+            <Button onClick={() => window.location.href = window.location.origin} className="gap-2">
+              <ArrowLeft size={20} />
+              Gå till startsidan
+            </Button>
+          </div>
+        </div>
         <Toaster position="top-center" />
       </>
     );
@@ -861,6 +924,15 @@ function App() {
                       <Button
                         variant="outline"
                         size="sm"
+                        onClick={handleShareRatings}
+                        className="gap-2 border-accent/30 hover:bg-accent/5"
+                      >
+                        <ShareNetwork size={18} weight="duotone" />
+                        Dela mina betyg
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => setShowGroupSelection(true)}
                         className="gap-2"
                       >
@@ -878,6 +950,14 @@ function App() {
                       </Button>
                     </div>
                     <div className="sm:hidden flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleShareRatings}
+                        className="gap-2"
+                      >
+                        <ShareNetwork size={18} weight="duotone" />
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
@@ -968,14 +1048,24 @@ function App() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <div className="mb-6">
-                    <h2 className="font-heading font-bold text-3xl text-foreground mb-2 flex items-center gap-3">
-                      <Heart size={32} weight="duotone" className="text-accent" />
-                      Mina favoriter
-                    </h2>
-                    <p className="font-body text-muted-foreground">
-                      Dina bäst betygsatta bidrag
-                    </p>
+                  <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
+                    <div>
+                      <h2 className="font-heading font-bold text-3xl text-foreground mb-2 flex items-center gap-3">
+                        <Heart size={32} weight="duotone" className="text-accent" />
+                        Mina favoriter
+                      </h2>
+                      <p className="font-body text-muted-foreground">
+                        Dina bäst betygsatta bidrag
+                      </p>
+                    </div>
+                    <Button
+                      onClick={handleShareRatings}
+                      variant="outline"
+                      className="gap-2 border-accent/30 hover:bg-accent/5"
+                    >
+                      <ShareNetwork size={20} weight="duotone" />
+                      Dela mina betyg
+                    </Button>
                   </div>
                   <PersonalLeaderboard entries={entries || []} userId={user!.id} />
                 </motion.div>
