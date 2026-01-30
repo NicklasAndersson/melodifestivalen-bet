@@ -72,25 +72,34 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
         backgroundColor: '#faf9fc',
         logging: false,
         useCORS: true,
+        allowTaint: true,
       });
 
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.download = `melodifestivalen-2026-${userName.toLowerCase().replace(/\s+/g, '-')}.png`;
-          link.href = url;
-          link.click();
-          URL.revokeObjectURL(url);
-          
-          toast.success('Bild nedladdad!', {
-            description: 'Din topplista har exporterats som bild',
-          });
-        }
+      const blob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob((blob) => resolve(blob), 'image/png', 1.0);
+      });
+
+      if (!blob) {
+        throw new Error('Failed to create image blob');
+      }
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.download = `melodifestivalen-2026-${userName.toLowerCase().replace(/\s+/g, '-')}.png`;
+      link.href = url;
+      link.click();
+      
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 100);
+      
+      toast.success('Bild nedladdad!', {
+        description: 'Din topplista har exporterats som bild',
       });
     } catch (error) {
+      console.error('Export error:', error);
       toast.error('Kunde inte exportera bild', {
-        description: 'Försök igen',
+        description: 'Försök igen eller använd PDF-export',
       });
     } finally {
       setIsExporting(false);
