@@ -135,63 +135,6 @@ function App() {
     setEntries(initialEntries);
   };
 
-  const handleLogin = async (email: string, password: string) => {
-    const storedUsers = users || [];
-    const foundUser = storedUsers.find(
-      (u) => u.email === email && u.password === password
-    );
-
-    if (foundUser) {
-      setUser({
-        id: foundUser.id,
-        email: foundUser.email,
-        name: foundUser.name,
-        avatarUrl: foundUser.avatarUrl,
-      });
-      setCurrentUserId(foundUser.id);
-      toast.success('Välkommen!', {
-        description: `Inloggad som ${foundUser.name}`,
-      });
-    } else {
-      toast.error('Fel e-post eller lösenord', {
-        description: 'Kontrollera dina uppgifter och försök igen',
-      });
-      throw new Error('Invalid credentials');
-    }
-  };
-
-  const handleRegister = async (email: string, password: string, name: string) => {
-    const storedUsers = users || [];
-    
-    if (storedUsers.find((u) => u.email === email)) {
-      toast.error('E-posten är redan registrerad', {
-        description: 'Använd en annan e-postadress eller logga in',
-      });
-      throw new Error('Email already exists');
-    }
-
-    const newUser: User = {
-      id: `user-${Date.now()}`,
-      email,
-      password,
-      name,
-      authProvider: 'email',
-      createdAt: Date.now(),
-    };
-
-    setUsers((current) => [...(current || []), newUser]);
-    setUser({
-      id: newUser.id,
-      email: newUser.email,
-      name: newUser.name,
-    });
-    setCurrentUserId(newUser.id);
-    
-    toast.success('Konto skapat!', {
-      description: `Välkommen ${name}`,
-    });
-  };
-
   const handleSSOLogin = async () => {
     try {
       const githubUser = await window.spark.user();
@@ -459,7 +402,7 @@ function App() {
   if (!user && !viewOnlyGroupId && !viewOnlyUserId) {
     return (
       <>
-        <LoginScreen onLogin={handleLogin} onRegister={handleRegister} onSSOLogin={handleSSOLogin} />
+        <LoginScreen onSSOLogin={handleSSOLogin} />
         <Toaster position="top-center" />
       </>
     );

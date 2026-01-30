@@ -1,39 +1,14 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { MusicNotes, SignIn, UserPlus, GithubLogo } from '@phosphor-icons/react';
+import { MusicNotes, GithubLogo } from '@phosphor-icons/react';
 import { motion } from 'framer-motion';
-import { Separator } from '@/components/ui/separator';
 
 interface LoginScreenProps {
-  onLogin: (email: string, password: string) => Promise<void>;
-  onRegister: (email: string, password: string, name: string) => Promise<void>;
   onSSOLogin: () => Promise<void>;
 }
 
-export function LoginScreen({ onLogin, onRegister, onSSOLogin }: LoginScreenProps) {
-  const [isRegistering, setIsRegistering] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [loading, setLoading] = useState(false);
+export function LoginScreen({ onSSOLogin }: LoginScreenProps) {
   const [ssoLoading, setSSOLoading] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      if (isRegistering) {
-        await onRegister(email, password, name);
-      } else {
-        await onLogin(email, password);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSSOLogin = async () => {
     setSSOLoading(true);
@@ -65,117 +40,20 @@ export function LoginScreen({ onLogin, onRegister, onSSOLogin }: LoginScreenProp
             </h1>
             
             <p className="font-body text-muted-foreground text-lg">
-              {isRegistering ? 'Skapa ett konto' : 'Logga in för att betygsätta'}
+              Logga in för att betygsätta
             </p>
           </div>
 
-          <div className="space-y-4">
-            <Button
-              type="button"
-              size="lg"
-              variant="outline"
-              className="w-full font-heading gap-3 border-2 hover:bg-accent/10 hover:border-accent"
-              onClick={handleSSOLogin}
-              disabled={ssoLoading}
-            >
-              <GithubLogo size={24} weight="fill" />
-              {ssoLoading ? 'Loggar in...' : 'Fortsätt med GitHub'}
-            </Button>
-
-            <div className="relative">
-              <Separator className="my-6" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="bg-card px-3 text-xs font-body text-muted-foreground uppercase">
-                  eller
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4 mt-6">
-            {isRegistering && (
-              <div className="space-y-2">
-                <Label htmlFor="name" className="font-body">
-                  Namn
-                </Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Ditt namn"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  className="font-body"
-                />
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="email" className="font-body">
-                E-post
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="din@email.se"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="font-body"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password" className="font-body">
-                Lösenord
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                className="font-body"
-              />
-              {isRegistering && (
-                <p className="text-xs text-muted-foreground font-body">
-                  Minst 6 tecken
-                </p>
-              )}
-            </div>
-
-            <Button
-              type="submit"
-              size="lg"
-              className="w-full font-heading gap-3 bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg"
-              disabled={loading}
-            >
-              {isRegistering ? (
-                <>
-                  <UserPlus size={24} weight="bold" />
-                  {loading ? 'Skapar konto...' : 'Skapa konto'}
-                </>
-              ) : (
-                <>
-                  <SignIn size={24} weight="bold" />
-                  {loading ? 'Loggar in...' : 'Logga in'}
-                </>
-              )}
-            </Button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => setIsRegistering(!isRegistering)}
-              className="font-body text-sm text-primary hover:underline"
-            >
-              {isRegistering
-                ? 'Har du redan ett konto? Logga in'
-                : 'Har du inget konto? Registrera dig'}
-            </button>
-          </div>
+          <Button
+            type="button"
+            size="lg"
+            className="w-full font-heading gap-3 bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg"
+            onClick={handleSSOLogin}
+            disabled={ssoLoading}
+          >
+            <GithubLogo size={24} weight="fill" />
+            {ssoLoading ? 'Loggar in...' : 'Fortsätt med GitHub'}
+          </Button>
         </div>
       </motion.div>
     </div>

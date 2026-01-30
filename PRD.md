@@ -1,6 +1,6 @@
 # Planning Guide
 
-A Melodifestivalen 2026 rating application where users can log in with GitHub SSO or email/password, create or join groups, and evaluate each song entry from a specific heat with star ratings and comments. Group members can see each other's ratings. Voting for each heat opens one day before it airs.
+A Melodifestivalen 2026 rating application where users log in with GitHub SSO, create or join groups, and evaluate each song entry from a specific heat with star ratings and comments. Group members can see each other's ratings. Voting for each heat opens one day before it airs.
 
 **Experience Qualities**: 
 1. **Collaborative** - The app should foster group participation where friends can see and compare ratings in real-time
@@ -14,9 +14,9 @@ This is a multi-user collaborative application with authentication, group manage
 
 ### GitHub SSO Authentication
 - **Functionality**: Users authenticate with their GitHub account to access the application
-- **Purpose**: Provide secure identity management and enable user-specific ratings without custom auth
+- **Purpose**: Provide secure identity management and enable user-specific ratings using GitHub authentication
 - **Trigger**: App loads without authenticated user
-- **Progression**: App loads → Login screen displays → User clicks "Logga in med GitHub" → GitHub authentication flow → User authenticated → Redirect to group selection
+- **Progression**: App loads → Login screen displays → User clicks "Fortsätt med GitHub" → GitHub authentication flow → User authenticated → Redirect to group selection
 - **Success criteria**: Users can successfully log in and their GitHub profile (avatar, username) is displayed throughout the app
 
 ### Create and Join Groups
