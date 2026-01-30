@@ -3,14 +3,15 @@ import { Group } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
-import { Users, Plus, Copy, UserPlus, SignOut } from '@phosphor-icons/react';
+import { Users, Plus, Copy, UserPlus, SignOut, Crown } from '@phosphor-icons/react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 
 interface GroupSelectionProps {
-  user: { login: string; avatarUrl: string };
+  user: { login: string; avatarUrl: string; id: string };
   groups: Group[];
   onCreateGroup: (name: string) => void;
   onSelectGroup: (groupId: string) => void;
@@ -144,50 +145,66 @@ export function GroupSelection({
           </motion.div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {groups.map((group, index) => (
-              <motion.div
-                key={group.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-              >
-                <Card
-                  className="cursor-pointer hover:shadow-lg transition-all hover:border-primary/50"
-                  onClick={() => onSelectGroup(group.id)}
+            {groups.map((group, index) => {
+              const isOwner = group.ownerId === user.id;
+              
+              return (
+                <motion.div
+                  key={group.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
                 >
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                        <Users size={24} weight="duotone" className="text-primary" />
+                  <Card
+                    className="cursor-pointer hover:shadow-lg transition-all hover:border-primary/50"
+                    onClick={() => onSelectGroup(group.id)}
+                  >
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                          <Users size={24} weight="duotone" className="text-primary" />
+                        </div>
+                        {isOwner && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyGroupLink(group.id);
+                            }}
+                          >
+                            <Copy size={18} />
+                          </Button>
+                        )}
                       </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          copyGroupLink(group.id);
-                        }}
-                      >
-                        <Copy size={18} />
-                      </Button>
-                    </div>
-                    
-                    <h3 className="font-heading font-bold text-xl text-foreground mb-2">
-                      {group.name}
-                    </h3>
-                    
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-body text-muted-foreground">
-                        {group.memberIds.length} {group.memberIds.length === 1 ? 'medlem' : 'medlemmar'}
-                      </span>
-                      <span className="font-body text-muted-foreground">
-                        av {group.ownerName}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+                      
+                      <h3 className="font-heading font-bold text-xl text-foreground mb-2">
+                        {group.name}
+                      </h3>
+                      
+                      <div className="flex items-center justify-between text-sm gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-body text-muted-foreground">
+                            {group.memberIds.length} {group.memberIds.length === 1 ? 'medlem' : 'medlemmar'}
+                          </span>
+                          {isOwner && (
+                            <Badge variant="secondary" className="font-body text-xs px-2 py-0 gap-1">
+                              <Crown size={12} weight="fill" className="text-gold" />
+                              Ägare
+                            </Badge>
+                          )}
+                        </div>
+                        {!isOwner && (
+                          <span className="font-body text-muted-foreground text-xs truncate">
+                            av {group.ownerName}
+                          </span>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </div>

@@ -671,15 +671,17 @@ function App() {
                       className="w-10 h-10 rounded-full border-2 border-border"
                     />
                     <div className="hidden sm:flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setMemberManagementOpen(true)}
-                        className="gap-2"
-                      >
-                        <UsersThree size={18} weight="duotone" />
-                        Medlemmar
-                      </Button>
+                      {selectedGroup && selectedGroup.ownerId === user!.id && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setMemberManagementOpen(true)}
+                          className="gap-2 border-primary/30 hover:bg-primary/5"
+                        >
+                          <UsersThree size={18} weight="duotone" />
+                          Hantera medlemmar
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"

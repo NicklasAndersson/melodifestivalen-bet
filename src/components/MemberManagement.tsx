@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Users, UserPlus, X, Crown, User } from '@phosphor-icons/react';
+import { Users, UserPlus, X, Crown, User, Link, Copy } from '@phosphor-icons/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 
@@ -32,6 +32,14 @@ export function MemberManagement({
   const [isAdding, setIsAdding] = useState(false);
 
   const isOwner = group.ownerId === currentUserId;
+  const shareUrl = `${window.location.origin}${window.location.pathname}?group=${group.id}`;
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(shareUrl);
+    toast.success('Länk kopierad!', {
+      description: 'Dela länken med andra för att bjuda in dem till gruppen',
+    });
+  };
 
   const handleAddMember = async () => {
     if (!newMemberId.trim()) return;
@@ -40,7 +48,9 @@ export function MemberManagement({
     try {
       onAddMember(newMemberId.trim());
       setNewMemberId('');
-      toast.success('Medlem tillagd!');
+      toast.success('Medlem tillagd!', {
+        description: `${newMemberId.trim()} har lagts till i gruppen`,
+      });
     } catch (error) {
       toast.error('Kunde inte lägga till medlem');
     } finally {
@@ -48,14 +58,16 @@ export function MemberManagement({
     }
   };
 
-  const handleRemoveMember = (userId: string) => {
+  const handleRemoveMember = (userId: string, userName: string) => {
     if (userId === group.ownerId) {
       toast.error('Kan inte ta bort gruppens ägare');
       return;
     }
     
     onRemoveMember(userId);
-    toast.success('Medlem borttagen');
+    toast.success('Medlem borttagen', {
+      description: `${userName} har tagits bort från gruppen`,
+    });
   };
 
   return (
@@ -76,17 +88,48 @@ export function MemberManagement({
 
         <div className="flex-1 overflow-hidden flex flex-col gap-4">
           {isOwner && (
+            <Card className="p-4 border-2 border-primary/30 bg-primary/5">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Link size={20} weight="duotone" className="text-primary" />
+                  <Label className="font-body font-semibold text-foreground">
+                    Bjud in till gruppen
+                  </Label>
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    value={shareUrl}
+                    readOnly
+                    className="font-body flex-1 text-sm bg-background"
+                  />
+                  <Button
+                    onClick={handleCopyLink}
+                    variant="secondary"
+                    className="font-body gap-2 shrink-0"
+                  >
+                    <Copy size={20} weight="bold" />
+                    Kopiera
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground font-body">
+                  Dela länken så kan andra gå med i gruppen direkt
+                </p>
+              </div>
+            </Card>
+          )}
+
+          {isOwner && (
             <Card className="p-4 border-2 border-accent/30 bg-accent/5">
               <div className="space-y-3">
                 <Label htmlFor="new-member" className="font-body font-semibold text-foreground">
-                  Lägg till medlem
+                  Lägg till medlem manuellt
                 </Label>
                 <div className="flex gap-2">
                   <Input
                     id="new-member"
                     value={newMemberId}
                     onChange={(e) => setNewMemberId(e.target.value)}
-                    placeholder="Ange användarnamn eller ID"
+                    placeholder="Ange GitHub användarnamn"
                     className="font-body flex-1"
                     onKeyDown={(e) => e.key === 'Enter' && handleAddMember()}
                   />
@@ -100,7 +143,7 @@ export function MemberManagement({
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground font-body">
-                  Medlemmen måste ha loggat in på appen minst en gång
+                  Lägg till någon som redan har ett konto
                 </p>
               </div>
             </Card>
@@ -170,7 +213,7 @@ export function MemberManagement({
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  onClick={() => handleRemoveMember(member.id)}
+                                  onClick={() => handleRemoveMember(member.id, member.name)}
                                   className="shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
                                 >
                                   <X size={20} weight="bold" />
