@@ -32,7 +32,6 @@ const iconMap = {
 function App() {
   const [user, setUser] = useState<{ id: string; email: string; name: string; avatarUrl?: string } | null>(null);
   const [users, setUsers] = useKV<User[]>('mello-users', []);
-  const [currentUserId, setCurrentUserId] = useKV<string | null>('mello-current-user', null);
   const [groups, setGroups] = useKV<Group[]>('mello-groups', []);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [entries, setEntries] = useKV<Entry[]>('mello-entries', []);
@@ -63,22 +62,7 @@ function App() {
     }
   }, []);
 
-  useEffect(() => {
-    if (currentUserId && users) {
-      const storedUsers = users || [];
-      const foundUser = storedUsers.find((u) => u.id === currentUserId);
-      if (foundUser) {
-        setUser({
-          id: foundUser.id,
-          email: foundUser.email,
-          name: foundUser.name,
-          avatarUrl: foundUser.avatarUrl,
-        });
-      } else {
-        setCurrentUserId(null);
-      }
-    }
-  }, [currentUserId, users]);
+
 
   useEffect(() => {
     if (viewOnlyGroupId && user) {
@@ -135,6 +119,18 @@ function App() {
     setEntries(initialEntries);
   };
 
+  const handleSelectExistingUser = (selectedUser: User) => {
+    setUser({
+      id: selectedUser.id,
+      email: selectedUser.email,
+      name: selectedUser.name,
+      avatarUrl: selectedUser.avatarUrl,
+    });
+    toast.success('Välkommen tillbaka!', {
+      description: `Inloggad som ${selectedUser.name}`,
+    });
+  };
+
   const handleSSOLogin = async () => {
     try {
       const githubUser = await window.spark.user();
@@ -153,7 +149,6 @@ function App() {
           name: foundUser.name,
           avatarUrl: foundUser.avatarUrl,
         });
-        setCurrentUserId(foundUser.id);
         toast.success('Välkommen tillbaka!', {
           description: `Inloggad som ${foundUser.name}`,
         });
@@ -174,7 +169,6 @@ function App() {
           name: newUser.name,
           avatarUrl: newUser.avatarUrl,
         });
-        setCurrentUserId(newUser.id);
         
         toast.success('Konto skapat!', {
           description: `Välkommen ${newUser.name}`,
@@ -190,7 +184,6 @@ function App() {
 
   const handleLogout = () => {
     setUser(null);
-    setCurrentUserId(null);
     setSelectedGroupId(null);
     setShowGroupSelection(false);
     toast.success('Utloggad');
@@ -413,7 +406,11 @@ function App() {
   if (!user && !viewOnlyGroupId && !viewOnlyUserId) {
     return (
       <>
-        <LoginScreen onSSOLogin={handleSSOLogin} />
+        <LoginScreen 
+          onSSOLogin={handleSSOLogin}
+          existingUsers={users || []}
+          onSelectUser={handleSelectExistingUser}
+        />
         <Toaster position="top-center" />
       </>
     );
