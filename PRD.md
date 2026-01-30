@@ -28,6 +28,13 @@ This is a multi-user collaborative application with authentication, group manage
   - Join: Click "Gå med i grupp" OR use shared link → Enter group ID/paste link → Join group → Redirect to heat view
 - **Success criteria**: Groups are created with unique IDs, shareable links work, members can see group member count
 
+### Manage Group Members (Owner Only)
+- **Functionality**: Group owners can view all members, add new members by username/ID, and remove existing members
+- **Purpose**: Give group owners control over membership to maintain group privacy and relevance
+- **Trigger**: Group owner clicks "Medlemmar" button in the heat view header
+- **Progression**: Click "Medlemmar" → Dialog displays member list → Owner can add member by username → Member added to group OR Owner can remove member → Member removed from group → Changes persist
+- **Success criteria**: Only group owners see add/remove options, all members can view the list, owner cannot remove themselves, changes save immediately
+
 ### Heat-Based Entry Viewing
 - **Functionality**: Display entries organized by deltävling (heat) with tab navigation between heats
 - **Purpose**: Keep users focused on rating one heat at a time, matching the actual competition format
@@ -58,6 +65,9 @@ This is a multi-user collaborative application with authentication, group manage
 - **Unrated Entries**: Display entries with 0 score and empty progress bar when user hasn't rated yet
 - **Switching Groups**: Allow users to return to group selection to switch between multiple groups
 - **Data Persistence**: All groups, memberships, and user ratings automatically saved using useKV with unique keys
+- **Owner Removal Protection**: Group owner cannot remove themselves from the group
+- **Duplicate Member**: Show info toast when trying to add a member who's already in the group
+- **Non-Owner Access**: Non-owner members can view the member list but cannot add or remove members
 
 ## Design Direction
 
@@ -100,20 +110,23 @@ Animations should enhance the feeling of social interaction and shared experienc
 ## Component Selection
 
 - **Components**: 
-  - Dialog (create/join group forms with validation)
-  - Card (entry display with gradient backgrounds, group selection cards)
+  - Dialog (create/join group forms with validation, member management)
+  - Card (entry display with gradient backgrounds, group selection cards, member cards)
   - Tabs (heat/deltävling navigation)
   - Textarea (comments for each category)
   - Button (primary actions in hot pink, secondary in purple tones)
-  - ScrollArea (for long lists of entries and ratings)
-  - Badge (displaying heat/semifinal information, user indicators)
+  - ScrollArea (for long lists of entries, ratings, and members)
+  - Badge (displaying heat/semifinal information, user indicators, owner badge)
   - Avatar (GitHub profile pictures for group members)
+  - Input (for adding members by username/ID)
   
 - **Customizations**: 
   - Custom star rating component (using phosphor-icons Star/StarFill) with purple-to-gold gradient fill
   - Entry card component showing user's personal score
   - Group member rating cards showing all users' scores side-by-side
   - Heat tab navigation with active state highlighting
+  - Member management dialog with owner-only add/remove functionality
+  - Member list with visual distinction for group owner (crown icon)
   
 - **States**: 
   - Buttons: Default (solid color), Hover (slight brightness increase + lift), Active (scale down), Disabled (low opacity + no interaction)
@@ -124,14 +137,18 @@ Animations should enhance the feeling of social interaction and shared experienc
 - **Icon Selection**: 
   - SignIn (GitHub authentication)
   - Users (groups, members)
+  - UsersThree (member management button)
   - Plus (create group, add rating)
-  - UserPlus (join group)
+  - UserPlus (join group, add member)
   - Copy (share group link)
   - SignOut (logout)
   - Star/StarFill (ratings)
   - MusicNotes (entry cards)
   - Microphone, Palette, Television, TextAa (category icons)
   - Sparkle (score indicators)
+  - Crown (group owner indicator)
+  - User (regular member indicator)
+  - X (remove member)
   
 - **Spacing**: 
   - Container padding: px-6 py-8 (desktop), px-4 py-6 (mobile)

@@ -25,12 +25,18 @@ export interface Entry {
   userRatings: UserRating[];
 }
 
+export interface GroupMember {
+  id: string;
+  name: string;
+}
+
 export interface Group {
   id: string;
   name: string;
   ownerId: string;
   ownerName: string;
   memberIds: string[];
+  members?: GroupMember[];
   createdAt: number;
 }
 

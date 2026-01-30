@@ -7,11 +7,12 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Users, SignOut, ArrowLeft, Sparkle, Star, MusicNotes, Palette, Television, Microphone, TextAa } from '@phosphor-icons/react';
+import { Users, SignOut, ArrowLeft, Sparkle, Star, MusicNotes, Palette, Television, Microphone, TextAa, UsersThree } from '@phosphor-icons/react';
 import { LoginScreen } from '@/components/LoginScreen';
 import { GroupSelection } from '@/components/GroupSelection';
 import { EntryCard } from '@/components/EntryCard';
 import { RatingView } from '@/components/RatingView';
+import { MemberManagement } from '@/components/MemberManagement';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster, toast } from 'sonner';
 import { MELODIFESTIVALEN_2025 } from '@/lib/melodifestivalen-data';
@@ -32,6 +33,7 @@ function App() {
   const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
   const [selectedHeat, setSelectedHeat] = useState<string>(HEATS[0]);
   const [viewOnlyGroupId, setViewOnlyGroupId] = useState<string | null>(null);
+  const [memberManagementOpen, setMemberManagementOpen] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -71,6 +73,29 @@ function App() {
     if ((entries || []).length === 0) {
       initializeEntries();
     }
+  }, []);
+
+  useEffect(() => {
+    setGroups((current) => {
+      const groups = current || [];
+      let needsUpdate = false;
+      
+      const updatedGroups = groups.map((group) => {
+        if (!group.members || group.members.length === 0) {
+          needsUpdate = true;
+          return {
+            ...group,
+            members: group.memberIds.map((id) => ({
+              id,
+              name: id === group.ownerId ? group.ownerName : id,
+            })),
+          };
+        }
+        return group;
+      });
+      
+      return needsUpdate ? updatedGroups : groups;
+    });
   }, []);
 
   const initializeEntries = () => {
@@ -119,6 +144,7 @@ function App() {
       ownerId: user.id,
       ownerName: user.login,
       memberIds: [user.id],
+      members: [{ id: user.id, name: user.login }],
       createdAt: Date.now(),
     };
 
@@ -153,7 +179,11 @@ function App() {
 
       return groups.map((g) =>
         g.id === extractedId
-          ? { ...g, memberIds: [...g.memberIds, user.id] }
+          ? { 
+              ...g, 
+              memberIds: [...g.memberIds, user.id],
+              members: [...(g.members || []), { id: user.id, name: user.login }]
+            }
           : g
       );
     });
@@ -231,6 +261,46 @@ function App() {
           return updatedEntry;
         }
         return entry;
+      });
+    });
+  };
+
+  const handleAddMember = (memberId: string) => {
+    if (!selectedGroupId) return;
+
+    setGroups((current) => {
+      const groups = current || [];
+      return groups.map((g) => {
+        if (g.id === selectedGroupId) {
+          if (g.memberIds.includes(memberId)) {
+            toast.info('Medlemmen finns redan i gruppen');
+            return g;
+          }
+          return {
+            ...g,
+            memberIds: [...g.memberIds, memberId],
+            members: [...(g.members || []), { id: memberId, name: memberId }],
+          };
+        }
+        return g;
+      });
+    });
+  };
+
+  const handleRemoveMember = (memberId: string) => {
+    if (!selectedGroupId) return;
+
+    setGroups((current) => {
+      const groups = current || [];
+      return groups.map((g) => {
+        if (g.id === selectedGroupId) {
+          return {
+            ...g,
+            memberIds: g.memberIds.filter((id) => id !== memberId),
+            members: (g.members || []).filter((m) => m.id !== memberId),
+          };
+        }
+        return g;
       });
     });
   };
@@ -604,6 +674,15 @@ function App() {
                       <Button
                         variant="outline"
                         size="sm"
+                        onClick={() => setMemberManagementOpen(true)}
+                        className="gap-2"
+                      >
+                        <UsersThree size={18} weight="duotone" />
+                        Medlemmar
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={handleBackToGroups}
                         className="gap-2"
                       >
@@ -665,6 +744,17 @@ function App() {
           </div>
         </div>
       </div>
+
+      {selectedGroup && (
+        <MemberManagement
+          open={memberManagementOpen}
+          onOpenChange={setMemberManagementOpen}
+          group={selectedGroup}
+          currentUserId={user!.id}
+          onAddMember={handleAddMember}
+          onRemoveMember={handleRemoveMember}
+        />
+      )}
 
       <Toaster position="top-center" />
     </>
