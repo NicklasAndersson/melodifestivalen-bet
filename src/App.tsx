@@ -628,12 +628,12 @@ function App() {
                   </div>
 
                   <Tabs value={selectedHeat} onValueChange={setSelectedHeat} className="w-full">
-                    <TabsList className="w-full grid grid-cols-4 h-auto p-1">
+                    <TabsList className="w-full grid grid-cols-2 sm:grid-cols-4 h-auto p-1 gap-1">
                       {HEATS.map((heat) => (
                         <TabsTrigger
                           key={heat}
                           value={heat}
-                          className="font-body text-sm sm:text-base py-3"
+                          className="font-body text-xs sm:text-sm md:text-base py-2.5 sm:py-3 px-2"
                         >
                           {heat}
                         </TabsTrigger>
@@ -867,29 +867,29 @@ function App() {
                     setSelectedHeat(value);
                   }
                 }} className="w-full">
-                  <TabsList className="w-full grid grid-cols-6 h-auto p-1">
+                  <TabsList className="w-full grid grid-cols-3 sm:grid-cols-6 h-auto p-1 gap-1">
                     {HEATS.map((heat) => (
                       <TabsTrigger
                         key={heat}
                         value={heat}
-                        className="font-body text-sm sm:text-base py-3"
+                        className="font-body text-xs sm:text-sm md:text-base py-2.5 sm:py-3 px-2"
                       >
                         {heat}
                       </TabsTrigger>
                     ))}
                     <TabsTrigger
                       value="leaderboard"
-                      className="font-body text-sm sm:text-base py-3 gap-2"
+                      className="font-body text-xs sm:text-sm md:text-base py-2.5 sm:py-3 px-2 gap-1.5"
                     >
-                      <Trophy size={18} weight="duotone" />
-                      Grupp
+                      <Trophy size={16} weight="duotone" className="shrink-0" />
+                      <span className="truncate">Grupp</span>
                     </TabsTrigger>
                     <TabsTrigger
                       value="personal"
-                      className="font-body text-sm sm:text-base py-3 gap-2"
+                      className="font-body text-xs sm:text-sm md:text-base py-2.5 sm:py-3 px-2 gap-1.5"
                     >
-                      <Heart size={18} weight="duotone" />
-                      Mina
+                      <Heart size={16} weight="duotone" className="shrink-0" />
+                      <span className="truncate">Mina</span>
                     </TabsTrigger>
                   </TabsList>
                 </Tabs>
