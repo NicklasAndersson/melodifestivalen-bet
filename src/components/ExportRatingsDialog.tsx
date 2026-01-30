@@ -2,10 +2,7 @@ import { useState, useRef } from 'react';
 import { Entry } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
-import { Sparkle, Star, Crown, Medal, Download, Image as ImageIcon, FilePdf, MusicNotes, Palette, Television, Microphone, TextAa } from '@phosphor-icons/react';
+import { Download, Image as ImageIcon, FilePdf } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -19,12 +16,12 @@ interface ExportRatingsDialogProps {
   userName: string;
 }
 
-const iconMap = {
-  MusicNotes,
-  Palette,
-  Television,
-  Microphone,
-  TextAa,
+const iconEmojiMap: Record<string, string> = {
+  MusicNotes: '🎵',
+  Palette: '🎨',
+  Television: '📺',
+  Microphone: '🎤',
+  TextAa: '📝',
 };
 
 export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userName }: ExportRatingsDialogProps) {
@@ -45,23 +42,6 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
     .sort((a, b) => b.rating.totalScore - a.rating.totalScore)
     .slice(0, 10);
 
-  const getPositionIcon = (position: number) => {
-    switch (position) {
-      case 0:
-        return <Crown size={20} weight="fill" className="text-gold" />;
-      case 1:
-        return <Medal size={20} weight="fill" className="text-[#87CEEB]" />;
-      case 2:
-        return <Medal size={20} weight="fill" className="text-[#CD7F32]" />;
-      default:
-        return (
-          <span className="font-heading font-bold text-lg text-muted-foreground">
-            {position + 1}
-          </span>
-        );
-    }
-  };
-
   const exportAsImage = async () => {
     if (!exportRef.current) return;
 
@@ -73,6 +53,12 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
         logging: false,
         useCORS: true,
         allowTaint: true,
+        onclone: (clonedDoc) => {
+          const clonedElement = clonedDoc.querySelector('[data-export-content]');
+          if (clonedElement instanceof HTMLElement) {
+            clonedElement.style.backgroundColor = '#faf9fc';
+          }
+        }
       });
 
       canvas.toBlob((blob) => {
@@ -121,6 +107,12 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
         logging: false,
         useCORS: true,
         allowTaint: true,
+        onclone: (clonedDoc) => {
+          const clonedElement = clonedDoc.querySelector('[data-export-content]');
+          if (clonedElement instanceof HTMLElement) {
+            clonedElement.style.backgroundColor = '#faf9fc';
+          }
+        }
       });
 
       const imgData = canvas.toDataURL('image/png');
@@ -272,11 +264,11 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
                         flexShrink: 0
                       }}>
                         {index === 0 ? (
-                          <Crown size={20} weight="fill" style={{ color: '#dcb464' }} />
+                          <span style={{ fontSize: '24px', color: '#dcb464' }}>👑</span>
                         ) : index === 1 ? (
-                          <Medal size={20} weight="fill" style={{ color: '#87CEEB' }} />
+                          <span style={{ fontSize: '24px', color: '#87CEEB' }}>🥈</span>
                         ) : index === 2 ? (
-                          <Medal size={20} weight="fill" style={{ color: '#CD7F32' }} />
+                          <span style={{ fontSize: '24px', color: '#CD7F32' }}>🥉</span>
                         ) : (
                           <span style={{ 
                             fontFamily: 'Quicksand, sans-serif', 
@@ -323,7 +315,7 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
                               {item.entry.heat}
                             </span>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <Sparkle size={16} weight="fill" style={{ color: '#dcb464' }} />
+                              <span style={{ fontSize: '16px', color: '#dcb464' }}>✨</span>
                               <span style={{ 
                                 fontFamily: 'Quicksand, sans-serif', 
                                 fontWeight: 'bold', 
@@ -344,7 +336,7 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
                           borderTop: '1px solid rgba(212, 195, 224, 0.5)' 
                         }}>
                           {CATEGORIES.map((category) => {
-                            const Icon = iconMap[category.icon as keyof typeof iconMap];
+                            const emoji = iconEmojiMap[category.icon];
                             const categoryRating = item.rating.ratings[category.key as CategoryKey];
                             
                             return (
@@ -359,7 +351,7 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
                                   justifyContent: 'center',
                                   flexShrink: 0
                                 }}>
-                                  <Icon size={14} weight="duotone" style={{ color: '#ce64ad' }} />
+                                  <span style={{ fontSize: '12px' }}>{emoji}</span>
                                 </div>
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                   <div style={{ 
@@ -374,12 +366,16 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
                                   </div>
                                   <div style={{ display: 'flex', gap: '2px', marginTop: '2px' }}>
                                     {[...Array(5)].map((_, i) => (
-                                      <Star
+                                      <span
                                         key={i}
-                                        size={10}
-                                        weight={i < categoryRating.rating ? 'fill' : 'regular'}
-                                        style={{ color: i < categoryRating.rating ? '#dcb464' : 'rgba(122, 107, 152, 0.3)' }}
-                                      />
+                                        style={{ 
+                                          fontSize: '10px',
+                                          color: i < categoryRating.rating ? '#dcb464' : 'rgba(122, 107, 152, 0.3)',
+                                          lineHeight: 1
+                                        }}
+                                      >
+                                        ★
+                                      </span>
                                     ))}
                                   </div>
                                 </div>
