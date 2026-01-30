@@ -673,7 +673,7 @@ function App() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <AnimatePresence mode="popLayout">
                     {heatEntries.map((entry, index) => {
-                      const groupAverage = entry.userRatings.length > 0
+                        ? entry.userRatings.reduce((sum, ur) => sum + ur.totalScore, 0) / entry.userRatings.length
                         ? entry.userRatings.reduce((sum, ur) => sum + ur.totalScore, 0) / entry.userRatings.length
                         : 0;
 
