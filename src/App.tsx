@@ -5,13 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { SignOut, ArrowLeft, Sparkle, Star, Trophy, Heart, Download, Globe, UserCircle } from '@phosphor-icons/react';
+import { SignOut, ArrowLeft, Sparkle, Star, Trophy, Heart, Download, Globe, UserCircle, Users } from '@phosphor-icons/react';
 import { SSOLoginScreen } from '@/components/SSOLoginScreen';
 import { ProfileSelector } from '@/components/ProfileSelector';
 import { EntryCard } from '@/components/EntryCard';
 import { RatingView } from '@/components/RatingView';
 import { GlobalLeaderboard } from '@/components/GlobalLeaderboard';
 import { PersonalLeaderboard } from '@/components/PersonalLeaderboard';
+import { GroupLeaderboard } from '@/components/GroupLeaderboard';
 import { ExportRatingsDialog } from '@/components/ExportRatingsDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster, toast } from 'sonner';
@@ -27,6 +28,7 @@ function App() {
   const [selectedHeat, setSelectedHeat] = useState<string>(HEATS[0]);
   const [showGlobalLeaderboard, setShowGlobalLeaderboard] = useState(false);
   const [showPersonalLeaderboard, setShowPersonalLeaderboard] = useState(false);
+  const [showGroupLeaderboard, setShowGroupLeaderboard] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   
   const CURRENT_DATA_VERSION = 3000;
@@ -322,6 +324,29 @@ function App() {
     );
   }
 
+  if (showGroupLeaderboard) {
+    return (
+      <>
+        <div className="min-h-screen bg-background p-4 sm:p-6">
+          <div className="max-w-5xl mx-auto">
+            <div className="mb-6 flex items-center justify-between">
+              <Button
+                variant="ghost"
+                onClick={() => setShowGroupLeaderboard(false)}
+                className="gap-2"
+              >
+                <ArrowLeft size={18} />
+                Tillbaka
+              </Button>
+            </div>
+            <GroupLeaderboard entries={entries || []} users={users || []} />
+          </div>
+        </div>
+        <Toaster position="top-center" />
+      </>
+    );
+  }
+
   return (
     <>
       <div className="min-h-screen bg-background">
@@ -382,7 +407,15 @@ function App() {
                 className="gap-2 flex-1"
               >
                 <Globe size={18} weight="duotone" />
-                Global topplista
+                Global
+              </Button>
+              <Button
+                variant={showGroupLeaderboard ? 'default' : 'outline'}
+                onClick={() => setShowGroupLeaderboard(true)}
+                className="gap-2 flex-1"
+              >
+                <Users size={18} weight="duotone" />
+                Grupp
               </Button>
               <Button
                 variant={showPersonalLeaderboard ? 'default' : 'outline'}
@@ -390,7 +423,7 @@ function App() {
                 className="gap-2 flex-1"
               >
                 <Trophy size={18} weight="duotone" />
-                Min topplista
+                Min
               </Button>
             </div>
           </div>
