@@ -1,6 +1,6 @@
 # Planning Guide
 
-A Melodifestivalen 2025 rating application where users can log in with GitHub SSO, create or join groups, and evaluate each song entry from a specific heat with star ratings and comments. Group members can see each other's ratings.
+A Melodifestivalen 2026 rating application where users can log in with GitHub SSO or email/password, create or join groups, and evaluate each song entry from a specific heat with star ratings and comments. Group members can see each other's ratings. Voting for each heat opens one day before it airs.
 
 **Experience Qualities**: 
 1. **Collaborative** - The app should foster group participation where friends can see and compare ratings in real-time
@@ -43,11 +43,11 @@ This is a multi-user collaborative application with authentication, group manage
 - **Success criteria**: Users can switch between 4 heats, each showing only its 7 entries, with clear visual separation
 
 ### Rate Entry Categories (Per User)
-- **Functionality**: Assign 1-5 star ratings and text comments for each of the six categories, stored per user
-- **Purpose**: Record individual evaluations that can be viewed by all group members
-- **Trigger**: User selects an entry from the heat view
-- **Progression**: Select entry → Rating interface displays user's existing ratings → Update stars/comments → Auto-saves → Return to heat view
-- **Success criteria**: Each user's ratings persist independently, updates save immediately, returning to an entry shows previous ratings
+- **Functionality**: Assign 1-5 star ratings and text comments for each of the six categories, stored per user. Voting opens one day before each heat airs.
+- **Purpose**: Record individual evaluations that can be viewed by all group members while preventing premature voting
+- **Trigger**: User selects an entry from the heat view, and voting is open for that heat
+- **Progression**: Select entry → Check if voting is open → If locked, show countdown message → If open, rating interface displays user's existing ratings → Update stars/comments → Auto-saves → Return to heat view
+- **Success criteria**: Each user's ratings persist independently, updates save immediately, returning to an entry shows previous ratings, locked entries display voting open date clearly
 
 ### View Group Member Ratings
 - **Functionality**: Display all group members' ratings for each entry in a shared view
@@ -63,6 +63,7 @@ This is a multi-user collaborative application with authentication, group manage
 - **Invalid Group Link**: Show error toast when joining with invalid group ID
 - **Already Member**: Show info toast when attempting to join a group user is already in
 - **Unrated Entries**: Display entries with 0 score and empty progress bar when user hasn't rated yet
+- **Locked Voting**: Display lock icon on entry cards and show informative message with voting open date when voting is not yet available
 - **Switching Groups**: Allow users to return to group selection to switch between multiple groups
 - **Data Persistence**: All groups, memberships, and user ratings automatically saved using useKV with unique keys
 - **Owner Removal Protection**: Group owner cannot remove themselves from the group
@@ -149,6 +150,8 @@ Animations should enhance the feeling of social interaction and shared experienc
   - Crown (group owner indicator)
   - User (regular member indicator)
   - X (remove member)
+  - LockKey (locked voting indicator)
+  - CalendarBlank (voting open date display)
   
 - **Spacing**: 
   - Container padding: px-6 py-8 (desktop), px-4 py-6 (mobile)

@@ -22,6 +22,7 @@ export interface Entry {
   artist: string;
   song: string;
   heat: string;
+  heatDate: string;
   userRatings: UserRating[];
 }
 

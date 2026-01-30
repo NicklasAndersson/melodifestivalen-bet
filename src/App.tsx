@@ -15,7 +15,7 @@ import { RatingView } from '@/components/RatingView';
 import { MemberManagement } from '@/components/MemberManagement';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster, toast } from 'sonner';
-import { MELODIFESTIVALEN_2025 } from '@/lib/melodifestivalen-data';
+import { MELODIFESTIVALEN_2026, isVotingAllowed } from '@/lib/melodifestivalen-data';
 
 const iconMap = {
   MusicNotes,
@@ -103,11 +103,12 @@ function App() {
   }, []);
 
   const initializeEntries = () => {
-    const initialEntries: Entry[] = MELODIFESTIVALEN_2025.map((entry) => ({
+    const initialEntries: Entry[] = MELODIFESTIVALEN_2026.map((entry) => ({
       id: `${entry.artist}-${entry.song}`.toLowerCase().replace(/\s+/g, '-'),
       artist: entry.artist,
       song: entry.song,
       heat: entry.heat,
+      heatDate: entry.heatDate,
       userRatings: [],
     }));
     setEntries(initialEntries);

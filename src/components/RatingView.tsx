@@ -6,9 +6,10 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { StarRating } from './StarRating';
-import { ArrowLeft, Sparkle, MusicNotes, Palette, Television, Microphone, TextAa, Star, Users } from '@phosphor-icons/react';
+import { ArrowLeft, Sparkle, MusicNotes, Palette, Television, Microphone, TextAa, Star, Users, LockKey, CalendarBlank } from '@phosphor-icons/react';
 import { motion } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { isVotingAllowed, getVotingOpensDate } from '@/lib/melodifestivalen-data';
 
 interface RatingViewProps {
   entry: Entry;
@@ -29,9 +30,22 @@ const iconMap = {
 export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateRating }: RatingViewProps) {
   const totalScore = userRating?.totalScore || 0;
   const otherUserRatings = entry.userRatings.filter(ur => ur.userId !== currentUserId);
+  const votingAllowed = isVotingAllowed(entry.heatDate);
+  const votingOpensDate = getVotingOpensDate(entry.heatDate);
 
   const getRating = (category: CategoryKey) => {
     return userRating?.ratings[category] || { rating: 0, comment: '' };
+  };
+
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat('sv-SE', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
   };
 
   return (
@@ -76,10 +90,43 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
       <ScrollArea className="flex-1">
         <div className="max-w-4xl mx-auto px-6 py-8">
           <div className="space-y-8">
+            {!votingAllowed && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                <Card className="p-8 border-2 border-accent/30 bg-gradient-to-br from-accent/10 via-accent/5 to-transparent">
+                  <div className="flex flex-col items-center text-center gap-4">
+                    <div className="w-20 h-20 rounded-full bg-accent/20 flex items-center justify-center">
+                      <LockKey size={40} weight="duotone" className="text-accent" />
+                    </div>
+                    <div>
+                      <h3 className="font-heading font-bold text-2xl text-foreground mb-2">
+                        Röstningen är inte öppen än
+                      </h3>
+                      <p className="text-muted-foreground font-body text-lg mb-4">
+                        Du kan börja betygsätta detta bidrag en dag innan deltävlingen
+                      </p>
+                      <div className="flex items-center justify-center gap-2 text-accent">
+                        <CalendarBlank size={24} weight="duotone" />
+                        <span className="font-heading font-semibold text-lg">
+                          Öppnar: {formatDate(votingOpensDate)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
+            )}
+            
             <div>
               <h3 className="font-heading font-bold text-2xl text-foreground mb-6 flex items-center gap-2">
                 <Users size={28} weight="duotone" className="text-primary" />
                 Dina betyg
+                {!votingAllowed && (
+                  <LockKey size={24} weight="duotone" className="text-muted-foreground" />
+                )}
               </h3>
               <div className="space-y-6">
                 {CATEGORIES.map((category) => {
@@ -93,7 +140,7 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <Card className="p-6 border-2">
+                      <Card className={`p-6 border-2 ${!votingAllowed ? 'opacity-60' : ''}`}>
                         <div className="flex items-center gap-3 mb-4">
                           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                             <Icon size={24} weight="duotone" className="text-primary" />
@@ -108,8 +155,9 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
                             <StarRating
                               value={categoryRating.rating}
                               onChange={(rating) => 
-                                onUpdateRating(category.key as CategoryKey, rating, categoryRating.comment)
+                                votingAllowed && onUpdateRating(category.key as CategoryKey, rating, categoryRating.comment)
                               }
+                              disabled={!votingAllowed}
                             />
                           </div>
 
@@ -121,10 +169,11 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
                               id={`comment-${category.key}`}
                               value={categoryRating.comment}
                               onChange={(e) =>
-                                onUpdateRating(category.key as CategoryKey, categoryRating.rating, e.target.value)
+                                votingAllowed && onUpdateRating(category.key as CategoryKey, categoryRating.rating, e.target.value)
                               }
-                              placeholder="Skriv dina tankar här..."
+                              placeholder={votingAllowed ? "Skriv dina tankar här..." : "Röstningen öppnas snart..."}
                               className="font-body min-h-[100px] resize-none"
+                              disabled={!votingAllowed}
                             />
                           </div>
                         </div>

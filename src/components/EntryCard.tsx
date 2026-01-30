@@ -1,8 +1,9 @@
 import { Entry, UserRating } from '@/lib/types';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Sparkle, Star } from '@phosphor-icons/react';
+import { Sparkle, Star, LockKey } from '@phosphor-icons/react';
 import { motion } from 'framer-motion';
+import { isVotingAllowed } from '@/lib/melodifestivalen-data';
 
 interface EntryCardProps {
   entry: Entry;
@@ -17,6 +18,7 @@ export function EntryCard({ entry, userRating, onClick }: EntryCardProps) {
     : 0;
   const totalCategories = 6;
   const isComplete = ratedCategories === totalCategories;
+  const votingAllowed = isVotingAllowed(entry.heatDate);
 
   return (
     <motion.div
@@ -24,10 +26,16 @@ export function EntryCard({ entry, userRating, onClick }: EntryCardProps) {
       whileTap={{ scale: 0.98 }}
     >
       <Card
-        className="p-6 cursor-pointer border-2 hover:border-primary/50 transition-colors relative overflow-hidden"
+        className={`p-6 cursor-pointer border-2 hover:border-primary/50 transition-colors relative overflow-hidden ${!votingAllowed ? 'opacity-75' : ''}`}
         onClick={onClick}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
+        
+        {!votingAllowed && (
+          <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
+            <LockKey size={18} weight="duotone" className="text-accent" />
+          </div>
+        )}
         
         <div className="relative">
           <div className="flex items-start justify-between gap-4 mb-3">
