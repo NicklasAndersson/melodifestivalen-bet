@@ -934,15 +934,15 @@ function App() {
                   </div>
                 </div>
 
+                <Tabs value={selectedHeat} onValueChange={(value) => {
                   if (value === 'leaderboard') {
-                  if (value === 'leaderboard') {
-                    setShowGlobalLeaderboard(false);
-                  } else if (value === 'global') {
                     setShowLeaderboard(true);
+                    setShowGlobalLeaderboard(false);
+                    setShowPersonalLeaderboard(false);
+                  } else if (value === 'global') {
+                    setShowLeaderboard(false);
                     setShowPersonalLeaderboard(false);
                     setShowGlobalLeaderboard(true);
-                  } else if (value === 'personal') {
-                    setShowLeaderboard(false);
                   } else if (value === 'personal') {
                     setShowLeaderboard(false);
                     setShowGlobalLeaderboard(false);
@@ -951,18 +951,20 @@ function App() {
                     setShowLeaderboard(false);
                     setShowGlobalLeaderboard(false);
                     setShowPersonalLeaderboard(false);
+                    setSelectedHeat(value);
+                  }
                 }} className="w-full">
                   <TabsList className={`w-full ${selectedGroup ? 'grid grid-cols-3 sm:grid-cols-7' : 'grid grid-cols-2 sm:grid-cols-6'} h-auto p-1 gap-1`}>
-                }} className="w-full">
-                  <TabsList className={`w-full ${selectedGroup ? 'grid grid-cols-3 sm:grid-cols-7' : 'grid grid-cols-2 sm:grid-cols-6'} h-auto p-1 gap-1`}>
+                    {HEATS.map((heat) => (
+                      <TabsTrigger
                         key={heat}
                         value={heat}
-                        key={heat}:py-3 px-2"
+                        className="font-body text-xs sm:text-sm md:text-base py-2.5 sm:py-3 px-2"
                       >
                         {heat}
                       </TabsTrigger>
                     ))}
-                      </TabsTrigger>
+                    {selectedGroup && (
                       <TabsTrigger
                         value="leaderboard"
                         className="font-body text-xs sm:text-sm md:text-base py-2.5 sm:py-3 px-2 gap-1.5"
@@ -974,13 +976,13 @@ function App() {
                     <TabsTrigger
                       value="global"
                       className="font-body text-xs sm:text-sm md:text-base py-2.5 sm:py-3 px-2 gap-1.5"
-                      value="global"
-                      className="font-body text-xs sm:text-sm md:text-base py-2.5 sm:py-3 px-2 gap-1.5"
                     >
                       <Globe size={16} weight="duotone" className="shrink-0" />
                       <span className="truncate">Alla</span>
                     </TabsTrigger>
                     <TabsTrigger
+                      value="personal"
+                      className="font-body text-xs sm:text-sm md:text-base py-2.5 sm:py-3 px-2 gap-1.5"
                     >
                       <Heart size={16} weight="duotone" className="shrink-0" />
                       <span className="truncate">Mina</span>
@@ -989,13 +991,13 @@ function App() {
                 </Tabs>
               </div>
             </motion.div>
-              </div>
-            </motion.div>
-assName="max-w-4xl mx-auto">
+
             {showLeaderboard && selectedGroup ? (
               <div className="max-w-4xl mx-auto">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
                 >
                   <div className="mb-6">
                     <h2 className="font-heading font-bold text-3xl text-foreground mb-2 flex items-center gap-3">
@@ -1011,18 +1013,16 @@ assName="max-w-4xl mx-auto">
               </div>
             ) : showGlobalLeaderboard ? (
               <div className="max-w-4xl mx-auto">
-            ) : showGlobalLeaderboard ? (
+                <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4 }}
                 >
                   <div className="mb-6">
                     <h2 className="font-heading font-bold text-3xl text-foreground mb-2 flex items-center gap-3">
-                  <div className="mb-6">
-                    <h2 className="font-heading font-bold text-3xl text-foreground mb-2 flex items-center gap-3">
                       <Globe size={32} weight="duotone" className="text-accent" />
                       Global topplista
-                    </h2>ändare
+                    </h2>
                     <p className="font-body text-muted-foreground">
                       De bäst betygsatta bidragen från alla användare
                     </p>
@@ -1031,17 +1031,17 @@ assName="max-w-4xl mx-auto">
                 </motion.div>
               </div>
             ) : showPersonalLeaderboard ? (
+              <div className="max-w-4xl mx-auto">
+                <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4 }}
                 >
                   <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
                     <div>
-                  <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
-                    <div>
                       <h2 className="font-heading font-bold text-3xl text-foreground mb-2 flex items-center gap-3">
                         <Heart size={32} weight="duotone" className="text-accent" />
-                        Mina favoriteround">
+                        Mina favoriter
                       </h2>
                       <p className="font-body text-muted-foreground">
                         Dina bäst betygsatta bidrag
@@ -1055,16 +1055,18 @@ assName="max-w-4xl mx-auto">
                       <Download size={20} weight="duotone" />
                       Exportera
                     </Button>
-                </motion.div>
+                  </div>
                   <PersonalLeaderboard entries={entries || []} userId={user!.id} />
+                </motion.div>
+              </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            ) : (AnimatePresence mode="popLayout">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <AnimatePresence mode="popLayout">
                   {heatEntries.map((entry, index) => {
                     const userRating = getUserRating(entry);
 
+                    return (
+                      <motion.div
                         key={entry.id}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
