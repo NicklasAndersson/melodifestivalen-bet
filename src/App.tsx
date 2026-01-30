@@ -10,6 +10,7 @@ import { SSOLoginScreen } from '@/components/SSOLoginScreen';
 import { ProfileSelector } from '@/components/ProfileSelector';
 import { EntryCard } from '@/components/EntryCard';
 import { RatingView } from '@/components/RatingView';
+import { ProfileComparisonView } from '@/components/ProfileComparisonView';
 import { GlobalLeaderboard } from '@/components/GlobalLeaderboard';
 import { PersonalLeaderboard } from '@/components/PersonalLeaderboard';
 import { GroupLeaderboard } from '@/components/GroupLeaderboard';
@@ -25,6 +26,7 @@ function App() {
   const [entries, setEntries] = useKV<Entry[]>('mello-entries-v2', []);
   const [dataVersion, setDataVersion] = useKV<number>('mello-data-version-v2', 0);
   const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
+  const [showComparison, setShowComparison] = useState(false);
   const [selectedHeat, setSelectedHeat] = useState<string>(HEATS[0]);
   const [showGlobalLeaderboard, setShowGlobalLeaderboard] = useState(false);
   const [showPersonalLeaderboard, setShowPersonalLeaderboard] = useState(false);
@@ -145,6 +147,7 @@ function App() {
 
   const handleBackToProfiles = () => {
     setSelectedProfile(null);
+    setShowComparison(false);
   };
 
   const handleRating = (entryId: string, category: CategoryKey, rating: number, comment: string) => {
@@ -262,6 +265,19 @@ function App() {
     );
   }
 
+  if (selectedEntry && showComparison) {
+    return (
+      <>
+        <ProfileComparisonView
+          entry={selectedEntry}
+          currentUserId={selectedProfile.id}
+          onBack={() => setShowComparison(false)}
+        />
+        <Toaster position="top-center" />
+      </>
+    );
+  }
+
   if (selectedEntry) {
     return (
       <>
@@ -272,6 +288,7 @@ function App() {
           userRating={getUserRating(selectedEntry)}
           currentUserId={selectedProfile.id}
           onDeleteRating={() => handleDeleteRating(selectedEntry.id)}
+          onShowComparison={() => setShowComparison(true)}
         />
         <Toaster position="top-center" />
       </>

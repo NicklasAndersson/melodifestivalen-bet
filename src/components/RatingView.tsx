@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { StarRating } from './StarRating';
 import { Countdown } from './Countdown';
-import { ArrowLeft, Sparkle, MusicNotes, Palette, Television, Microphone, TextAa, Star, Users, CalendarBlank, Clock, LinkSimple, Trash, ChatCircleText } from '@phosphor-icons/react';
+import { ArrowLeft, Sparkle, MusicNotes, Palette, Television, Microphone, TextAa, Star, Users, CalendarBlank, Clock, LinkSimple, Trash, ChatCircleText, ChartBar } from '@phosphor-icons/react';
 import { motion } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { isHeatToday, getHeatCity, getHeatVenue, getMellopediaUrl } from '@/lib/melodifestivalen-data';
@@ -31,6 +31,7 @@ interface RatingViewProps {
   onBack: () => void;
   onUpdateRating: (category: CategoryKey, rating: number, comment: string) => void;
   onDeleteRating: () => void;
+  onShowComparison?: () => void;
 }
 
 const iconMap = {
@@ -41,7 +42,7 @@ const iconMap = {
   TextAa,
 };
 
-export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateRating, onDeleteRating }: RatingViewProps) {
+export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateRating, onDeleteRating, onShowComparison }: RatingViewProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [focusedComment, setFocusedComment] = useState<string | null>(null);
   const textareaRefs = useRef<{ [key: string]: HTMLTextAreaElement | null }>({});
@@ -93,37 +94,50 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
               Tillbaka
             </Button>
             
-            {hasRatings && (
-              <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                  >
-                    <Trash size={18} weight="duotone" />
-                    Radera betyg
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle className="font-heading">Radera betyg?</AlertDialogTitle>
-                    <AlertDialogDescription className="font-body">
-                      Är du säker på att du vill radera alla dina betyg för "{entry.song}"? Detta går inte att ångra.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel className="font-body">Avbryt</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleDeleteConfirm}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-body"
+            <div className="flex items-center gap-2">
+              {otherUserRatings.length > 0 && onShowComparison && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onShowComparison}
+                  className="gap-2 border-accent/30 hover:bg-accent/5"
+                >
+                  <ChartBar size={18} weight="duotone" />
+                  Jämför betyg
+                </Button>
+              )}
+              {hasRatings && (
+                <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
                     >
-                      Radera
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
+                      <Trash size={18} weight="duotone" />
+                      Radera betyg
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="font-heading">Radera betyg?</AlertDialogTitle>
+                      <AlertDialogDescription className="font-body">
+                        Är du säker på att du vill radera alla dina betyg för "{entry.song}"? Detta går inte att ångra.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel className="font-body">Avbryt</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDeleteConfirm}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-body"
+                      >
+                        Radera
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+            </div>
           </div>
           
           <div className="flex items-start justify-between gap-4">
