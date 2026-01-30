@@ -1,46 +1,41 @@
 import { Entry } from '@/lib/types';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Sparkle, Star, Trophy, Medal, Crown, LinkSimple } from '@phosphor-icons/react';
+import { Sparkle, Star, Trophy, Medal, Crown, LinkSimple, Globe } from '@phosphor-icons/react';
 import { motion } from 'framer-motion';
 import { getMellopediaUrl } from '@/lib/melodifestivalen-data';
 
-interface LeaderboardProps {
+interface GlobalLeaderboardProps {
   entries: Entry[];
-  groupMemberIds: string[];
 }
 
-export function Leaderboard({ entries, groupMemberIds }: LeaderboardProps) {
-  const entriesWithGroupAverage = entries
+export function GlobalLeaderboard({ entries }: GlobalLeaderboardProps) {
+  const entriesWithGlobalAverage = entries
     .map((entry) => {
-      const groupRatings = entry.userRatings.filter((ur) =>
-        groupMemberIds.includes(ur.userId)
-      );
-
-      if (groupRatings.length === 0) {
+      if (entry.userRatings.length === 0) {
         return { entry, average: 0, ratingsCount: 0 };
       }
 
-      const totalScore = groupRatings.reduce((sum, ur) => sum + ur.totalScore, 0);
-      const average = totalScore / groupRatings.length;
+      const totalScore = entry.userRatings.reduce((sum, ur) => sum + ur.totalScore, 0);
+      const average = totalScore / entry.userRatings.length;
 
-      return { entry, average, ratingsCount: groupRatings.length };
+      return { entry, average, ratingsCount: entry.userRatings.length };
     })
     .filter((item) => item.ratingsCount > 0)
     .sort((a, b) => b.average - a.average)
     .slice(0, 10);
 
-  if (entriesWithGroupAverage.length === 0) {
+  if (entriesWithGlobalAverage.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 px-6">
         <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mb-6">
-          <Trophy size={48} weight="duotone" className="text-primary" />
+          <Globe size={48} weight="duotone" className="text-primary" />
         </div>
         <h2 className="font-heading font-bold text-2xl text-foreground mb-3 text-center">
           Ingen topplista än
         </h2>
         <p className="font-body text-muted-foreground text-center max-w-md">
-          Börja betygsätta bidragen för att se vilka som ligger i topp
+          Börja betygsätta bidragen för att se vilka som ligger i topp globalt
         </p>
       </div>
     );
@@ -65,7 +60,7 @@ export function Leaderboard({ entries, groupMemberIds }: LeaderboardProps) {
 
   return (
     <div className="space-y-4">
-      {entriesWithGroupAverage.map((item, index) => (
+      {entriesWithGlobalAverage.map((item, index) => (
         <motion.div
           key={item.entry.id}
           initial={{ opacity: 0, y: 20 }}
@@ -142,7 +137,7 @@ export function Leaderboard({ entries, groupMemberIds }: LeaderboardProps) {
                       ))}
                     </div>
                     <span className="text-xs text-muted-foreground font-body">
-                      {item.ratingsCount} {item.ratingsCount === 1 ? 'betyg' : 'betyg'}
+                      {item.ratingsCount} {item.ratingsCount === 1 ? 'betyg' : 'betyg'} från alla användare
                     </span>
                   </div>
 

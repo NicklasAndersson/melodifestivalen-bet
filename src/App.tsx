@@ -7,13 +7,14 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Users, SignOut, ArrowLeft, Sparkle, Star, MusicNotes, Palette, Television, Microphone, TextAa, UsersThree, Trophy, Heart, LinkSimple, User as UserIcon, Download } from '@phosphor-icons/react';
+import { Users, SignOut, ArrowLeft, Sparkle, Star, MusicNotes, Palette, Television, Microphone, TextAa, UsersThree, Trophy, Heart, LinkSimple, User as UserIcon, Download, Globe } from '@phosphor-icons/react';
 import { LoginScreen } from '@/components/LoginScreen';
 import { GroupSelection } from '@/components/GroupSelection';
 import { EntryCard } from '@/components/EntryCard';
 import { RatingView } from '@/components/RatingView';
 import { MemberManagement } from '@/components/MemberManagement';
 import { Leaderboard } from '@/components/Leaderboard';
+import { GlobalLeaderboard } from '@/components/GlobalLeaderboard';
 import { PersonalLeaderboard } from '@/components/PersonalLeaderboard';
 import { SharedRatingsView } from '@/components/SharedRatingsView';
 import { ExportRatingsDialog } from '@/components/ExportRatingsDialog';
@@ -42,6 +43,7 @@ function App() {
   const [viewOnlyUserId, setViewOnlyUserId] = useState<string | null>(null);
   const [memberManagementOpen, setMemberManagementOpen] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showGlobalLeaderboard, setShowGlobalLeaderboard] = useState(false);
   const [showPersonalLeaderboard, setShowPersonalLeaderboard] = useState(false);
   const [showGroupSelection, setShowGroupSelection] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
@@ -932,20 +934,27 @@ function App() {
                   </div>
                 </div>
 
-                <Tabs value={showLeaderboard ? 'leaderboard' : showPersonalLeaderboard ? 'personal' : selectedHeat} onValueChange={(value) => {
+                <Tabs value={showLeaderboard ? 'leaderboard' : showGlobalLeaderboard ? 'global' : showPersonalLeaderboard ? 'personal' : selectedHeat} onValueChange={(value) => {
                   if (value === 'leaderboard') {
                     setShowPersonalLeaderboard(false);
+                    setShowGlobalLeaderboard(false);
                     setShowLeaderboard(true);
+                  } else if (value === 'global') {
+                    setShowLeaderboard(false);
+                    setShowPersonalLeaderboard(false);
+                    setShowGlobalLeaderboard(true);
                   } else if (value === 'personal') {
                     setShowLeaderboard(false);
+                    setShowGlobalLeaderboard(false);
                     setShowPersonalLeaderboard(true);
                   } else {
                     setShowLeaderboard(false);
+                    setShowGlobalLeaderboard(false);
                     setShowPersonalLeaderboard(false);
                     setSelectedHeat(value);
                   }
                 }} className="w-full">
-                  <TabsList className={`w-full ${selectedGroup ? 'grid grid-cols-3 sm:grid-cols-6' : 'grid grid-cols-2 sm:grid-cols-5'} h-auto p-1 gap-1`}>
+                  <TabsList className={`w-full ${selectedGroup ? 'grid grid-cols-3 sm:grid-cols-7' : 'grid grid-cols-2 sm:grid-cols-6'} h-auto p-1 gap-1`}>
                     {HEATS.map((heat) => (
                       <TabsTrigger
                         key={heat}
@@ -964,6 +973,13 @@ function App() {
                         <span className="truncate">Grupp</span>
                       </TabsTrigger>
                     )}
+                    <TabsTrigger
+                      value="global"
+                      className="font-body text-xs sm:text-sm md:text-base py-2.5 sm:py-3 px-2 gap-1.5"
+                    >
+                      <Globe size={16} weight="duotone" className="shrink-0" />
+                      <span className="truncate">Alla</span>
+                    </TabsTrigger>
                     <TabsTrigger
                       value="personal"
                       className="font-body text-xs sm:text-sm md:text-base py-2.5 sm:py-3 px-2 gap-1.5"
@@ -993,6 +1009,25 @@ function App() {
                     </p>
                   </div>
                   <Leaderboard entries={entries || []} groupMemberIds={selectedGroup?.memberIds || []} />
+                </motion.div>
+              </div>
+            ) : showGlobalLeaderboard ? (
+              <div className="max-w-4xl mx-auto">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <div className="mb-6">
+                    <h2 className="font-heading font-bold text-3xl text-foreground mb-2 flex items-center gap-3">
+                      <Globe size={32} weight="duotone" className="text-accent" />
+                      Global topplista
+                    </h2>
+                    <p className="font-body text-muted-foreground">
+                      De bäst betygsatta bidragen från alla användare
+                    </p>
+                  </div>
+                  <GlobalLeaderboard entries={entries || []} />
                 </motion.div>
               </div>
             ) : showPersonalLeaderboard ? (

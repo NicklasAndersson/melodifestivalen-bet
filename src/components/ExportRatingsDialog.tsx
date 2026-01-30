@@ -53,12 +53,6 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
         logging: false,
         useCORS: true,
         allowTaint: true,
-        onclone: (clonedDoc) => {
-          const clonedElement = clonedDoc.querySelector('[data-export-content]');
-          if (clonedElement instanceof HTMLElement) {
-            clonedElement.style.backgroundColor = '#faf9fc';
-          }
-        }
       });
 
       canvas.toBlob((blob) => {
@@ -107,12 +101,6 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
         logging: false,
         useCORS: true,
         allowTaint: true,
-        onclone: (clonedDoc) => {
-          const clonedElement = clonedDoc.querySelector('[data-export-content]');
-          if (clonedElement instanceof HTMLElement) {
-            clonedElement.style.backgroundColor = '#faf9fc';
-          }
-        }
       });
 
       const imgData = canvas.toDataURL('image/png');
