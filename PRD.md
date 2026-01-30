@@ -57,11 +57,13 @@ This is a multi-user collaborative application with authentication, group manage
 - **Success criteria**: All group members' ratings are visible with their usernames, real-time updates when ratings change
 
 ### Share Personal Ratings
-- **Functionality**: Users can generate a shareable link to their personal ratings that anyone can view without logging in
-- **Purpose**: Enable users to share their opinions on social media or with non-app users, encouraging organic growth
-- **Trigger**: User clicks "Dela mina betyg" button from header or personal leaderboard
-- **Progression**: Click share button → Link copied to clipboard → Toast confirmation → Share link with others → Recipients open link → View-only ratings page displays → Recipients can browse all rated entries and see detailed ratings
-- **Success criteria**: Link generation works, view-only mode displays correctly, non-logged-in users can view shared ratings without authentication prompts
+- **Functionality**: Users can generate a shareable link to their personal ratings that anyone can view without logging in, or export their ratings as PDF/image for social media
+- **Purpose**: Enable users to share their opinions via link, PDF, or image on social media or with non-app users, encouraging organic growth
+- **Trigger**: User clicks "Dela mina betyg" button to share link, or "Exportera" button to download as PDF/image
+- **Progression**: 
+  - Share Link: Click share button → Link copied to clipboard → Toast confirmation → Share link with others → Recipients open link → View-only ratings page displays → Recipients can browse all rated entries and see detailed ratings
+  - Export: Click export button → Dialog opens with preview → Choose "Ladda ner som bild" or "Ladda ner som PDF" → File downloads with formatted top 10 rated entries
+- **Success criteria**: Link generation works, view-only mode displays correctly, non-logged-in users can view shared ratings without authentication prompts, exports generate properly formatted PDF/PNG files with user's top 10 ratings including all category details and comments
 
 ## Edge Case Handling
 
@@ -69,6 +71,8 @@ This is a multi-user collaborative application with authentication, group manage
 - **Shared Ratings View**: Users viewing a shared rating link see a read-only interface without login prompts
 - **Invalid User Link**: Show error page when shared rating link points to non-existent user
 - **No Ratings Shared**: Display empty state when viewing a user who hasn't rated any entries yet
+- **No Ratings to Export**: Show informative message in export dialog when user hasn't rated any entries
+- **Export Preview**: Show formatted preview of export content before downloading
 - **No Groups**: Show empty state with CTAs for both creating and joining groups
 - **Invalid Group Link**: Show error toast when joining with invalid group ID
 - **Already Member**: Show info toast when attempting to join a group user is already in
@@ -153,6 +157,9 @@ Animations should enhance the feeling of social interaction and shared experienc
   - UserPlus (join group, add member)
   - Copy (share group link)
   - ShareNetwork (share personal ratings)
+  - Download (export ratings button)
+  - ImageIcon (export as image option)
+  - FilePdf (export as PDF option)
   - SignOut (logout)
   - Star/StarFill (ratings)
   - MusicNotes (entry cards)

@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Users, SignOut, ArrowLeft, Sparkle, Star, MusicNotes, Palette, Television, Microphone, TextAa, UsersThree, Trophy, Heart, LinkSimple, User as UserIcon, ShareNetwork } from '@phosphor-icons/react';
+import { Users, SignOut, ArrowLeft, Sparkle, Star, MusicNotes, Palette, Television, Microphone, TextAa, UsersThree, Trophy, Heart, LinkSimple, User as UserIcon, ShareNetwork, Download } from '@phosphor-icons/react';
 import { LoginScreen } from '@/components/LoginScreen';
 import { GroupSelection } from '@/components/GroupSelection';
 import { EntryCard } from '@/components/EntryCard';
@@ -16,6 +16,7 @@ import { MemberManagement } from '@/components/MemberManagement';
 import { Leaderboard } from '@/components/Leaderboard';
 import { PersonalLeaderboard } from '@/components/PersonalLeaderboard';
 import { SharedRatingsView } from '@/components/SharedRatingsView';
+import { ExportRatingsDialog } from '@/components/ExportRatingsDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster, toast } from 'sonner';
 import { MELODIFESTIVALEN_2026, getMellopediaUrl } from '@/lib/melodifestivalen-data';
@@ -44,6 +45,7 @@ function App() {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showPersonalLeaderboard, setShowPersonalLeaderboard] = useState(false);
   const [showGroupSelection, setShowGroupSelection] = useState(false);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
   
   const CURRENT_DATA_VERSION = 2026;
 
@@ -924,6 +926,15 @@ function App() {
                       <Button
                         variant="outline"
                         size="sm"
+                        onClick={() => setExportDialogOpen(true)}
+                        className="gap-2 border-accent/30 hover:bg-accent/5"
+                      >
+                        <Download size={18} weight="duotone" />
+                        Exportera
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={handleShareRatings}
                         className="gap-2 border-accent/30 hover:bg-accent/5"
                       >
@@ -950,6 +961,14 @@ function App() {
                       </Button>
                     </div>
                     <div className="sm:hidden flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setExportDialogOpen(true)}
+                        className="gap-2"
+                      >
+                        <Download size={18} weight="duotone" />
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
@@ -1058,14 +1077,24 @@ function App() {
                         Dina bäst betygsatta bidrag
                       </p>
                     </div>
-                    <Button
-                      onClick={handleShareRatings}
-                      variant="outline"
-                      className="gap-2 border-accent/30 hover:bg-accent/5"
-                    >
-                      <ShareNetwork size={20} weight="duotone" />
-                      Dela mina betyg
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => setExportDialogOpen(true)}
+                        variant="outline"
+                        className="gap-2 border-accent/30 hover:bg-accent/5"
+                      >
+                        <Download size={20} weight="duotone" />
+                        Exportera
+                      </Button>
+                      <Button
+                        onClick={handleShareRatings}
+                        variant="outline"
+                        className="gap-2 border-accent/30 hover:bg-accent/5"
+                      >
+                        <ShareNetwork size={20} weight="duotone" />
+                        Dela
+                      </Button>
+                    </div>
                   </div>
                   <PersonalLeaderboard entries={entries || []} userId={user!.id} />
                 </motion.div>
@@ -1109,6 +1138,14 @@ function App() {
           onRemoveMember={handleRemoveMember}
         />
       )}
+
+      <ExportRatingsDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
+        entries={entries || []}
+        userId={user!.id}
+        userName={user!.name}
+      />
 
       <Toaster position="top-center" />
     </>
