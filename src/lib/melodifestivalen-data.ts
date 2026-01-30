@@ -6,7 +6,7 @@ export interface MelodiArtist {
 }
 
 export const HEAT_DATES: Record<string, string> = {
-  "Deltävling 1": "2026-02-01",
+  "Deltävling 1": "2026-01-31",
   "Deltävling 2": "2026-02-08",
   "Deltävling 3": "2026-02-15",
   "Deltävling 4": "2026-02-22",
@@ -49,14 +49,30 @@ export const MELODIFESTIVALEN_2026: MelodiArtist[] = [
 ];
 
 export function isVotingAllowed(heatDate: string): boolean {
-  const heatDateTime = new Date(heatDate + 'T20:00:00+01:00').getTime();
-  const oneDayBefore = heatDateTime - (24 * 60 * 60 * 1000);
-  const now = Date.now();
+  return true;
+}
+
+export function isHeatToday(heatDate: string): boolean {
+  const heatDateTime = new Date(heatDate + 'T20:00:00');
+  const today = new Date();
   
-  return now >= oneDayBefore;
+  return heatDateTime.toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' }) === 
+         today.toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' });
+}
+
+export function getHeatCity(heat: string): string {
+  const cities: Record<string, string> = {
+    "Deltävling 1": "Linköping",
+    "Deltävling 2": "TBA",
+    "Deltävling 3": "TBA",
+    "Deltävling 4": "TBA",
+    "Andra chansen": "TBA",
+    "Final": "TBA",
+  };
+  return cities[heat] || "";
 }
 
 export function getVotingOpensDate(heatDate: string): Date {
-  const heatDateTime = new Date(heatDate + 'T20:00:00+01:00').getTime();
+  const heatDateTime = new Date(heatDate + 'T20:00:00').getTime();
   return new Date(heatDateTime - (24 * 60 * 60 * 1000));
 }

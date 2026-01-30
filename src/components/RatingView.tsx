@@ -9,7 +9,7 @@ import { StarRating } from './StarRating';
 import { ArrowLeft, Sparkle, MusicNotes, Palette, Television, Microphone, TextAa, Star, Users, CalendarBlank, Info } from '@phosphor-icons/react';
 import { motion } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { isVotingAllowed } from '@/lib/melodifestivalen-data';
+import { isHeatToday, getHeatCity } from '@/lib/melodifestivalen-data';
 
 interface RatingViewProps {
   entry: Entry;
@@ -30,19 +30,21 @@ const iconMap = {
 export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateRating }: RatingViewProps) {
   const totalScore = userRating?.totalScore || 0;
   const otherUserRatings = entry.userRatings.filter(ur => ur.userId !== currentUserId);
-  const votingAllowed = isVotingAllowed(entry.heatDate);
+  const heatIsToday = isHeatToday(entry.heatDate);
+  const heatCity = getHeatCity(entry.heat);
 
   const getRating = (category: CategoryKey) => {
     return userRating?.ratings[category] || { rating: 0, comment: '' };
   };
 
   const formatDate = (date: string) => {
-    const heatDate = new Date(date);
+    const heatDate = new Date(date + 'T20:00:00');
     return new Intl.DateTimeFormat('sv-SE', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
+      timeZone: 'Europe/Stockholm',
     }).format(heatDate);
   };
 
@@ -88,7 +90,7 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
       <ScrollArea className="flex-1">
         <div className="max-w-4xl mx-auto px-6 py-8">
           <div className="space-y-8">
-            {!votingAllowed && (
+            {!heatIsToday && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -106,6 +108,11 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
                       <p className="text-muted-foreground font-body">
                         Detta bidrag tävlar {formatDate(entry.heatDate)}
                       </p>
+                      {heatCity && (
+                        <p className="text-muted-foreground font-body text-sm mt-1">
+                          Deltävlingen sänds från {heatCity === "Linköping" ? "Saab Arena i Linköping" : heatCity}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </Card>

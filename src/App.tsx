@@ -17,7 +17,7 @@ import { Leaderboard } from '@/components/Leaderboard';
 import { PersonalLeaderboard } from '@/components/PersonalLeaderboard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster, toast } from 'sonner';
-import { MELODIFESTIVALEN_2026, isVotingAllowed } from '@/lib/melodifestivalen-data';
+import { MELODIFESTIVALEN_2026 } from '@/lib/melodifestivalen-data';
 
 const iconMap = {
   MusicNotes,
