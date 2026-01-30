@@ -40,33 +40,49 @@ export function GroupLeaderboard({ entries, users }: GroupLeaderboardProps) {
     .slice(0, 10);
 
   const handleExportImage = async () => {
-    if (!leaderboardRef.current) return;
+    if (!leaderboardRef.current) {
+      toast.error('Kunde inte hitta innehåll att exportera');
+      return;
+    }
 
     try {
+      toast.info('Förbereder export...', {
+        description: 'Vänta ett ögonblick',
+      });
+
       const canvas = await html2canvas(leaderboardRef.current, {
         backgroundColor: '#fef9f5',
         scale: 2,
         logging: false,
         useCORS: true,
+        allowTaint: true,
       });
 
       canvas.toBlob((blob) => {
         if (blob) {
           const url = URL.createObjectURL(blob);
           const link = document.createElement('a');
-          link.download = `melodifestivalen-2026-grupptopplista.png`;
+          link.download = `melodifestivalen-2026-grupptopplista-${Date.now()}.png`;
           link.href = url;
+          document.body.appendChild(link);
           link.click();
-          URL.revokeObjectURL(url);
+          document.body.removeChild(link);
+          
+          setTimeout(() => {
+            URL.revokeObjectURL(url);
+          }, 1000);
           
           toast.success('Grupptopplista exporterad!', {
             description: 'Bilden har laddats ner',
           });
+        } else {
+          throw new Error('Kunde inte skapa blob');
         }
-      });
+      }, 'image/png', 1.0);
     } catch (error) {
+      console.error('Export error:', error);
       toast.error('Kunde inte exportera bild', {
-        description: 'Försök igen',
+        description: error instanceof Error ? error.message : 'Försök igen',
       });
     }
   };

@@ -18,12 +18,20 @@ const defaultTheme = {
     padding: "2rem",
   },
   extend: {
+    fontFamily: {
+      sans: ['Quicksand', 'ui-sans-serif', 'system-ui'],
+      serif: ['Alegreya', 'ui-serif', 'Georgia'],
+      mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+      heading: ['Quicksand', 'ui-sans-serif', 'system-ui'],
+      body: ['Quicksand', 'ui-sans-serif', 'system-ui'],
+    },
     screens: {
       coarse: { raw: "(pointer: coarse)" },
       fine: { raw: "(pointer: fine)" },
       pwa: { raw: "(display-mode: standalone)" },
     },
     colors: {
+      gold: "var(--color-gold)",
       neutral: {
         1: "var(--color-neutral-1)",
         2: "var(--color-neutral-2)",
