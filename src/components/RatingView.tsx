@@ -42,6 +42,7 @@ const iconMap = {
 
 export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateRating, onDeleteRating }: RatingViewProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [focusedComment, setFocusedComment] = useState<string | null>(null);
   const totalScore = userRating?.totalScore || 0;
   const otherUserRatings = entry.userRatings.filter(ur => ur.userId !== currentUserId);
   const heatIsToday = isHeatToday(entry.heatDate);
@@ -252,8 +253,12 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
                               onChange={(e) =>
                                 onUpdateRating(category.key as CategoryKey, categoryRating.rating, e.target.value)
                               }
+                              onFocus={() => setFocusedComment(category.key)}
+                              onBlur={() => setFocusedComment(null)}
                               placeholder="Skriv dina tankar här..."
-                              className="font-body min-h-[70px] resize-none text-sm"
+                              className={`font-body resize-none text-sm transition-all duration-300 ease-in-out ${
+                                focusedComment === category.key ? 'min-h-[140px]' : 'min-h-[70px]'
+                              }`}
                               disabled={false}
                             />
                           </div>
