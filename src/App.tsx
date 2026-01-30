@@ -823,26 +823,28 @@ function App() {
                   </div>
                 </div>
 
-                  if (value === 'leaderboard') {
+                <Tabs value={selectedHeat} onValueChange={(value) => {
                   if (value === 'leaderboard') {
                     setShowPersonalLeaderboard(false);
+                    setShowLeaderboard(true);
+                  } else if (value === 'personal') {
                     setShowLeaderboard(false);
                     setShowPersonalLeaderboard(true);
                   } else {
                     setShowLeaderboard(false);
-                  } else {
-                    setShowLeaderboard(false);
-                  }
+                    setShowPersonalLeaderboard(false);
                     setSelectedHeat(value);
                   }
                 }} className="w-full">
                   <TabsList className="w-full grid grid-cols-6 h-auto p-1">
                     {HEATS.map((heat) => (
                       <TabsTrigger
+                        key={heat}
+                        value={heat}
                         className="font-body text-sm sm:text-base py-3"
                       >
                         {heat}
-                      >
+                      </TabsTrigger>
                     ))}
                     <TabsTrigger
                       value="leaderboard"
@@ -851,8 +853,6 @@ function App() {
                       <Trophy size={18} weight="duotone" />
                       Grupp
                     </TabsTrigger>
-                      Grupp
-                      value="personal"
                     <TabsTrigger
                       value="personal"
                       className="font-body text-sm sm:text-base py-3 gap-2"
@@ -860,19 +860,21 @@ function App() {
                       <Heart size={18} weight="duotone" />
                       Mina
                     </TabsTrigger>
+                  </TabsList>
+                </Tabs>
               </div>
             </motion.div>
 
             {showLeaderboard ? (
-e="max-w-4xl mx-auto">
-                <motion.div
               <div className="max-w-4xl mx-auto">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4 }}
-                >ding font-bold text-3xl text-foreground mb-2 flex items-center gap-3">
-                  <div className="mb-6">old" />
+                >
+                  <div className="mb-6">
+                    <h2 className="font-heading font-bold text-3xl text-foreground mb-2 flex items-center gap-3">
+                      <Trophy size={32} weight="duotone" className="text-gold" />
                       Topplista
                     </h2>
                     <p className="font-body text-muted-foreground">
@@ -882,8 +884,6 @@ e="max-w-4xl mx-auto">
                   <Leaderboard entries={entries || []} groupMemberIds={selectedGroup?.memberIds || []} />
                 </motion.div>
               </div>
-            ) : showPersonalLeaderboard ? (
-              <div className="max-w-4xl mx-auto">
             ) : showPersonalLeaderboard ? (
               <div className="max-w-4xl mx-auto">
                 <motion.div
@@ -903,6 +903,8 @@ e="max-w-4xl mx-auto">
                   <PersonalLeaderboard entries={entries || []} userId={user!.id} />
                 </motion.div>
               </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <AnimatePresence mode="popLayout">
                   {heatEntries.map((entry, index) => {
                     const userRating = getUserRating(entry);
@@ -914,8 +916,6 @@ e="max-w-4xl mx-auto">
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95 }}
                         transition={{ duration: 0.3, delay: index * 0.05 }}
-                      >
-                        <EntryCard
                       >
                         <EntryCard
                           entry={entry}
@@ -931,10 +931,12 @@ e="max-w-4xl mx-auto">
           </div>
         </div>
       </div>
-t
+
       {selectedGroup && (
         <MemberManagement
           open={memberManagementOpen}
+          onOpenChange={setMemberManagementOpen}
+          group={selectedGroup}
           currentUserId={user!.id}
           onAddMember={handleAddMember}
           onRemoveMember={handleRemoveMember}
