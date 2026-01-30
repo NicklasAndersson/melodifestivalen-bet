@@ -395,7 +395,7 @@ function App() {
   };
 
   const selectedGroup = (groups || []).find((g) => g.id === selectedGroupId) || (groups || []).find((g) => g.id === viewOnlyGroupId);
-  const heatEntries = (entries || []).filter((e) => e.heat === selectedHeat);
+  const heatEntries = (entries || []).filter((e) => e.heat === selectedHeat).sort((a, b) => a.number - b.number);
   
   const getUserRating = (entry: Entry) => {
     return entry.userRatings.find((ur) => ur.userId === user?.id);
