@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Users, SignOut, ArrowLeft, Sparkle, Star, MusicNotes, Palette, Television, Microphone, TextAa, UsersThree, Trophy, Heart } from '@phosphor-icons/react';
+import { Users, SignOut, ArrowLeft, Sparkle, Star, MusicNotes, Palette, Television, Microphone, TextAa, UsersThree, Trophy, Heart, LinkSimple } from '@phosphor-icons/react';
 import { LoginScreen } from '@/components/LoginScreen';
 import { GroupSelection } from '@/components/GroupSelection';
 import { EntryCard } from '@/components/EntryCard';
@@ -17,7 +17,7 @@ import { Leaderboard } from '@/components/Leaderboard';
 import { PersonalLeaderboard } from '@/components/PersonalLeaderboard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster, toast } from 'sonner';
-import { MELODIFESTIVALEN_2026 } from '@/lib/melodifestivalen-data';
+import { MELODIFESTIVALEN_2026, getMellopediaUrl } from '@/lib/melodifestivalen-data';
 
 const iconMap = {
   MusicNotes,
@@ -441,12 +441,34 @@ function App() {
                 
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <h2 className="font-heading font-bold text-3xl text-foreground mb-2">
-                      {selectedEntry.song}
-                    </h2>
-                    <p className="text-muted-foreground font-body text-lg">
-                      {selectedEntry.artist}
-                    </p>
+                    <div className="flex items-center gap-2 mb-2">
+                      <h2 className="font-heading font-bold text-3xl text-foreground">
+                        {selectedEntry.song}
+                      </h2>
+                      <a
+                        href={getMellopediaUrl(selectedEntry.song)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:text-primary/80 transition-colors"
+                        title="Öppna på Mellopedia"
+                      >
+                        <LinkSimple size={24} weight="bold" />
+                      </a>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-muted-foreground font-body text-lg">
+                        {selectedEntry.artist}
+                      </p>
+                      <a
+                        href={getMellopediaUrl(selectedEntry.artist)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:text-primary/80 transition-colors"
+                        title="Öppna artist på Mellopedia"
+                      >
+                        <LinkSimple size={20} weight="bold" />
+                      </a>
+                    </div>
                   </div>
                   <Badge variant="secondary" className="font-body text-base px-3 py-1.5">
                     {selectedEntry.heat}

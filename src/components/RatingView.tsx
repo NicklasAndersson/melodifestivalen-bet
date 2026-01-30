@@ -6,10 +6,10 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { StarRating } from './StarRating';
-import { ArrowLeft, Sparkle, MusicNotes, Palette, Television, Microphone, TextAa, Star, Users, CalendarBlank, Info } from '@phosphor-icons/react';
+import { ArrowLeft, Sparkle, MusicNotes, Palette, Television, Microphone, TextAa, Star, Users, CalendarBlank, Info, LinkSimple } from '@phosphor-icons/react';
 import { motion } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { isHeatToday, getHeatCity, getHeatVenue } from '@/lib/melodifestivalen-data';
+import { isHeatToday, getHeatCity, getHeatVenue, getMellopediaUrl } from '@/lib/melodifestivalen-data';
 
 interface RatingViewProps {
   entry: Entry;
@@ -64,12 +64,34 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
           
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="font-heading font-bold text-3xl text-foreground mb-2">
-                {entry.song}
-              </h2>
-              <p className="text-muted-foreground font-body text-lg">
-                {entry.artist}
-              </p>
+              <div className="flex items-center gap-2 mb-2">
+                <h2 className="font-heading font-bold text-3xl text-foreground">
+                  {entry.song}
+                </h2>
+                <a
+                  href={getMellopediaUrl(entry.song)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:text-primary/80 transition-colors"
+                  title="Öppna på Mellopedia"
+                >
+                  <LinkSimple size={24} weight="bold" />
+                </a>
+              </div>
+              <div className="flex items-center gap-2">
+                <p className="text-muted-foreground font-body text-lg">
+                  {entry.artist}
+                </p>
+                <a
+                  href={getMellopediaUrl(entry.artist)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:text-primary/80 transition-colors"
+                  title="Öppna artist på Mellopedia"
+                >
+                  <LinkSimple size={20} weight="bold" />
+                </a>
+              </div>
             </div>
             <Badge variant="secondary" className="font-body text-base px-3 py-1.5">
               {entry.heat}

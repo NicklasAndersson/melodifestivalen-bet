@@ -88,3 +88,17 @@ export function getVotingOpensDate(heatDate: string): Date {
   const heatDateTime = new Date(heatDate + 'T20:00:00').getTime();
   return new Date(heatDateTime - (24 * 60 * 60 * 1000));
 }
+
+export function getMellopediaUrl(text: string): string {
+  const normalized = text
+    .replace(/&/g, '%26')
+    .replace(/\s+/g, '_')
+    .replace(/å/g, 'å')
+    .replace(/ä/g, 'ä')
+    .replace(/ö/g, 'ö')
+    .replace(/Å/g, 'Å')
+    .replace(/Ä/g, 'Ä')
+    .replace(/Ö/g, 'Ö');
+  
+  return `https://mellopedia.svt.se/index.php/${normalized}`;
+}
