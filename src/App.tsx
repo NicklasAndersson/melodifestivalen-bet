@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Users, SignOut, ArrowLeft, Sparkle, Star, MusicNotes, Palette, Television, Microphone, TextAa, UsersThree, Trophy, Heart, LinkSimple, User as UserIcon, ShareNetwork, Download } from '@phosphor-icons/react';
+import { Users, SignOut, ArrowLeft, Sparkle, Star, MusicNotes, Palette, Television, Microphone, TextAa, UsersThree, Trophy, Heart, LinkSimple, User as UserIcon, Download } from '@phosphor-icons/react';
 import { LoginScreen } from '@/components/LoginScreen';
 import { GroupSelection } from '@/components/GroupSelection';
 import { EntryCard } from '@/components/EntryCard';
@@ -403,20 +403,6 @@ function App() {
   
   const getUserRating = (entry: Entry) => {
     return entry.userRatings.find((ur) => ur.userId === user?.id);
-  };
-
-  const handleShareRatings = () => {
-    if (!user) return;
-    
-    const shareUrl = `${window.location.origin}${window.location.pathname}?user=${user.id}`;
-    
-    navigator.clipboard.writeText(shareUrl).then(() => {
-      toast.success('Länk kopierad!', {
-        description: 'Dela länken för att visa dina betyg',
-      });
-    }).catch(() => {
-      toast.error('Kunde inte kopiera länk');
-    });
   };
 
   const isViewOnly = !user && viewOnlyGroupId && selectedGroup;
@@ -904,15 +890,6 @@ function App() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={handleShareRatings}
-                        className="gap-2 border-accent/30 hover:bg-accent/5"
-                      >
-                        <ShareNetwork size={18} weight="duotone" />
-                        Dela mina betyg
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
                         onClick={() => setShowGroupSelection(true)}
                         className="gap-2"
                       >
@@ -937,14 +914,6 @@ function App() {
                         className="gap-2"
                       >
                         <Download size={18} weight="duotone" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleShareRatings}
-                        className="gap-2"
-                      >
-                        <ShareNetwork size={18} weight="duotone" />
                       </Button>
                       <Button
                         variant="outline"
@@ -1046,24 +1015,14 @@ function App() {
                         Dina bäst betygsatta bidrag
                       </p>
                     </div>
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => setExportDialogOpen(true)}
-                        variant="outline"
-                        className="gap-2 border-accent/30 hover:bg-accent/5"
-                      >
-                        <Download size={20} weight="duotone" />
-                        Exportera
-                      </Button>
-                      <Button
-                        onClick={handleShareRatings}
-                        variant="outline"
-                        className="gap-2 border-accent/30 hover:bg-accent/5"
-                      >
-                        <ShareNetwork size={20} weight="duotone" />
-                        Dela
-                      </Button>
-                    </div>
+                    <Button
+                      onClick={() => setExportDialogOpen(true)}
+                      variant="outline"
+                      className="gap-2 border-accent/30 hover:bg-accent/5"
+                    >
+                      <Download size={20} weight="duotone" />
+                      Exportera
+                    </Button>
                   </div>
                   <PersonalLeaderboard entries={entries || []} userId={user!.id} />
                 </motion.div>
