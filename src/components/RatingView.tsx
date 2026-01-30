@@ -6,10 +6,22 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { StarRating } from './StarRating';
-import { ArrowLeft, Sparkle, MusicNotes, Palette, Television, Microphone, TextAa, Star, Users, CalendarBlank, Info, LinkSimple } from '@phosphor-icons/react';
+import { ArrowLeft, Sparkle, MusicNotes, Palette, Television, Microphone, TextAa, Star, Users, CalendarBlank, Info, LinkSimple, Trash } from '@phosphor-icons/react';
 import { motion } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { isHeatToday, getHeatCity, getHeatVenue, getMellopediaUrl } from '@/lib/melodifestivalen-data';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { useState } from 'react';
 
 interface RatingViewProps {
   entry: Entry;
@@ -17,6 +29,7 @@ interface RatingViewProps {
   currentUserId: string;
   onBack: () => void;
   onUpdateRating: (category: CategoryKey, rating: number, comment: string) => void;
+  onDeleteRating: () => void;
 }
 
 const iconMap = {
@@ -27,12 +40,14 @@ const iconMap = {
   TextAa,
 };
 
-export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateRating }: RatingViewProps) {
+export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateRating, onDeleteRating }: RatingViewProps) {
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const totalScore = userRating?.totalScore || 0;
   const otherUserRatings = entry.userRatings.filter(ur => ur.userId !== currentUserId);
   const heatIsToday = isHeatToday(entry.heatDate);
   const heatCity = getHeatCity(entry.heat);
   const heatVenue = getHeatVenue(entry.heat);
+  const hasRatings = userRating && Object.values(userRating.ratings).some(r => r.rating > 0 || r.comment.length > 0);
 
   const getRating = (category: CategoryKey) => {
     return userRating?.ratings[category] || { rating: 0, comment: '' };
@@ -49,18 +64,58 @@ export function RatingView({ entry, userRating, currentUserId, onBack, onUpdateR
     }).format(heatDate);
   };
 
+  const handleDeleteConfirm = () => {
+    onDeleteRating();
+    setDeleteDialogOpen(false);
+    onBack();
+  };
+
   return (
     <div className="h-full flex flex-col">
       <div className="shrink-0 border-b border-border bg-card">
         <div className="max-w-4xl mx-auto px-6 py-6">
-          <Button
-            variant="ghost"
-            onClick={onBack}
-            className="mb-4 font-body gap-2 -ml-2"
-          >
-            <ArrowLeft size={20} />
-            Tillbaka
-          </Button>
+          <div className="flex items-center justify-between mb-4">
+            <Button
+              variant="ghost"
+              onClick={onBack}
+              className="font-body gap-2 -ml-2"
+            >
+              <ArrowLeft size={20} />
+              Tillbaka
+            </Button>
+            
+            {hasRatings && (
+              <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <Trash size={18} weight="duotone" />
+                    Radera betyg
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="font-heading">Radera betyg?</AlertDialogTitle>
+                    <AlertDialogDescription className="font-body">
+                      Är du säker på att du vill radera alla dina betyg för "{entry.song}"? Detta går inte att ångra.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="font-body">Avbryt</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteConfirm}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-body"
+                    >
+                      Radera
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
           
           <div className="flex items-start justify-between gap-4">
             <div>

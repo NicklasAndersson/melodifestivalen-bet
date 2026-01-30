@@ -333,6 +333,31 @@ function App() {
     });
   };
 
+  const handleDeleteRating = (entryId: string) => {
+    if (!user) return;
+
+    setEntries((current) => {
+      const entries = current || [];
+      return entries.map((entry) => {
+        if (entry.id === entryId) {
+          const updatedEntry = {
+            ...entry,
+            userRatings: entry.userRatings.filter((ur) => ur.userId !== user.id),
+          };
+
+          if (selectedEntry?.id === entryId) {
+            setSelectedEntry(updatedEntry);
+          }
+
+          return updatedEntry;
+        }
+        return entry;
+      });
+    });
+
+    toast.success('Betyg raderat');
+  };
+
   const handleAddMember = (memberId: string) => {
     if (!selectedGroupId) return;
 
@@ -801,6 +826,7 @@ function App() {
           onUpdateRating={(category, rating, comment) =>
             handleUpdateRating(selectedEntry.id, category, rating, comment)
           }
+          onDeleteRating={() => handleDeleteRating(selectedEntry.id)}
         />
         <Toaster position="top-center" />
       </>
