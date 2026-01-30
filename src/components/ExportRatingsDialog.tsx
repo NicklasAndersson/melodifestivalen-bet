@@ -73,6 +73,9 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
         logging: false,
         useCORS: true,
         allowTaint: true,
+        ignoreElements: (element) => {
+          return element.classList?.contains('ignore-export') || false;
+        },
       });
 
       canvas.toBlob((blob) => {
@@ -199,118 +202,245 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
             </p>
           </div>
 
-          <div ref={exportRef} className="bg-background p-8 space-y-6">
-            <div className="text-center space-y-2 pb-6 border-b-2 border-primary/20">
-              <h1 className="font-display text-4xl text-foreground tracking-tight">
+          <div ref={exportRef} style={{ backgroundColor: '#faf9fc', padding: '32px' }}>
+            <div style={{ 
+              textAlign: 'center', 
+              paddingBottom: '24px', 
+              borderBottom: '2px solid rgba(206, 100, 173, 0.2)',
+              marginBottom: '24px'
+            }}>
+              <h1 style={{ 
+                fontFamily: 'Quicksand, sans-serif', 
+                fontSize: '36px', 
+                color: '#3a2d5c',
+                fontWeight: 'bold',
+                margin: '0 0 8px 0',
+                letterSpacing: '-0.025em'
+              }}>
                 Melodifestivalen 2026
               </h1>
-              <p className="font-heading text-xl text-primary">
+              <p style={{ 
+                fontFamily: 'Quicksand, sans-serif', 
+                fontSize: '20px', 
+                color: '#ce64ad',
+                fontWeight: '600',
+                margin: '0 0 8px 0'
+              }}>
                 {userName}s topplista
               </p>
-              <p className="font-body text-sm text-muted-foreground">
+              <p style={{ 
+                fontFamily: 'Quicksand, sans-serif', 
+                fontSize: '14px', 
+                color: '#7a6b98',
+                margin: 0
+              }}>
                 Mina {entriesWithUserRating.length} bäst betygsatta bidrag
               </p>
             </div>
 
-            <div className="space-y-4">
-              {entriesWithUserRating.map((item, index) => (
-                <Card
-                  key={item.entry.id}
-                  className={`p-4 border-2 ${
-                    index === 0
-                      ? 'border-gold/50 bg-gradient-to-br from-gold/10 via-gold/5 to-transparent'
-                      : index === 1
-                      ? 'border-[#87CEEB]/30 bg-gradient-to-br from-[#87CEEB]/5 to-transparent'
-                      : index === 2
-                      ? 'border-[#CD7F32]/30 bg-gradient-to-br from-[#CD7F32]/5 to-transparent'
-                      : 'border-border'
-                  }`}
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="flex items-center justify-center w-12 h-12 shrink-0">
-                      {getPositionIcon(index)}
-                    </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {entriesWithUserRating.map((item, index) => {
+                const borderColor = 
+                  index === 0 ? 'rgba(220, 180, 100, 0.5)' :
+                  index === 1 ? 'rgba(135, 206, 235, 0.3)' :
+                  index === 2 ? 'rgba(205, 127, 50, 0.3)' :
+                  '#d4c3e0';
+                
+                const bgGradient = 
+                  index === 0 ? 'linear-gradient(135deg, rgba(220, 180, 100, 0.1) 0%, rgba(220, 180, 100, 0.05) 50%, transparent 100%)' :
+                  index === 1 ? 'linear-gradient(135deg, rgba(135, 206, 235, 0.05) 0%, transparent 100%)' :
+                  index === 2 ? 'linear-gradient(135deg, rgba(205, 127, 50, 0.05) 0%, transparent 100%)' :
+                  '#ffffff';
 
-                    <div className="flex-1 min-w-0 space-y-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-heading font-bold text-lg text-foreground">
-                            {item.entry.song}
-                          </h3>
-                          <p className="text-muted-foreground font-body text-sm">
-                            {item.entry.artist}
-                          </p>
-                        </div>
-                        <div className="flex flex-col items-end gap-1">
-                          <Badge variant="secondary" className="shrink-0 font-body text-xs">
-                            {item.entry.heat}
-                          </Badge>
-                          <div className="flex items-center gap-1">
-                            <Sparkle size={16} weight="fill" className="text-gold" />
-                            <span className="font-heading font-bold text-xl text-foreground">
-                              {item.rating.totalScore}
-                            </span>
-                          </div>
-                        </div>
+                return (
+                  <div
+                    key={item.entry.id}
+                    style={{
+                      padding: '16px',
+                      border: `2px solid ${borderColor}`,
+                      borderRadius: '8px',
+                      background: bgGradient,
+                      backgroundColor: index > 2 ? '#ffffff' : undefined,
+                    }}
+                  >
+                    <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                      <div style={{ 
+                        width: '48px', 
+                        height: '48px', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        flexShrink: 0
+                      }}>
+                        {index === 0 ? (
+                          <Crown size={20} weight="fill" style={{ color: '#dcb464' }} />
+                        ) : index === 1 ? (
+                          <Medal size={20} weight="fill" style={{ color: '#87CEEB' }} />
+                        ) : index === 2 ? (
+                          <Medal size={20} weight="fill" style={{ color: '#CD7F32' }} />
+                        ) : (
+                          <span style={{ 
+                            fontFamily: 'Quicksand, sans-serif', 
+                            fontWeight: 'bold', 
+                            fontSize: '18px', 
+                            color: '#7a6b98' 
+                          }}>
+                            {index + 1}
+                          </span>
+                        )}
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/50">
-                        {CATEGORIES.map((category) => {
-                          const Icon = iconMap[category.icon as keyof typeof iconMap];
-                          const categoryRating = item.rating.ratings[category.key as CategoryKey];
-                          
-                          return (
-                            <div key={category.key} className="flex items-center gap-2">
-                              <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center shrink-0">
-                                <Icon size={14} weight="duotone" className="text-primary" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <Label className="font-body text-[10px] uppercase tracking-wide text-muted-foreground">
-                                  {category.label}
-                                </Label>
-                                <div className="flex gap-0.5 mt-0.5">
-                                  {[...Array(5)].map((_, i) => (
-                                    <Star
-                                      key={i}
-                                      size={10}
-                                      weight={i < categoryRating.rating ? 'fill' : 'regular'}
-                                      className={i < categoryRating.rating ? 'text-gold' : 'text-muted-foreground/30'}
-                                    />
-                                  ))}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', marginBottom: '12px' }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <h3 style={{ 
+                              fontFamily: 'Quicksand, sans-serif', 
+                              fontWeight: 'bold', 
+                              fontSize: '18px', 
+                              color: '#3a2d5c',
+                              margin: '0 0 4px 0'
+                            }}>
+                              {item.entry.song}
+                            </h3>
+                            <p style={{ 
+                              fontFamily: 'Quicksand, sans-serif', 
+                              fontSize: '14px', 
+                              color: '#7a6b98',
+                              margin: 0
+                            }}>
+                              {item.entry.artist}
+                            </p>
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                            <span style={{
+                              fontFamily: 'Quicksand, sans-serif',
+                              fontSize: '12px',
+                              padding: '4px 8px',
+                              backgroundColor: '#e8dff1',
+                              color: '#3a2d5c',
+                              borderRadius: '4px',
+                              fontWeight: '500'
+                            }}>
+                              {item.entry.heat}
+                            </span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <Sparkle size={16} weight="fill" style={{ color: '#dcb464' }} />
+                              <span style={{ 
+                                fontFamily: 'Quicksand, sans-serif', 
+                                fontWeight: 'bold', 
+                                fontSize: '20px', 
+                                color: '#3a2d5c' 
+                              }}>
+                                {item.rating.totalScore}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ 
+                          display: 'grid', 
+                          gridTemplateColumns: '1fr 1fr', 
+                          gap: '8px', 
+                          paddingTop: '8px', 
+                          borderTop: '1px solid rgba(212, 195, 224, 0.5)' 
+                        }}>
+                          {CATEGORIES.map((category) => {
+                            const Icon = iconMap[category.icon as keyof typeof iconMap];
+                            const categoryRating = item.rating.ratings[category.key as CategoryKey];
+                            
+                            return (
+                              <div key={category.key} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <div style={{ 
+                                  width: '24px', 
+                                  height: '24px', 
+                                  borderRadius: '4px', 
+                                  backgroundColor: 'rgba(206, 100, 173, 0.1)', 
+                                  display: 'flex', 
+                                  alignItems: 'center', 
+                                  justifyContent: 'center',
+                                  flexShrink: 0
+                                }}>
+                                  <Icon size={14} weight="duotone" style={{ color: '#ce64ad' }} />
+                                </div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ 
+                                    fontFamily: 'Quicksand, sans-serif', 
+                                    fontSize: '10px', 
+                                    textTransform: 'uppercase', 
+                                    letterSpacing: '0.05em', 
+                                    color: '#7a6b98',
+                                    marginBottom: '2px'
+                                  }}>
+                                    {category.label}
+                                  </div>
+                                  <div style={{ display: 'flex', gap: '2px', marginTop: '2px' }}>
+                                    {[...Array(5)].map((_, i) => (
+                                      <Star
+                                        key={i}
+                                        size={10}
+                                        weight={i < categoryRating.rating ? 'fill' : 'regular'}
+                                        style={{ color: i < categoryRating.rating ? '#dcb464' : 'rgba(122, 107, 152, 0.3)' }}
+                                      />
+                                    ))}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {Object.values(item.rating.ratings).some(r => r.comment) && (
-                        <div className="pt-2 border-t border-border/50">
-                          <Label className="font-body text-xs text-muted-foreground mb-1 block">
-                            Kommentarer:
-                          </Label>
-                          <div className="space-y-1">
-                            {CATEGORIES.map((category) => {
-                              const categoryRating = item.rating.ratings[category.key as CategoryKey];
-                              if (!categoryRating.comment) return null;
-                              
-                              return (
-                                <p key={category.key} className="text-xs text-foreground font-body">
-                                  <span className="font-semibold">{category.label}:</span> {categoryRating.comment}
-                                </p>
-                              );
-                            })}
-                          </div>
+                            );
+                          })}
                         </div>
-                      )}
+
+                        {Object.values(item.rating.ratings).some(r => r.comment) && (
+                          <div style={{ 
+                            paddingTop: '8px', 
+                            borderTop: '1px solid rgba(212, 195, 224, 0.5)',
+                            marginTop: '8px'
+                          }}>
+                            <div style={{ 
+                              fontFamily: 'Quicksand, sans-serif', 
+                              fontSize: '12px', 
+                              color: '#7a6b98',
+                              marginBottom: '4px',
+                              fontWeight: '600'
+                            }}>
+                              Kommentarer:
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              {CATEGORIES.map((category) => {
+                                const categoryRating = item.rating.ratings[category.key as CategoryKey];
+                                if (!categoryRating.comment) return null;
+                                
+                                return (
+                                  <p key={category.key} style={{ 
+                                    fontFamily: 'Quicksand, sans-serif', 
+                                    fontSize: '12px', 
+                                    color: '#3a2d5c',
+                                    margin: 0
+                                  }}>
+                                    <span style={{ fontWeight: '600' }}>{category.label}:</span> {categoryRating.comment}
+                                  </p>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </Card>
-              ))}
+                );
+              })}
             </div>
 
-            <div className="text-center pt-6 border-t-2 border-primary/20">
-              <p className="font-body text-xs text-muted-foreground">
+            <div style={{ 
+              textAlign: 'center', 
+              paddingTop: '24px', 
+              borderTop: '2px solid rgba(206, 100, 173, 0.2)' 
+            }}>
+              <p style={{ 
+                fontFamily: 'Quicksand, sans-serif', 
+                fontSize: '12px', 
+                color: '#7a6b98',
+                margin: 0
+              }}>
                 Skapad med Melodifestivalen 2026 Gruppbetyg
               </p>
             </div>
