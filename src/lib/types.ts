@@ -68,4 +68,5 @@ export const HEATS = [
   "Deltävling 2",
   "Deltävling 3",
   "Deltävling 4",
+  "Deltävling 5",
 ] as const;

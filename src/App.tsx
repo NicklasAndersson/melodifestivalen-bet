@@ -48,7 +48,7 @@ function App() {
   const [showGroupSelection, setShowGroupSelection] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   
-  const CURRENT_DATA_VERSION = 2027;
+  const CURRENT_DATA_VERSION = 2028;
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -654,7 +654,7 @@ function App() {
                   </div>
 
                   <Tabs value={selectedHeat} onValueChange={setSelectedHeat} className="w-full">
-                    <TabsList className="w-full grid grid-cols-2 sm:grid-cols-4 h-auto p-1 gap-1">
+                    <TabsList className="w-full grid grid-cols-2 sm:grid-cols-5 h-auto p-1 gap-1">
                       {HEATS.map((heat) => (
                         <TabsTrigger
                           key={heat}
@@ -955,7 +955,7 @@ function App() {
                     setSelectedHeat(value);
                   }
                 }} className="w-full">
-                  <TabsList className={`w-full ${selectedGroup ? 'grid grid-cols-3 sm:grid-cols-7' : 'grid grid-cols-2 sm:grid-cols-6'} h-auto p-1 gap-1`}>
+                  <TabsList className={`w-full ${selectedGroup ? 'grid grid-cols-3 sm:grid-cols-8' : 'grid grid-cols-3 sm:grid-cols-7'} h-auto p-1 gap-1`}>
                     {HEATS.map((heat) => (
                       <TabsTrigger
                         key={heat}
