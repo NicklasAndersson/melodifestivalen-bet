@@ -828,46 +828,47 @@ function App() {
                     setShowPersonalLeaderboard(false);
                     setShowLeaderboard(true);
                   } else if (value === 'personal') {
+                    setShowLeaderboard(false);
                     setShowPersonalLeaderboard(true);
-                    setShowPersonalLeaderboard(true);
+                  } else {
                     setShowLeaderboard(false);
                     setShowPersonalLeaderboard(false);
                     setSelectedHeat(value);
-                    setSelectedHeat(value);
                   }
+                }} className="w-full">
                   <TabsList className="w-full grid grid-cols-6 h-auto p-1">
                     {HEATS.map((heat) => (
                       <TabsTrigger
                         key={heat}
-                        key={heat}
                         value={heat}
+                        className="font-body text-sm sm:text-base py-3"
                       >
                         {heat}
-                        {heat}
                       </TabsTrigger>
+                    ))}
                     <TabsTrigger
                       value="leaderboard"
                       className="font-body text-sm sm:text-base py-3 gap-2"
-                      className="font-body text-sm sm:text-base py-3 gap-2"
+                    >
                       <Trophy size={18} weight="duotone" />
                       Grupp
                     </TabsTrigger>
                     <TabsTrigger
-                    <TabsTrigger
-                      className="font-body text-sm sm:text-base py-3 gap-2"
+                      value="personal"
                       className="font-body text-sm sm:text-base py-3 gap-2"
                     >
+                      <Heart size={18} weight="duotone" />
                       Mina
                     </TabsTrigger>
                   </TabsList>
-                  </TabsList>
                 </Tabs>
+              </div>
             </motion.div>
 
             {showLeaderboard ? (
               <div className="max-w-4xl mx-auto">
-e="max-w-4xl mx-auto">
                 <motion.div
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4 }}
                 >
