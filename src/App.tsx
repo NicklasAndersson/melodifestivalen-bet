@@ -138,35 +138,58 @@ function App() {
     setSelectedProfile(profile);
     toast.success('Profil vald', {
       description: profile.nickname,
-      return entries.map((entry) => {
-          let updatedUserRatings: UserRating[];
-          
+    });
+  };
+
   const handleBackToProfiles = () => {
     setSelectedProfile(null);
+  };
+
+  const handleRating = (entryId: string, category: CategoryKey, rating: number, comment: string) => {
+    if (!selectedProfile) return;
+
+    setEntries((currentEntries) => {
+      return (currentEntries || []).map((entry) => {
+        if (entry.id === entryId) {
+          let updatedUserRatings: UserRating[];
+          
+          const existingRating = entry.userRatings.find((ur) => ur.profileId === selectedProfile.id);
+
+          if (existingRating) {
+            const updatedRatings = {
+              ...existingRating.ratings,
+              [category]: { rating, comment },
+            };
+            const totalScore = Object.values(updatedRatings).reduce((sum, r) => sum + r.rating, 0);
             
+            updatedUserRatings = entry.userRatings.map((ur) =>
               ur.profileId === selectedProfile.id
                 ? { ...ur, ratings: updatedRatings, totalScore }
+                : ur
+            );
+          } else {
+            const newRatings = {
+              song: { rating: 0, comment: '' },
+              scenography: { rating: 0, comment: '' },
               clothes: { rating: 0, comment: '' },
-    if (!selectedProfile) return;
               vocals: { rating: 0, comment: '' },
               lyrics: { rating: 0, comment: '' },
               postcard: { rating: 0, comment: '' },
               [category]: { rating, comment },
             };
-          const existingRating = entry.userRatings.find((ur) => ur.profileId === selectedProfile.id);
             const totalScore = Object.values(newRatings).reduce((sum, r) => sum + r.rating, 0);
             
             updatedUserRatings = [
-          if (existingRating) {
+              ...entry.userRatings,
               {
-              ...existingRating.ratings,
+                profileId: selectedProfile.id,
                 profileName: selectedProfile.nickname,
                 ratings: newRatings,
                 totalScore,
               },
             ];
           }
-              ur.profileId === selectedProfile.id
+
           const updatedEntry = {
             ...entry,
             userRatings: updatedUserRatings,
@@ -186,9 +209,8 @@ function App() {
   const handleDeleteRating = (entryId: string) => {
     if (!selectedProfile) return;
 
-                profileId: selectedProfile.id,
-                profileName: selectedProfile.nickname,
-      return entries.map((entry) => {
+    setEntries((currentEntries) => {
+      return (currentEntries || []).map((entry) => {
         if (entry.id === entryId) {
           const updatedEntry = {
             ...entry,
@@ -211,7 +233,8 @@ function App() {
   const heatEntries = (entries || []).filter((e) => e.heat === selectedHeat).sort((a, b) => a.number - b.number);
   
   const getUserRating = (entry: Entry) => {
-    if (!selectedProfile) return;=== selectedProfile?.id);
+    if (!selectedProfile) return;
+    return entry.userRatings.find((ur) => ur.profileId === selectedProfile?.id);
   };
 
   if (!currentUser) {
@@ -219,7 +242,7 @@ function App() {
       <>
         <SSOLoginScreen onSSOLogin={handleSSOLogin} />
         <Toaster position="top-center" />
-            userRatings: entry.userRatings.filter((ur) => ur.profileId !== selectedProfile.id),
+      </>
     );
   }
 
@@ -235,33 +258,198 @@ function App() {
         <Toaster position="top-center" />
       </>
     );
-                      <UserCircle size={20} weight="duotone" />
-                      {selectedProfile.nickname}
-                    </p>
-    return entry.userRatings.find((ur) => ur.profileId === selectedProfile?.id);
-                  <div className="flex items-center gap-3">
-                    {currentUser.avatarUrl ? (
-  if (!currentUser) {
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center border-2 border-border">
-                        <span className="font-heading font-bold text-foreground text-sm">
-        <SSOLoginScreen onSSOLogin={handleSSOLogin} />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setExportDialogOpen(true)}
-                      className="gap-2 border-accent/30 hover:bg-accent/5"
-  if (!selectedProfile) {
-                        <Download size={18} weight="duotone" />
-                        Exportera
-        <ProfileSelector
-          user={currentUser}
-          onSelectProfile={handleSelectProfile}
-          onCreateProfile={handleCreateProfile}
-          onLogout={handleLogout}
-                        className="gap-2"
-                      >
-                        <ArrowLeft size={18} />
-                        Profiler
-                      </Button>
-                    <Button
-          currentUserId={selectedProfile.id}                      Melodifestivalen 2026                    <p className="font-body text-muted-foreground text-lg flex items-center gap-2">                      <UserCircle size={20} weight="duotone" />                      {selectedProfile.nickname}                    </p>                    {currentUser.avatarUrl ? (                        src={currentUser.avatarUrl}                         alt={currentUser.githubLogin}                          {currentUser.githubLogin.charAt(0).toUpperCase()}                        onClick={handleBackToProfiles}                        <ArrowLeft size={18} />                        Profiler                        onClick={handleBackToProfiles}                        <ArrowLeft size={18} />                  if (value === 'global') {                  <TabsList className="w-full grid grid-cols-3 sm:grid-cols-7 h-auto p-1 gap-1">            {showGlobalLeaderboard ? (                  <PersonalLeaderboard entries={entries || []} userId={selectedProfile.id} />        userId={selectedProfile.id}        userName={selectedProfile.nickname}
+  }
+
+  if (selectedEntry) {
+    return (
+      <>
+        <RatingView
+          entry={selectedEntry}
+          onBack={() => setSelectedEntry(null)}
+          onUpdateRating={(category, rating, comment) => handleRating(selectedEntry.id, category, rating, comment)}
+          userRating={getUserRating(selectedEntry)}
+          currentUserId={selectedProfile.id}
+          onDeleteRating={() => handleDeleteRating(selectedEntry.id)}
+        />
+        <Toaster position="top-center" />
+      </>
+    );
+  }
+
+  if (showGlobalLeaderboard) {
+    return (
+      <>
+        <div className="min-h-screen bg-background p-4 sm:p-6">
+          <div className="max-w-5xl mx-auto">
+            <div className="mb-6 flex items-center justify-between">
+              <Button
+                variant="ghost"
+                onClick={() => setShowGlobalLeaderboard(false)}
+                className="gap-2"
+              >
+                <ArrowLeft size={18} />
+                Tillbaka
+              </Button>
+            </div>
+            <GlobalLeaderboard entries={entries || []} />
+          </div>
+        </div>
+        <Toaster position="top-center" />
+      </>
+    );
+  }
+
+  if (showPersonalLeaderboard) {
+    return (
+      <>
+        <div className="min-h-screen bg-background p-4 sm:p-6">
+          <div className="max-w-5xl mx-auto">
+            <div className="mb-6 flex items-center justify-between">
+              <Button
+                variant="ghost"
+                onClick={() => setShowPersonalLeaderboard(false)}
+                className="gap-2"
+              >
+                <ArrowLeft size={18} />
+                Tillbaka
+              </Button>
+            </div>
+            <PersonalLeaderboard entries={entries || []} userId={selectedProfile.id} />
+          </div>
+        </div>
+        <Toaster position="top-center" />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div className="min-h-screen bg-background">
+        <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="font-serif text-3xl sm:text-4xl font-bold text-foreground mb-1 flex items-center gap-2">
+                  <Sparkle size={32} weight="duotone" className="text-primary" />
+                  Melodifestivalen 2026
+                </h1>
+                <p className="font-body text-muted-foreground text-lg flex items-center gap-2">
+                  <UserCircle size={20} weight="duotone" />
+                  {selectedProfile.nickname}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                {currentUser.avatarUrl ? (
+                  <img
+                    src={currentUser.avatarUrl}
+                    alt={currentUser.githubLogin}
+                    className="w-10 h-10 rounded-full border-2 border-border"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center border-2 border-border">
+                    <span className="font-heading font-bold text-foreground text-sm">
+                      {currentUser.githubLogin.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                <div className="flex flex-col gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setExportDialogOpen(true)}
+                    className="gap-2 border-accent/30 hover:bg-accent/5"
+                  >
+                    <Download size={18} weight="duotone" />
+                    Exportera
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleBackToProfiles}
+                    className="gap-2"
+                  >
+                    <ArrowLeft size={18} />
+                    Profiler
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex gap-3">
+              <Button
+                variant={showGlobalLeaderboard ? 'default' : 'outline'}
+                onClick={() => setShowGlobalLeaderboard(true)}
+                className="gap-2 flex-1"
+              >
+                <Globe size={18} weight="duotone" />
+                Global topplista
+              </Button>
+              <Button
+                variant={showPersonalLeaderboard ? 'default' : 'outline'}
+                onClick={() => setShowPersonalLeaderboard(true)}
+                className="gap-2 flex-1"
+              >
+                <Trophy size={18} weight="duotone" />
+                Min topplista
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
+          <Tabs value={selectedHeat} onValueChange={setSelectedHeat} className="w-full">
+            <ScrollArea className="w-full pb-2">
+              <TabsList className="w-full grid grid-cols-3 sm:grid-cols-7 h-auto p-1 gap-1">
+                {HEATS.map((heat) => (
+                  <TabsTrigger
+                    key={heat}
+                    value={heat}
+                    className="text-xs sm:text-sm whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                  >
+                    {heat}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </ScrollArea>
+          </Tabs>
+
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <AnimatePresence mode="popLayout">
+              {heatEntries.map((entry) => {
+                const userRating = getUserRating(entry);
+                return (
+                  <motion.div
+                    key={entry.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <EntryCard
+                      entry={entry}
+                      onClick={() => setSelectedEntry(entry)}
+                      userRating={userRating}
+                    />
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
+
+      <ExportRatingsDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
+        entries={entries || []}
+        userId={selectedProfile.id}
+        userName={selectedProfile.nickname}
+      />
+
+      <Toaster position="top-center" />
+    </>
+  );
+}
+
+export default App;
