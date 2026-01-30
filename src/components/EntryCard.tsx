@@ -1,4 +1,4 @@
-import { Entry } from '@/lib/types';
+import { Entry, UserRating } from '@/lib/types';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Sparkle, Star } from '@phosphor-icons/react';
@@ -6,11 +6,15 @@ import { motion } from 'framer-motion';
 
 interface EntryCardProps {
   entry: Entry;
+  userRating?: UserRating;
   onClick: () => void;
 }
 
-export function EntryCard({ entry, onClick }: EntryCardProps) {
-  const ratedCategories = Object.values(entry.ratings).filter(r => r.rating > 0).length;
+export function EntryCard({ entry, userRating, onClick }: EntryCardProps) {
+  const totalScore = userRating?.totalScore || 0;
+  const ratedCategories = userRating 
+    ? Object.values(userRating.ratings).filter(r => r.rating > 0).length 
+    : 0;
   const totalCategories = 6;
   const isComplete = ratedCategories === totalCategories;
 
@@ -47,8 +51,8 @@ export function EntryCard({ entry, onClick }: EntryCardProps) {
                   <Star
                     key={i}
                     size={16}
-                    weight={i < Math.round(entry.totalScore / 6) ? 'fill' : 'regular'}
-                    className={i < Math.round(entry.totalScore / 6) ? 'text-gold' : 'text-muted-foreground/40'}
+                    weight={i < Math.round(totalScore / 6) ? 'fill' : 'regular'}
+                    className={i < Math.round(totalScore / 6) ? 'text-gold' : 'text-muted-foreground/40'}
                   />
                 ))}
               </div>
@@ -60,12 +64,12 @@ export function EntryCard({ entry, onClick }: EntryCardProps) {
             <div className="flex items-center gap-1.5">
               <Sparkle size={20} weight="fill" className="text-gold" />
               <span className="font-heading font-bold text-2xl text-foreground">
-                {entry.totalScore}
+                {totalScore}
               </span>
             </div>
           </div>
 
-          {!isComplete && (
+          {!isComplete && ratedCategories > 0 && (
             <div className="mt-3">
               <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                 <motion.div

@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useKV } from '@github/spark/hooks';
-import { Entry, CategoryKey } from '@/lib/types';
+import { Entry, Group, CategoryKey, UserRating, HEATS } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Plus, MusicNotes, SortAscending, SortDescending, Sparkle } from '@phosphor-icons/react';
-import { AddEntryDialog } from '@/components/AddEntryDialog';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Users, SignOut } from '@phosphor-icons/react';
+import { LoginScreen } from '@/components/LoginScreen';
+import { GroupSelection } from '@/components/GroupSelection';
 import { EntryCard } from '@/components/EntryCard';
 import { RatingView } from '@/components/RatingView';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,48 +13,196 @@ import { Toaster, toast } from 'sonner';
 import { MELODIFESTIVALEN_2025 } from '@/lib/melodifestivalen-data';
 
 function App() {
-  const [entries, setEntries] = useKV<Entry[]>('melodifestivalen-entries', []);
+  const [user, setUser] = useState<{ login: string; avatarUrl: string; id: string } | null>(null);
+  const [groups, setGroups] = useKV<Group[]>('mello-groups', []);
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [entries, setEntries] = useKV<Entry[]>('mello-entries', []);
   const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [sortDescending, setSortDescending] = useState(true);
+  const [selectedHeat, setSelectedHeat] = useState<string>(HEATS[0]);
 
-  const handleAddEntry = (artist: string, song: string, heat: string) => {
-    const newEntry: Entry = {
-      id: Date.now().toString(),
-      artist,
-      song,
-      heat,
-      ratings: {
-        song: { rating: 0, comment: '' },
-        clothes: { rating: 0, comment: '' },
-        scenography: { rating: 0, comment: '' },
-        vocals: { rating: 0, comment: '' },
-        lyrics: { rating: 0, comment: '' },
-        postcard: { rating: 0, comment: '' },
-      },
-      totalScore: 0,
+  useEffect(() => {
+    const initUser = async () => {
+      try {
+        const userData = await window.spark.user();
+        if (userData) {
+          setUser({
+            login: userData.login,
+            avatarUrl: userData.avatarUrl,
+            id: String(userData.id),
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load user:', error);
+      }
     };
 
-    setEntries((current) => [...(current || []), newEntry]);
-    toast.success('Bidrag tillagt!', {
-      description: `${song} av ${artist}`,
+    initUser();
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const groupParam = params.get('group');
+    if (groupParam && user) {
+      handleJoinGroup(groupParam);
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if ((entries || []).length === 0) {
+      initializeEntries();
+    }
+  }, []);
+
+  const initializeEntries = () => {
+    const initialEntries: Entry[] = MELODIFESTIVALEN_2025.map((entry) => ({
+      id: `${entry.artist}-${entry.song}`.toLowerCase().replace(/\s+/g, '-'),
+      artist: entry.artist,
+      song: entry.song,
+      heat: entry.heat,
+      userRatings: [],
+    }));
+    setEntries(initialEntries);
+  };
+
+  const handleLogin = async () => {
+    try {
+      const userData = await window.spark.user();
+      if (userData) {
+        setUser({
+          login: userData.login,
+          avatarUrl: userData.avatarUrl,
+          id: String(userData.id),
+        });
+        toast.success('Välkommen!', {
+          description: `Inloggad som ${userData.login}`,
+        });
+      }
+    } catch (error) {
+      toast.error('Kunde inte logga in', {
+        description: 'Försök igen senare',
+      });
+    }
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setSelectedGroupId(null);
+    toast.success('Utloggad');
+  };
+
+  const handleCreateGroup = (name: string) => {
+    if (!user) return;
+
+    const newGroup: Group = {
+      id: `group-${Date.now()}`,
+      name,
+      ownerId: user.id,
+      ownerName: user.login,
+      memberIds: [user.id],
+      createdAt: Date.now(),
+    };
+
+    setGroups((current) => [...(current || []), newGroup]);
+    setSelectedGroupId(newGroup.id);
+    toast.success('Grupp skapad!', {
+      description: `${name} är redo`,
     });
   };
 
+  const handleJoinGroup = (groupId: string) => {
+    if (!user) return;
+
+    const extractedId = groupId.includes('?group=') 
+      ? groupId.split('?group=')[1] 
+      : groupId;
+
+    setGroups((current) => {
+      const groups = current || [];
+      const group = groups.find((g) => g.id === extractedId);
+      
+      if (!group) {
+        toast.error('Gruppen hittades inte');
+        return groups;
+      }
+
+      if (group.memberIds.includes(user.id)) {
+        setSelectedGroupId(extractedId);
+        toast.info('Du är redan medlem');
+        return groups;
+      }
+
+      return groups.map((g) =>
+        g.id === extractedId
+          ? { ...g, memberIds: [...g.memberIds, user.id] }
+          : g
+      );
+    });
+
+    setSelectedGroupId(extractedId);
+    toast.success('Gick med i gruppen!');
+  };
+
+  const handleSelectGroup = (groupId: string) => {
+    setSelectedGroupId(groupId);
+  };
+
+  const handleBackToGroups = () => {
+    setSelectedGroupId(null);
+    setSelectedEntry(null);
+  };
+
   const handleUpdateRating = (entryId: string, category: CategoryKey, rating: number, comment: string) => {
-    setEntries((current) =>
-      (current || []).map((entry) => {
+    if (!user) return;
+
+    setEntries((current) => {
+      const entries = current || [];
+      return entries.map((entry) => {
         if (entry.id === entryId) {
-          const updatedRatings = {
-            ...entry.ratings,
-            [category]: { rating, comment },
-          };
-          const totalScore = Object.values(updatedRatings).reduce((sum, r) => sum + r.rating, 0);
+          const existingUserRating = entry.userRatings.find((ur) => ur.userId === user.id);
           
+          let updatedUserRatings: UserRating[];
+          
+          if (existingUserRating) {
+            const updatedRatings = {
+              ...existingUserRating.ratings,
+              [category]: { rating, comment },
+            };
+            
+            const totalScore = Object.values(updatedRatings).reduce((sum, r) => sum + r.rating, 0);
+            
+            updatedUserRatings = entry.userRatings.map((ur) =>
+              ur.userId === user.id
+                ? { ...ur, ratings: updatedRatings, totalScore }
+                : ur
+            );
+          } else {
+            const newRatings = {
+              song: { rating: 0, comment: '' },
+              clothes: { rating: 0, comment: '' },
+              scenography: { rating: 0, comment: '' },
+              vocals: { rating: 0, comment: '' },
+              lyrics: { rating: 0, comment: '' },
+              postcard: { rating: 0, comment: '' },
+              [category]: { rating, comment },
+            };
+            
+            const totalScore = Object.values(newRatings).reduce((sum, r) => sum + r.rating, 0);
+            
+            updatedUserRatings = [
+              ...entry.userRatings,
+              {
+                userId: user.id,
+                userName: user.login,
+                ratings: newRatings,
+                totalScore,
+              },
+            ];
+          }
+
           const updatedEntry = {
             ...entry,
-            ratings: updatedRatings,
-            totalScore,
+            userRatings: updatedUserRatings,
           };
 
           if (selectedEntry?.id === entryId) {
@@ -62,64 +212,51 @@ function App() {
           return updatedEntry;
         }
         return entry;
-      })
-    );
-  };
-
-  const handleLoadMelodifestivalen = () => {
-    const currentEntries = entries || [];
-    let addedCount = 0;
-
-    MELODIFESTIVALEN_2025.forEach((melodiEntry) => {
-      const exists = currentEntries.some(
-        (entry) => entry.artist === melodiEntry.artist && entry.song === melodiEntry.song
-      );
-
-      if (!exists) {
-        const newEntry: Entry = {
-          id: `${Date.now()}-${Math.random()}`,
-          artist: melodiEntry.artist,
-          song: melodiEntry.song,
-          heat: melodiEntry.heat,
-          ratings: {
-            song: { rating: 0, comment: '' },
-            clothes: { rating: 0, comment: '' },
-            scenography: { rating: 0, comment: '' },
-            vocals: { rating: 0, comment: '' },
-            lyrics: { rating: 0, comment: '' },
-            postcard: { rating: 0, comment: '' },
-          },
-          totalScore: 0,
-        };
-        currentEntries.push(newEntry);
-        addedCount++;
-      }
+      });
     });
-
-    if (addedCount > 0) {
-      setEntries(currentEntries);
-      toast.success(`${addedCount} bidrag tillagda!`, {
-        description: 'Melodifestivalen 2025 är nu laddad',
-      });
-    } else {
-      toast.info('Alla bidrag finns redan', {
-        description: 'Inga nya bidrag att lägga till',
-      });
-    }
   };
 
-  const sortedEntries = [...(entries || [])].sort((a, b) => {
-    if (sortDescending) {
-      return b.totalScore - a.totalScore;
-    }
-    return a.totalScore - b.totalScore;
-  });
+  const selectedGroup = (groups || []).find((g) => g.id === selectedGroupId);
+  const heatEntries = (entries || []).filter((e) => e.heat === selectedHeat);
+  
+  const getUserRating = (entry: Entry) => {
+    return entry.userRatings.find((ur) => ur.userId === user?.id);
+  };
+
+  if (!user) {
+    return (
+      <>
+        <LoginScreen onLogin={handleLogin} />
+        <Toaster position="top-center" />
+      </>
+    );
+  }
+
+  if (!selectedGroupId) {
+    return (
+      <>
+        <GroupSelection
+          user={user}
+          groups={groups || []}
+          onCreateGroup={handleCreateGroup}
+          onSelectGroup={handleSelectGroup}
+          onJoinGroup={handleJoinGroup}
+          onLogout={handleLogout}
+        />
+        <Toaster position="top-center" />
+      </>
+    );
+  }
 
   if (selectedEntry) {
+    const userRating = getUserRating(selectedEntry);
+
     return (
       <>
         <RatingView
           entry={selectedEntry}
+          userRating={userRating}
+          currentUserId={user.id}
           onBack={() => setSelectedEntry(null)}
           onUpdateRating={(category, rating, comment) =>
             handleUpdateRating(selectedEntry.id, category, rating, comment)
@@ -142,129 +279,87 @@ function App() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-                <div>
-                  <h1 className="font-display text-4xl sm:text-5xl text-foreground mb-2 tracking-tight">
-                    Melodifestivalen
-                  </h1>
-                  <p className="font-body text-muted-foreground text-lg">
-                    Betygsätt alla bidrag
-                  </p>
+              <div className="flex flex-col gap-4 mb-8">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h1 className="font-display text-4xl sm:text-5xl text-foreground mb-2 tracking-tight">
+                      {selectedGroup?.name}
+                    </h1>
+                    <p className="font-body text-muted-foreground text-lg">
+                      {selectedGroup?.memberIds.length} {selectedGroup?.memberIds.length === 1 ? 'medlem' : 'medlemmar'}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={user.avatarUrl}
+                      alt={user.login}
+                      className="w-10 h-10 rounded-full border-2 border-border"
+                    />
+                    <div className="hidden sm:flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleBackToGroups}
+                        className="gap-2"
+                      >
+                        <Users size={18} />
+                        Byt grupp
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleLogout}
+                        className="gap-2"
+                      >
+                        <SignOut size={18} />
+                        Logga ut
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-3">
-                  <Button
-                    onClick={handleLoadMelodifestivalen}
-                    size="lg"
-                    variant="outline"
-                    className="font-body gap-2 border-2 border-primary/30 hover:bg-primary/5"
-                  >
-                    <Sparkle size={24} weight="fill" />
-                    Ladda Mello 2025
-                  </Button>
-                  <Button
-                    onClick={() => setDialogOpen(true)}
-                    size="lg"
-                    className="font-body gap-2 bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg"
-                  >
-                    <Plus size={24} weight="bold" />
-                    Lägg till bidrag
-                  </Button>
-                </div>
+
+                <Tabs value={selectedHeat} onValueChange={setSelectedHeat} className="w-full">
+                  <TabsList className="w-full grid grid-cols-4 h-auto p-1">
+                    {HEATS.map((heat) => (
+                      <TabsTrigger
+                        key={heat}
+                        value={heat}
+                        className="font-body text-sm sm:text-base py-3"
+                      >
+                        {heat}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </Tabs>
               </div>
             </motion.div>
 
-            {(entries || []).length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-              >
-                <div className="flex flex-col items-center justify-center py-20 px-6">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mb-6">
-                    <MusicNotes size={48} weight="duotone" className="text-primary" />
-                  </div>
-                  <h2 className="font-heading font-bold text-2xl text-foreground mb-3 text-center">
-                    Inga bidrag än
-                  </h2>
-                  <p className="font-body text-muted-foreground text-center mb-6 max-w-md">
-                    Börja med att lägga till dina första Melodifestivalen-bidrag för att börja betygsätta
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <Button
-                      onClick={handleLoadMelodifestivalen}
-                      size="lg"
-                      variant="outline"
-                      className="font-body gap-2 border-2 border-primary/30 hover:bg-primary/5"
-                    >
-                      <Sparkle size={24} weight="fill" />
-                      Ladda Mello 2025
-                    </Button>
-                    <Button
-                      onClick={() => setDialogOpen(true)}
-                      size="lg"
-                      className="font-body gap-2 bg-accent hover:bg-accent/90"
-                    >
-                      <Plus size={24} weight="bold" />
-                      Lägg till eget bidrag
-                    </Button>
-                  </div>
-                </div>
-              </motion.div>
-            ) : (
-              <>
-                <div className="flex items-center justify-between mb-6">
-                  <p className="font-body text-muted-foreground">
-                    {(entries || []).length} {(entries || []).length === 1 ? 'bidrag' : 'bidrag'}
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSortDescending(!sortDescending)}
-                    className="font-body gap-2"
-                  >
-                    {sortDescending ? (
-                      <>
-                        <SortDescending size={18} />
-                        Högst först
-                      </>
-                    ) : (
-                      <>
-                        <SortAscending size={18} />
-                        Lägst först
-                      </>
-                    )}
-                  </Button>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <AnimatePresence mode="popLayout">
+                {heatEntries.map((entry, index) => {
+                  const userRating = getUserRating(entry);
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <AnimatePresence mode="popLayout">
-                    {sortedEntries.map((entry, index) => (
-                      <motion.div
-                        key={entry.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ duration: 0.3, delay: index * 0.05 }}
-                      >
-                        <EntryCard
-                          entry={entry}
-                          onClick={() => setSelectedEntry(entry)}
-                        />
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </div>
-              </>
-            )}
+                  return (
+                    <motion.div
+                      key={entry.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                    >
+                      <EntryCard
+                        entry={entry}
+                        userRating={userRating}
+                        onClick={() => setSelectedEntry(entry)}
+                      />
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
       </div>
-
-      <AddEntryDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        onAdd={handleAddEntry}
-      />
 
       <Toaster position="top-center" />
     </>

@@ -3,11 +3,9 @@ export interface CategoryRating {
   comment: string;
 }
 
-export interface Entry {
-  id: string;
-  artist: string;
-  song: string;
-  heat: string;
+export interface UserRating {
+  userId: string;
+  userName: string;
   ratings: {
     song: CategoryRating;
     clothes: CategoryRating;
@@ -17,6 +15,23 @@ export interface Entry {
     postcard: CategoryRating;
   };
   totalScore: number;
+}
+
+export interface Entry {
+  id: string;
+  artist: string;
+  song: string;
+  heat: string;
+  userRatings: UserRating[];
+}
+
+export interface Group {
+  id: string;
+  name: string;
+  ownerId: string;
+  ownerName: string;
+  memberIds: string[];
+  createdAt: number;
 }
 
 export const CATEGORIES = [
@@ -29,3 +44,10 @@ export const CATEGORIES = [
 ] as const;
 
 export type CategoryKey = typeof CATEGORIES[number]['key'];
+
+export const HEATS = [
+  "Deltävling 1",
+  "Deltävling 2",
+  "Deltävling 3",
+  "Deltävling 4",
+] as const;
