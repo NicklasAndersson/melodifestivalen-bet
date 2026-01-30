@@ -741,7 +741,11 @@ function App() {
                     <h1 className="font-display text-4xl sm:text-5xl text-foreground mb-2 tracking-tight">
                       {selectedGroup?.name}
                     </h1>
-                    <p className="font-body text-muted-foreground text-lg">
+                    <p 
+                      className="font-body text-muted-foreground text-lg cursor-pointer hover:text-foreground transition-colors flex items-center gap-2"
+                      onClick={() => selectedGroup && selectedGroup.ownerId === user!.id && setMemberManagementOpen(true)}
+                    >
+                      <UsersThree size={20} weight="duotone" />
                       {selectedGroup?.memberIds.length} {selectedGroup?.memberIds.length === 1 ? 'medlem' : 'medlemmar'}
                     </p>
                   </div>
