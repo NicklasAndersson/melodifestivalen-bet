@@ -73,35 +73,41 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
         logging: false,
         useCORS: true,
         allowTaint: true,
+        windowWidth: exportRef.current.scrollWidth,
+        windowHeight: exportRef.current.scrollHeight,
       });
 
-      const blob = await new Promise<Blob | null>((resolve) => {
-        canvas.toBlob((blob) => resolve(blob), 'image/png', 1.0);
-      });
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          toast.error('Kunde inte skapa bildfil', {
+            description: 'Försök igen eller använd PDF-export',
+          });
+          setIsExporting(false);
+          return;
+        }
 
-      if (!blob) {
-        throw new Error('Failed to create image blob');
-      }
-
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.download = `melodifestivalen-2026-${userName.toLowerCase().replace(/\s+/g, '-')}.png`;
-      link.href = url;
-      link.click();
-      
-      setTimeout(() => {
-        URL.revokeObjectURL(url);
-      }, 100);
-      
-      toast.success('Bild nedladdad!', {
-        description: 'Din topplista har exporterats som bild',
-      });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = `melodifestivalen-2026-${userName.toLowerCase().replace(/\s+/g, '-')}.png`;
+        link.href = url;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        setTimeout(() => {
+          URL.revokeObjectURL(url);
+        }, 1000);
+        
+        toast.success('Bild nedladdad!', {
+          description: 'Din topplista har exporterats som bild',
+        });
+        setIsExporting(false);
+      }, 'image/png', 1.0);
     } catch (error) {
       console.error('Export error:', error);
       toast.error('Kunde inte exportera bild', {
         description: 'Försök igen eller använd PDF-export',
       });
-    } finally {
       setIsExporting(false);
     }
   };
