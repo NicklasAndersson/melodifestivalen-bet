@@ -233,8 +233,8 @@ function App() {
   const heatEntries = (entries || []).filter((e) => e.heat === selectedHeat).sort((a, b) => a.number - b.number);
   
   const getUserRating = (entry: Entry) => {
-    if (!selectedProfile) return;
-    if (!selectedProfile) return;
+    if (!selectedProfile) return undefined;
+    return entry.userRatings.find((ur) => ur.profileId === selectedProfile.id);
   };
 
   if (!currentUser) {
@@ -243,9 +243,10 @@ function App() {
         <SSOLoginScreen onSSOLogin={handleSSOLogin} />
         <Toaster position="top-center" />
       </>
-  }
+    );
   }
 
+  if (!selectedProfile) {
     return (
       <>
         <ProfileSelector
@@ -259,10 +260,10 @@ function App() {
     );
   }
 
-  }f (selectedEntry) {
-
   if (selectedEntry) {
     return (
+      <>
+        <RatingView
           entry={selectedEntry}
           onBack={() => setSelectedEntry(null)}
           onUpdateRating={(category, rating, comment) => handleRating(selectedEntry.id, category, rating, comment)}
