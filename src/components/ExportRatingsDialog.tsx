@@ -73,8 +73,38 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
         logging: false,
         useCORS: true,
         allowTaint: true,
+        foreignObjectRendering: false,
         ignoreElements: (element) => {
           return element.classList?.contains('ignore-export') || false;
+        },
+        onclone: (clonedDoc) => {
+          const clonedElement = clonedDoc.querySelector('[data-export-content]');
+          if (clonedElement) {
+            const allElements = clonedElement.querySelectorAll('*');
+            allElements.forEach((el) => {
+              const htmlEl = el as HTMLElement;
+              const computedStyle = window.getComputedStyle(htmlEl);
+              
+              const convertOklchToHex = (style: CSSStyleDeclaration, prop: string) => {
+                const value = style.getPropertyValue(prop);
+                if (value && value.includes('oklch')) {
+                  const tempDiv = document.createElement('div');
+                  tempDiv.style.display = 'none';
+                  tempDiv.style[prop as any] = value;
+                  document.body.appendChild(tempDiv);
+                  const computed = window.getComputedStyle(tempDiv).getPropertyValue(prop);
+                  document.body.removeChild(tempDiv);
+                  if (computed && !computed.includes('oklch')) {
+                    htmlEl.style[prop as any] = computed;
+                  }
+                }
+              };
+              
+              convertOklchToHex(computedStyle, 'color');
+              convertOklchToHex(computedStyle, 'background-color');
+              convertOklchToHex(computedStyle, 'border-color');
+            });
+          }
         },
       });
 
@@ -123,6 +153,37 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
         backgroundColor: '#faf9fc',
         logging: false,
         useCORS: true,
+        allowTaint: true,
+        foreignObjectRendering: false,
+        onclone: (clonedDoc) => {
+          const clonedElement = clonedDoc.querySelector('[data-export-content]');
+          if (clonedElement) {
+            const allElements = clonedElement.querySelectorAll('*');
+            allElements.forEach((el) => {
+              const htmlEl = el as HTMLElement;
+              const computedStyle = window.getComputedStyle(htmlEl);
+              
+              const convertOklchToHex = (style: CSSStyleDeclaration, prop: string) => {
+                const value = style.getPropertyValue(prop);
+                if (value && value.includes('oklch')) {
+                  const tempDiv = document.createElement('div');
+                  tempDiv.style.display = 'none';
+                  tempDiv.style[prop as any] = value;
+                  document.body.appendChild(tempDiv);
+                  const computed = window.getComputedStyle(tempDiv).getPropertyValue(prop);
+                  document.body.removeChild(tempDiv);
+                  if (computed && !computed.includes('oklch')) {
+                    htmlEl.style[prop as any] = computed;
+                  }
+                }
+              };
+              
+              convertOklchToHex(computedStyle, 'color');
+              convertOklchToHex(computedStyle, 'background-color');
+              convertOklchToHex(computedStyle, 'border-color');
+            });
+          }
+        },
       });
 
       const imgData = canvas.toDataURL('image/png');
@@ -142,6 +203,7 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
         description: 'Din topplista har exporterats som PDF',
       });
     } catch (error) {
+      console.error('Export error:', error);
       toast.error('Kunde inte exportera PDF', {
         description: 'Försök igen',
       });
@@ -202,7 +264,7 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
             </p>
           </div>
 
-          <div ref={exportRef} style={{ backgroundColor: '#faf9fc', padding: '32px' }}>
+          <div ref={exportRef} data-export-content style={{ backgroundColor: '#faf9fc', padding: '32px' }}>
             <div style={{ 
               textAlign: 'center', 
               paddingBottom: '24px', 
