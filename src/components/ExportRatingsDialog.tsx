@@ -278,8 +278,8 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
         
         categories.forEach((category, catIndex) => {
           const catX = x + 30 + (catIndex % 3) * categoryWidth;
-          const catY = y + 100 + (Math.floor(catIndex / 3) * 35);
-          
+          <div className="border-2 border-dashed border-border rounded-lg p-8 bg-muted/30 text-center">
+            <p className="text-sm text-muted-foreground font-body mb-2">
           const emojiMap: Record<string, string> = {
             MusicNotes: '🎵',
             Palette: '🎨',
