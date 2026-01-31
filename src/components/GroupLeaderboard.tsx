@@ -5,8 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Sparkle, Star, Trophy, Medal, Crown, LinkSimple, Users, Download } from '@phosphor-icons/react';
 import { motion } from 'framer-motion';
 import { getMellopediaUrl } from '@/lib/melodifestivalen-data';
-import { useRef } from 'react';
-import html2canvas from 'html2canvas';
 import { toast } from 'sonner';
 
 interface GroupLeaderboardProps {
@@ -15,8 +13,6 @@ interface GroupLeaderboardProps {
 }
 
 export function GroupLeaderboard({ entries, users }: GroupLeaderboardProps) {
-  const leaderboardRef = useRef<HTMLDivElement>(null);
-
   const allProfiles = users.flatMap((user) =>
     user.profiles.map((profile) => ({
       ...profile,
@@ -39,23 +35,149 @@ export function GroupLeaderboard({ entries, users }: GroupLeaderboardProps) {
     .sort((a, b) => b.average - a.average)
     .slice(0, 10);
 
-  const handleExportImage = async () => {
-    if (!leaderboardRef.current) {
-      toast.error('Kunde inte hitta innehåll att exportera');
+  const handleExportImage = () => {
+    if (entriesWithGroupAverage.length === 0) {
+      toast.error('Ingen data att exportera');
       return;
     }
 
     try {
-      toast.info('Förbereder export...', {
-        description: 'Vänta ett ögonblick',
+      toast.info('Skapar bild...', {
+        description: 'Detta kan ta en stund',
       });
 
-      const canvas = await html2canvas(leaderboardRef.current, {
-        backgroundColor: '#f8f3f6',
-        scale: 2,
-        logging: false,
-        useCORS: true,
-        allowTaint: true,
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) {
+        throw new Error('Kunde inte skapa canvas kontext');
+      }
+
+      const width = 1200;
+      const height = Math.max(1200, 200 + entriesWithGroupAverage.length * 140);
+      canvas.width = width;
+      canvas.height = height;
+
+      const colors = {
+        background: '#f8f3f6',
+        foreground: '#4a2d4a',
+        primary: '#d45d7a',
+        secondary: '#e8d98a',
+        accent: '#89c6c5',
+        gold: '#e8cd8c',
+        muted: '#f2e5ef',
+        mutedForeground: '#9e7c9e',
+        border: '#e8c8dc',
+      };
+
+      ctx.fillStyle = colors.background;
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.fillStyle = colors.primary;
+      ctx.font = 'bold 48px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Melodifestivalen 2026', width / 2, 80);
+
+      ctx.fillStyle = colors.mutedForeground;
+      ctx.font = '24px sans-serif';
+      ctx.fillText('Gruppens topplista', width / 2, 120);
+
+      let y = 200;
+      
+      entriesWithGroupAverage.forEach((item, index) => {
+        const cardX = 80;
+        const cardY = y;
+        const cardWidth = width - 160;
+        const cardHeight = 120;
+
+        ctx.fillStyle = colors.muted;
+        ctx.strokeStyle = colors.border;
+        ctx.lineWidth = 2;
+        
+        if (index === 0) {
+          ctx.fillStyle = 'rgba(232, 205, 140, 0.2)';
+          ctx.strokeStyle = 'rgba(232, 205, 140, 0.8)';
+          ctx.lineWidth = 3;
+        } else if (index === 1) {
+          ctx.fillStyle = 'rgba(135, 206, 235, 0.15)';
+          ctx.strokeStyle = 'rgba(135, 206, 235, 0.6)';
+          ctx.lineWidth = 3;
+        } else if (index === 2) {
+          ctx.fillStyle = 'rgba(205, 127, 50, 0.15)';
+          ctx.strokeStyle = 'rgba(205, 127, 50, 0.6)';
+          ctx.lineWidth = 3;
+        }
+        
+        ctx.beginPath();
+        ctx.roundRect(cardX, cardY, cardWidth, cardHeight, 12);
+        ctx.fill();
+        ctx.stroke();
+
+        const posX = cardX + 60;
+        const posY = cardY + cardHeight / 2 + 12;
+        
+        if (index === 0) {
+          ctx.fillStyle = colors.gold;
+          ctx.font = 'bold 36px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('👑', posX, posY);
+        } else if (index === 1) {
+          ctx.fillStyle = '#87CEEB';
+          ctx.font = 'bold 36px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('🥈', posX, posY);
+        } else if (index === 2) {
+          ctx.fillStyle = '#CD7F32';
+          ctx.font = 'bold 36px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('🥉', posX, posY);
+        } else {
+          ctx.fillStyle = colors.mutedForeground;
+          ctx.font = 'bold 32px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText((index + 1).toString(), posX, posY);
+        }
+
+        const numberX = cardX + 140;
+        const numberY = cardY + cardHeight / 2;
+        
+        ctx.fillStyle = colors.primary + '40';
+        ctx.beginPath();
+        ctx.roundRect(numberX - 25, numberY - 25, 50, 50, 8);
+        ctx.fill();
+        
+        ctx.fillStyle = colors.foreground;
+        ctx.font = 'bold 24px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(item.entry.number.toString(), numberX, numberY + 8);
+
+        const textX = numberX + 60;
+        const artistY = cardY + cardHeight / 2 - 15;
+        const songY = cardY + cardHeight / 2 + 15;
+        
+        ctx.fillStyle = colors.mutedForeground;
+        ctx.font = '600 16px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(item.entry.artist, textX, artistY);
+        
+        ctx.fillStyle = colors.foreground;
+        ctx.font = 'bold 22px sans-serif';
+        ctx.fillText(item.entry.song, textX, songY);
+
+        const scoreX = cardX + cardWidth - 120;
+        const scoreY = cardY + cardHeight / 2 + 10;
+        
+        ctx.fillStyle = colors.gold;
+        ctx.font = 'bold 36px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(item.average.toFixed(1), scoreX, scoreY);
+
+        ctx.fillStyle = colors.mutedForeground;
+        ctx.font = '14px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(`${item.ratingsCount} betyg`, scoreX, scoreY + 20);
+
+        y += 140;
       });
 
       canvas.toBlob((blob) => {
@@ -143,18 +265,7 @@ export function GroupLeaderboard({ entries, users }: GroupLeaderboardProps) {
       </div>
 
       <div className="space-y-4">
-        <div ref={leaderboardRef} className="space-y-4 p-4 sm:p-8 bg-background rounded-lg">
-          <div className="mb-6 sm:mb-8 text-center">
-            <h1 className="font-serif text-2xl sm:text-4xl font-bold text-foreground mb-2 flex items-center justify-center gap-2 sm:gap-3">
-              <Sparkle size={24} weight="duotone" className="text-primary sm:w-8 sm:h-8" />
-              Melodifestivalen 2026
-            </h1>
-            <p className="font-body text-base sm:text-xl text-muted-foreground">
-              Gruppens topplista
-            </p>
-          </div>
-
-          {entriesWithGroupAverage.map((item, index) => (
+        {entriesWithGroupAverage.map((item, index) => (
           <motion.div
             key={item.entry.id}
             initial={{ opacity: 0, y: 20 }}
@@ -273,7 +384,6 @@ export function GroupLeaderboard({ entries, users }: GroupLeaderboardProps) {
             </Card>
           </motion.div>
         ))}
-        </div>
       </div>
     </div>
   );
