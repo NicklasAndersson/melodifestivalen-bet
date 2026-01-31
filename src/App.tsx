@@ -32,16 +32,36 @@ function App() {
   const [dataVersion, setDataVersion] = useKV<number>('mello-data-version-v2', 0);
   const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
   const [showComparison, setShowComparison] = useState(false);
-  const [selectedHeat, setSelectedHeat] = useState<string>(HEATS[0]);
-  const [showGlobalLeaderboard, setShowGlobalLeaderboard] = useState(false);
-  const [showPersonalLeaderboard, setShowPersonalLeaderboard] = useState(false);
-  const [showGroupLeaderboard, setShowGroupLeaderboard] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [showMigrationDebug, setShowMigrationDebug] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [showBackupReminder, setShowBackupReminder] = useState(false);
   
   const CURRENT_DATA_VERSION = getDataVersion();
+
+  const getInitialViewFromURL = () => {
+    const params = new URLSearchParams(window.location.search);
+    return {
+      view: params.get('view') || 'main',
+      heat: params.get('heat') || HEATS[0],
+      entry: params.get('entry') || null,
+    };
+  };
+
+  const [selectedHeat, setSelectedHeat] = useState<string>(getInitialViewFromURL().heat);
+  const [showGlobalLeaderboard, setShowGlobalLeaderboard] = useState(getInitialViewFromURL().view === 'global');
+  const [showPersonalLeaderboard, setShowPersonalLeaderboard] = useState(getInitialViewFromURL().view === 'personal');
+  const [showGroupLeaderboard, setShowGroupLeaderboard] = useState(getInitialViewFromURL().view === 'group');
+
+  const updateURL = (view: string, heat?: string, entryId?: string) => {
+    const params = new URLSearchParams();
+    params.set('view', view);
+    if (heat) params.set('heat', heat);
+    if (entryId) params.set('entry', entryId);
+    
+    const newURL = `${window.location.pathname}?${params.toString()}`;
+    window.history.replaceState({}, '', newURL);
+  };
 
   useEffect(() => {
     const currentEntries = entries || [];
@@ -65,6 +85,19 @@ function App() {
     const currentEntries = entries || [];
     if (selectedProfile && hasRatings(currentEntries)) {
       setShowBackupReminder(shouldShowBackupWarning());
+    }
+  }, [selectedProfile, entries]);
+
+  useEffect(() => {
+    const initialView = getInitialViewFromURL();
+    if (selectedProfile && initialView.entry) {
+      const entry = (entries || []).find(e => e.id === initialView.entry);
+      if (entry) {
+        setSelectedEntry(entry);
+        if (initialView.view === 'comparison') {
+          setShowComparison(true);
+        }
+      }
     }
   }, [selectedProfile, entries]);
 
@@ -216,6 +249,7 @@ function App() {
   const handleBackToProfiles = () => {
     setSelectedProfile(null);
     setShowComparison(false);
+    updateURL('main', selectedHeat);
   };
 
   const handleRating = (entryId: string, category: CategoryKey, rating: number, comment: string) => {
@@ -357,7 +391,10 @@ function App() {
         <ProfileComparisonView
           entry={selectedEntry}
           currentUserId={selectedProfile.id}
-          onBack={() => setShowComparison(false)}
+          onBack={() => {
+            setShowComparison(false);
+            updateURL('entry', selectedHeat, selectedEntry.id);
+          }}
         />
         <Toaster position="top-center" />
       </>
@@ -369,12 +406,18 @@ function App() {
       <>
         <RatingView
           entry={selectedEntry}
-          onBack={() => setSelectedEntry(null)}
+          onBack={() => {
+            setSelectedEntry(null);
+            updateURL('main', selectedHeat);
+          }}
           onUpdateRating={(category, rating, comment) => handleRating(selectedEntry.id, category, rating, comment)}
           userRating={getUserRating(selectedEntry)}
           currentUserId={selectedProfile.id}
           onDeleteRating={() => handleDeleteRating(selectedEntry.id)}
-          onShowComparison={() => setShowComparison(true)}
+          onShowComparison={() => {
+            setShowComparison(true);
+            updateURL('comparison', selectedHeat, selectedEntry.id);
+          }}
         />
         <Toaster position="top-center" />
       </>
@@ -389,7 +432,10 @@ function App() {
             <div className="mb-6 flex items-center justify-between">
               <Button
                 variant="ghost"
-                onClick={() => setShowGlobalLeaderboard(false)}
+                onClick={() => {
+                  setShowGlobalLeaderboard(false);
+                  updateURL('main', selectedHeat);
+                }}
                 className="gap-2"
               >
                 <ArrowLeft size={18} />
@@ -412,7 +458,10 @@ function App() {
             <div className="mb-6 flex items-center justify-between">
               <Button
                 variant="ghost"
-                onClick={() => setShowPersonalLeaderboard(false)}
+                onClick={() => {
+                  setShowPersonalLeaderboard(false);
+                  updateURL('main', selectedHeat);
+                }}
                 className="gap-2"
               >
                 <ArrowLeft size={18} />
@@ -435,7 +484,10 @@ function App() {
             <div className="mb-6 flex items-center justify-between">
               <Button
                 variant="ghost"
-                onClick={() => setShowGroupLeaderboard(false)}
+                onClick={() => {
+                  setShowGroupLeaderboard(false);
+                  updateURL('main', selectedHeat);
+                }}
                 className="gap-2"
               >
                 <ArrowLeft size={18} />
@@ -553,7 +605,10 @@ function App() {
             <div className="mt-6 flex gap-3">
               <Button
                 variant={showGlobalLeaderboard ? 'default' : 'outline'}
-                onClick={() => setShowGlobalLeaderboard(true)}
+                onClick={() => {
+                  setShowGlobalLeaderboard(true);
+                  updateURL('global', selectedHeat);
+                }}
                 className="gap-2 flex-1"
               >
                 <Globe size={18} weight="duotone" />
@@ -561,7 +616,10 @@ function App() {
               </Button>
               <Button
                 variant={showGroupLeaderboard ? 'default' : 'outline'}
-                onClick={() => setShowGroupLeaderboard(true)}
+                onClick={() => {
+                  setShowGroupLeaderboard(true);
+                  updateURL('group', selectedHeat);
+                }}
                 className="gap-2 flex-1"
               >
                 <Users size={18} weight="duotone" />
@@ -569,7 +627,10 @@ function App() {
               </Button>
               <Button
                 variant={showPersonalLeaderboard ? 'default' : 'outline'}
-                onClick={() => setShowPersonalLeaderboard(true)}
+                onClick={() => {
+                  setShowPersonalLeaderboard(true);
+                  updateURL('personal', selectedHeat);
+                }}
                 className="gap-2 flex-1"
               >
                 <Trophy size={18} weight="duotone" />
@@ -580,7 +641,10 @@ function App() {
         </div>
 
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
-          <Tabs value={selectedHeat} onValueChange={setSelectedHeat} className="w-full">
+          <Tabs value={selectedHeat} onValueChange={(heat) => {
+            setSelectedHeat(heat);
+            updateURL('main', heat);
+          }} className="w-full">
             <ScrollArea className="w-full pb-2">
               <TabsList className="w-full grid grid-cols-3 sm:grid-cols-7 h-auto p-1 gap-1">
                 {HEATS.map((heat) => (
@@ -611,7 +675,10 @@ function App() {
                   >
                     <EntryCard
                       entry={entry}
-                      onClick={() => setSelectedEntry(entry)}
+                      onClick={() => {
+                        setSelectedEntry(entry);
+                        updateURL('entry', selectedHeat, entry.id);
+                      }}
                       userRating={userRating}
                     />
                   </motion.div>
