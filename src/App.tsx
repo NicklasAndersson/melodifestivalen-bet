@@ -142,10 +142,10 @@ function App() {
         });
       }
     } catch (error) {
+      console.error('SSO Login failed:', error);
       toast.error('Kunde inte logga in med GitHub', {
         description: 'Försök igen',
       });
-      throw error;
     }
   };
 

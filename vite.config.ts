@@ -28,6 +28,11 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test-setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
+    server: {
+      deps: {
+        inline: [/@radix-ui/, /class-variance-authority/],
+      },
+    },
     coverage: {
       reporter: ['text', 'html'],
       exclude: ['node_modules/', 'src/test-setup.ts'],
