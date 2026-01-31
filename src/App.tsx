@@ -15,9 +15,11 @@ import { GlobalLeaderboard } from '@/components/GlobalLeaderboard';
 import { PersonalLeaderboard } from '@/components/PersonalLeaderboard';
 import { GroupLeaderboard } from '@/components/GroupLeaderboard';
 import { ExportRatingsDialog } from '@/components/ExportRatingsDialog';
+import { MigrationDebug } from '@/components/MigrationDebug';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster, toast } from 'sonner';
 import { MELODIFESTIVALEN_2026 } from '@/lib/melodifestivalen-data';
+import { migrateEntries, validateEntries, getDataVersion } from '@/lib/migration';
 
 function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -32,32 +34,76 @@ function App() {
   const [showPersonalLeaderboard, setShowPersonalLeaderboard] = useState(false);
   const [showGroupLeaderboard, setShowGroupLeaderboard] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [showMigrationDebug, setShowMigrationDebug] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
   
-  const CURRENT_DATA_VERSION = 3000;
+  const CURRENT_DATA_VERSION = getDataVersion();
 
   useEffect(() => {
-    if ((entries || []).length === 0 || dataVersion !== CURRENT_DATA_VERSION) {
+    const currentEntries = entries || [];
+    const needsMigration = currentEntries.length === 0 || dataVersion !== CURRENT_DATA_VERSION;
+    
+    if (needsMigration) {
       initializeEntries();
-      setDataVersion(CURRENT_DATA_VERSION);
-      if (dataVersion !== CURRENT_DATA_VERSION && dataVersion !== 0) {
-        toast.success('Data uppdaterad!', {
-          description: 'Melodifestivalen 2026-bidrag har laddats',
-        });
-      }
     }
   }, []);
 
   const initializeEntries = () => {
-    const initialEntries: Entry[] = MELODIFESTIVALEN_2026.map((entry) => ({
-      id: `${entry.artist}-${entry.song}`.toLowerCase().replace(/\s+/g, '-'),
-      number: entry.number,
-      artist: entry.artist,
-      song: entry.song,
-      heat: entry.heat,
-      heatDate: entry.heatDate,
-      userRatings: [],
-    }));
-    setEntries(initialEntries);
+    const currentEntries = entries || [];
+    
+    if (currentEntries.length === 0) {
+      const initialEntries: Entry[] = MELODIFESTIVALEN_2026.map((entry) => ({
+        id: `${entry.artist}-${entry.song}`.toLowerCase().replace(/\s+/g, '-'),
+        number: entry.number,
+        artist: entry.artist,
+        song: entry.song,
+        heat: entry.heat,
+        heatDate: entry.heatDate,
+        userRatings: [],
+      }));
+      
+      setEntries(initialEntries);
+      setDataVersion(CURRENT_DATA_VERSION);
+      return;
+    }
+
+    const { entries: migratedEntries, result } = migrateEntries(currentEntries);
+    
+    const validation = validateEntries(migratedEntries);
+    if (!validation.valid) {
+      console.error('Entry validation failed:', validation.errors);
+      toast.error('Datavalidering misslyckades', {
+        description: 'Vänligen kontakta support',
+      });
+      return;
+    }
+    
+    setEntries(migratedEntries);
+    setDataVersion(CURRENT_DATA_VERSION);
+    
+    if (result.totalRatings > 0) {
+      if (result.migratedCount === result.totalRatings) {
+        toast.success('Data uppdaterad!', {
+          description: `Alla ${result.migratedCount} betyg migrerades`,
+        });
+      } else if (result.migratedCount > 0) {
+        toast.warning('Delvis migrering', {
+          description: `${result.migratedCount}/${result.totalRatings} betyg migrerades`,
+        });
+        
+        if (result.unmatchedEntries.length > 0) {
+          console.warn('Unmatched entries:', result.unmatchedEntries);
+        }
+      } else {
+        toast.error('Migrering misslyckades', {
+          description: 'Inga betyg kunde överföras',
+        });
+      }
+    } else if (dataVersion !== 0) {
+      toast.success('Data uppdaterad!', {
+        description: 'Melodifestivalen 2026-bidrag har laddats',
+      });
+    }
   };
 
   const handleSSOLogin = async () => {
@@ -67,6 +113,8 @@ function App() {
       if (!githubUser || !githubUser.email) {
         throw new Error('Kunde inte hämta GitHub-information');
       }
+      
+      setIsOwner(githubUser.isOwner);
       
       const storedUsers = users || [];
       let foundUser = storedUsers.find((u) => u.email === githubUser.email);
@@ -364,6 +412,27 @@ function App() {
     );
   }
 
+  if (showMigrationDebug && isOwner) {
+    return (
+      <>
+        <MigrationDebug
+          entries={entries || []}
+          currentVersion={dataVersion || 0}
+          onBack={() => setShowMigrationDebug(false)}
+          onMigrate={(newEntries) => {
+            setEntries(newEntries);
+            setDataVersion(getDataVersion());
+            setShowMigrationDebug(false);
+            toast.success('Migration tillämpades', {
+              description: 'Data har uppdaterats',
+            });
+          }}
+        />
+        <Toaster position="top-center" />
+      </>
+    );
+  }
+
   return (
     <>
       <div className="min-h-screen bg-background">
@@ -415,6 +484,17 @@ function App() {
                   </Button>
                 </div>
               </div>
+              {isOwner && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowMigrationDebug(true)}
+                  className="gap-2 text-xs opacity-50 hover:opacity-100"
+                  title="Debug (endast ägare)"
+                >
+                  Debug
+                </Button>
+              )}
             </div>
 
             <div className="mt-6 flex gap-3">

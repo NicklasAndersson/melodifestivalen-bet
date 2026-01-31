@@ -1,485 +1,254 @@
-# Melodifestivalen 2026 - Datamodell
+# Data Model Documentation
 
-## Översikt
+## Overview
 
-Denna applikation använder en normaliserad datastruktur där:
-- **Användare** (Users) lagras separat med sina **Profiler**
-- **Bidrag** (Entries) lagras separat med alla **Betyg** (Ratings)
-- Data persisteras i Spark KV-store med tre primära nycklar
+This document describes the complete data model for the Melodifestivalen 2026 rating application. The application uses Spark's Key-Value (KV) storage for all persistence.
 
-## Persistens Keys (Spark KV)
+## Storage Keys
 
-### `mello-users-v2`
-Lagrar alla användare och deras profiler. Varje GitHub-konto kan ha flera profiler.
+The application uses three primary KV storage keys:
 
-### `mello-entries-v2`
-Lagrar alla Melodifestivalen-bidrag och alla betyg från alla profiler.
+- `mello-users-v2`: Array of User objects
+- `mello-entries-v2`: Array of Entry objects (contains all ratings)
+- `mello-data-version-v2`: Number indicating the current data version
 
-### `mello-data-version-v2`
-Versionsnummer för att hantera datamigration och uppdateringar av bidragslistan.
-
----
-
-## Datatyper
+## Data Structures
 
 ### User
-Representerar en inloggad GitHub-användare. Varje GitHub-konto skapar en User.
+
+Represents a GitHub-authenticated user who can have multiple profiles.
 
 ```typescript
 interface User {
-  id: string;                    // Format: "user-{timestamp}"
-  email: string;                 // GitHub email (unik identifierare)
-  githubLogin: string;           // GitHub användarnamn
-  avatarUrl?: string;            // GitHub profilbild URL
-  createdAt: number;             // Unix timestamp (ms)
-  profiles: Profile[];           // Array av profiler som tillhör användaren
+  id: string;                    // Unique identifier (format: "user-{timestamp}")
+  email: string;                 // GitHub email address
+  githubLogin: string;           // GitHub username
+  avatarUrl?: string;            // GitHub avatar URL
+  createdAt: number;             // Unix timestamp
+  profiles: Profile[];           // Array of profiles belonging to this user
 }
 ```
 
-**Exempel:**
-```json
-{
-  "id": "user-1738000000000",
-  "email": "johan@example.com",
-  "githubLogin": "johansson",
-  "avatarUrl": "https://avatars.githubusercontent.com/u/123456",
-  "createdAt": 1738000000000,
-  "profiles": [
-    {
-      "id": "profile-1738000100000",
-      "userId": "user-1738000000000",
-      "nickname": "Johan",
-      "createdAt": 1738000100000
-    },
-    {
-      "id": "profile-1738000200000",
-      "userId": "user-1738000000000",
-      "nickname": "Anna",
-      "createdAt": 1738000200000
-    }
-  ]
-}
-```
-
-**Validering:**
-- `email` måste vara unik i systemet
-- `id` genereras automatiskt med timestamp
-- `profiles` är en array som kan vara tom eller innehålla flera profiler
-
----
+**Key Points:**
+- One GitHub account = One User
+- Users are uniquely identified by their email address
+- Users can create multiple profiles
 
 ### Profile
-Representerar en betygsprofil inom en User. Flera profiler kan finnas per GitHub-konto.
+
+Represents a rating profile under a user account. Each profile has independent ratings.
 
 ```typescript
 interface Profile {
-  id: string;              // Format: "profile-{timestamp}"
-  userId: string;          // Referens till User.id
-  nickname: string;        // Användarens valfria smeknamn
-  createdAt: number;       // Unix timestamp (ms)
+  id: string;                    // Unique identifier (format: "profile-{timestamp}")
+  userId: string;                // Reference to parent User.id
+  nickname: string;              // Display name for this profile
+  createdAt: number;             // Unix timestamp
 }
 ```
 
-**Exempel:**
-```json
-{
-  "id": "profile-1738000100000",
-  "userId": "user-1738000000000",
-  "nickname": "Johan",
-  "createdAt": 1738000100000
-}
-```
-
-**Validering:**
-- `userId` måste referera till en existerande User
-- `nickname` kan vara valfri sträng
-- Varje profil får unika betyg i systemet
-
----
+**Key Points:**
+- Multiple profiles can exist per user
+- Each profile maintains separate ratings
+- Profiles are used for group comparisons
 
 ### Entry
-Representerar ett Melodifestivalen-bidrag med alla betyg från alla profiler.
+
+Represents a Melodifestivalen contestant entry with all associated ratings.
 
 ```typescript
 interface Entry {
-  id: string;                    // Format: "{artist}-{song}" (normaliserad)
-  number: number;                // Bidragsnummer (1-6) inom deltävlingen
-  artist: string;                // Artistnamn
-  song: string;                  // Låttitel
-  heat: string;                  // Deltävling (ex: "Deltävling 1")
-  heatDate: string;              // Datum i format "YYYY-MM-DD"
-  userRatings: UserRating[];     // Array av alla profilers betyg
+  id: string;                    // Unique identifier (format: "{artist}-{song}" normalized)
+  number: number;                // Entry number within heat (1-6)
+  artist: string;                // Artist name
+  song: string;                  // Song title
+  heat: string;                  // Heat name (e.g., "Deltävling 1")
+  heatDate: string;              // Date in ISO format (YYYY-MM-DD)
+  userRatings: UserRating[];     // Array of all ratings for this entry
 }
 ```
 
-**Exempel:**
-```json
-{
-  "id": "greczula-half-of-me",
-  "number": 1,
-  "artist": "Greczula",
-  "song": "Half of Me",
-  "heat": "Deltävling 1",
-  "heatDate": "2026-01-31",
-  "userRatings": [
-    {
-      "profileId": "profile-1738000100000",
-      "profileName": "Johan",
-      "ratings": {
-        "song": { "rating": 8, "comment": "Stark melodi" },
-        "clothes": { "rating": 7, "comment": "" },
-        "scenography": { "rating": 9, "comment": "Imponerande" },
-        "vocals": { "rating": 8, "comment": "" },
-        "lyrics": { "rating": 7, "comment": "" },
-        "postcard": { "rating": 6, "comment": "" }
-      },
-      "totalScore": 45
-    }
-  ]
-}
-```
-
-**Validering:**
-- `id` genereras från artist och song (lowercase, spaces → dashes)
-- `number` är 1-6 inom varje deltävling
-- `heat` måste vara en av de definierade deltävlingarna
-- `userRatings` innehåller alla profilers betyg för detta bidrag
-
----
+**Key Points:**
+- Entry IDs are derived from artist and song names (kebab-case)
+- Each entry contains all user ratings from all profiles
+- Number is unique within each heat (1-6)
 
 ### UserRating
-Representerar en profils kompletta betyg för ett bidrag.
+
+Represents a single profile's rating for an entry across all categories.
 
 ```typescript
 interface UserRating {
-  profileId: string;             // Referens till Profile.id
-  profileName: string;           // Kopia av Profile.nickname (för prestanda)
+  profileId: string;             // Reference to Profile.id
+  profileName: string;           // Profile nickname (denormalized for performance)
   ratings: {
-    song: CategoryRating;
-    clothes: CategoryRating;
-    scenography: CategoryRating;
-    vocals: CategoryRating;
-    lyrics: CategoryRating;
-    postcard: CategoryRating;
+    song: CategoryRating;        // Rating for the song
+    clothes: CategoryRating;     // Rating for clothes/costume
+    scenography: CategoryRating; // Rating for stage design
+    vocals: CategoryRating;      // Rating for vocal performance
+    lyrics: CategoryRating;      // Rating for lyrics
+    postcard: CategoryRating;    // Rating for the postcard/intro video
   };
-  totalScore: number;            // Summa av alla rating-värden (0-60)
+  totalScore: number;            // Sum of all category ratings
 }
 ```
 
-**Exempel:**
-```json
-{
-  "profileId": "profile-1738000100000",
-  "profileName": "Johan",
-  "ratings": {
-    "song": { "rating": 8, "comment": "Stark melodi" },
-    "clothes": { "rating": 7, "comment": "" },
-    "scenography": { "rating": 9, "comment": "Imponerande" },
-    "vocals": { "rating": 8, "comment": "" },
-    "lyrics": { "rating": 7, "comment": "" },
-    "postcard": { "rating": 6, "comment": "" }
-  },
-  "totalScore": 45
-}
-```
-
-**Validering:**
-- `profileId` måste referera till en existerande Profile
-- `profileName` dupliceras här för att undvika lookups vid visning
-- `totalScore` beräknas som summan av alla rating-värden
-- Alla 6 kategorier måste finnas, även om rating är 0
-
----
+**Key Points:**
+- One UserRating per profile per entry
+- Contains ratings for all 6 categories
+- Total score is calculated as sum of all ratings
 
 ### CategoryRating
-Representerar betyg och kommentar för en specifik kategori.
+
+Represents a single category rating with optional comment.
 
 ```typescript
 interface CategoryRating {
-  rating: number;        // Värde 0-10
-  comment: string;       // Valfri kommentar
+  rating: number;                // Rating value (0-10)
+  comment: string;               // Optional comment (can be empty)
 }
 ```
 
-**Exempel:**
-```json
-{
-  "rating": 8,
-  "comment": "Stark melodi med bra hook"
-}
+**Key Points:**
+- Ratings are integers from 0 to 10
+- Comments are optional and can be empty strings
+- Each category in a UserRating has its own CategoryRating
+
+## Data Relationships
+
+```
+User (1) ────── (N) Profile
+                      │
+                      │ (profileId)
+                      │
+Entry (1) ────── (N) UserRating
 ```
 
-**Validering:**
-- `rating` måste vara 0-10
-- `comment` kan vara tom sträng ("")
+### Hierarchy
+1. **User** (GitHub account level)
+   - Has multiple **Profiles**
+2. **Profile** (Individual rating identity)
+   - Can rate multiple **Entries**
+3. **Entry** (Contestant)
+   - Has multiple **UserRatings** (one per profile)
 
----
+### Data Denormalization
 
-## Kategorier
+For performance, some data is denormalized:
+- `UserRating.profileName` duplicates `Profile.nickname`
+- This avoids lookups when displaying ratings
 
-De sex betygskategorierna som används i systemet:
+## Data Migration
 
+### Version Management
+
+The application uses an automatic versioning system:
 ```typescript
-const CATEGORIES = [
-  { key: 'song', label: 'Låt', icon: 'MusicNotes' },
-  { key: 'clothes', label: 'Kläder', icon: 'Palette' },
-  { key: 'scenography', label: 'Scenografi', icon: 'Television' },
-  { key: 'vocals', label: 'Sång', icon: 'Microphone' },
-  { key: 'lyrics', label: 'Text', icon: 'TextAa' },
-  { key: 'postcard', label: 'Vykort', icon: 'Television' },
-] as const;
-
-type CategoryKey = 'song' | 'clothes' | 'scenography' | 'vocals' | 'lyrics' | 'postcard';
+dataVersion = totalEntries * 1000 + sumOfAllEntryNumbers
 ```
 
----
+This ensures that any change to the entry list (additions, removals, or reordering) triggers a migration.
 
-## Deltävlingar
+### Migration Strategy
 
-Melodifestivalen 2026 består av 5 deltävlingar:
+When entries are updated, the migration system:
 
-```typescript
-const HEATS = [
-  "Deltävling 1",
-  "Deltävling 2",
-  "Deltävling 3",
-  "Deltävling 4",
-  "Deltävling 5",
-] as const;
+1. **Creates new entry list** from source data
+2. **Matches old entries to new entries** using multiple strategies:
+   - Exact ID match (artist-song normalized)
+   - Normalized artist + song match
+   - Song title only match
+   - Partial word overlap match
+   - Heat number + position match
+3. **Transfers ratings** from old to new entries
+4. **Validates** the resulting data structure
+5. **Reports** migration results to user
 
-const HEAT_DATES: Record<string, string> = {
-  "Deltävling 1": "2026-01-31",  // Linköping, Saab Arena
-  "Deltävling 2": "2026-02-07",  // Göteborg, Scandinavium
-  "Deltävling 3": "2026-02-14",  // Kristianstad, Kristianstad Arena
-  "Deltävling 4": "2026-02-21",  // Malmö, Malmö Arena
-  "Deltävling 5": "2026-02-28",  // Sundsvall, Gärdehov Arena
-};
+### Migration Preservation
+
+Ratings are preserved even when:
+- Entry metadata changes (heat, date, number)
+- Artist or song names have minor changes
+- Entries are reordered
+
+### Data Loss Prevention
+
+The migration system provides:
+- Multiple matching strategies (fallback chain)
+- Validation of migrated data
+- User notification of migration results
+- Console logging of unmatched entries
+
+## Data Flow
+
+### Rating Flow
+```
+User → Profile Selection → Entry Selection → Category Rating → Entry Update
+                                                                      ↓
+                                                           KV Storage (mello-entries-v2)
 ```
 
-Varje deltävling startar kl. 20:00 svensk tid.
-
----
-
-## Bidragslista
-
-Totalt 30 bidrag fördelade på 5 deltävlingar (6 bidrag per deltävling).
-
-### Deltävling 1 - Linköping (2026-01-31)
-1. Greczula - "Half of Me"
-2. Jacqline - "Woman"
-3. noll2 - "Berusade ord"
-4. Junior Lerin - "Copacabana Boy"
-5. Indra - "Beautiful Lie"
-6. A*Teens - "Iconic"
-
-### Deltävling 2 - Göteborg (2026-02-07)
-1. Arwin - "Glitter"
-2. Laila Adèle - "Oxygen"
-3. Robin Bengtsson - "Honey Honey"
-4. FELICIA - "My System"
-5. Klara Almström - "Där hela världen väntar"
-6. Brandsta City Släckers - "Rakt in i elden"
-
-### Deltävling 3 - Kristianstad (2026-02-14)
-1. Patrik Jean - "Dusk Till Dawn"
-2. Korslagda - "King of Rock 'n' Roll"
-3. Emilia Pantić - "Ingenting"
-4. Medina - "Viva L'Amor"
-5. Eva Jumatate - "Selfish"
-6. Saga Ludvigsson - "Ain't Today"
-
-### Deltävling 4 - Malmö (2026-02-21)
-1. Cimberly - "Eternity"
-2. Timo Räisänen - "Ingenting är efter oss"
-3. Meira Omar - "Dooset Daram"
-4. Felix Manu - "Hatar att jag älskar dig"
-5. Erika Jonsson - "Från landet"
-6. Smash Into Pieces - "Hollow"
-
-### Deltävling 5 - Sundsvall (2026-02-28)
-1. AleXa - "Tongue Tied"
-2. JULIETT - "Långt från alla andra"
-3. Bladë - "Who You Are"
-4. Lilla Al-Fadji - "Delulu"
-5. Vilhelm Buchaus - "Hearts Don't Lie"
-6. Sanna Nielsen - "Waste Your Love"
-
----
-
-## Dataflöde
-
-### 1. Användarskapande
+### Reading Flow
 ```
-GitHub SSO Login
-    ↓
-Hämta GitHub-användardata (email, login, avatar)
-    ↓
-Sök efter User med samma email i mello-users-v2
-    ↓
-Om hittas: Logga in
-Om inte: Skapa ny User → Spara i mello-users-v2
+KV Storage → App State → Component State → UI Display
 ```
 
-### 2. Profilskapande
+### Update Flow
 ```
-Användare klickar "Skapa profil"
-    ↓
-Ange smeknamn
-    ↓
-Skapa ny Profile med userId-referens
-    ↓
-Lägg till Profile i User.profiles[]
-    ↓
-Uppdatera mello-users-v2
+UI Action → Functional Update → Entry Mutation → KV Storage
 ```
 
-### 3. Betygssättning
-```
-Välj profil
-    ↓
-Välj bidrag (Entry)
-    ↓
-Sätt betyg (0-10) och kommentar för varje kategori
-    ↓
-Hitta eller skapa UserRating i Entry.userRatings[]
-    ↓
-Uppdatera CategoryRating för vald kategori
-    ↓
-Beräkna om totalScore
-    ↓
-Spara Entry i mello-entries-v2
-```
+## Data Integrity
 
-### 4. Radering av betyg
-```
-Välj bidrag med befintligt betyg
-    ↓
-Klicka "Radera betyg"
-    ↓
-Filtrera bort UserRating för aktuell profileId från Entry.userRatings[]
-    ↓
-Spara Entry i mello-entries-v2
-```
+### Constraints
 
----
+1. **User Email Uniqueness**: Each email can only have one User
+2. **Profile ID Uniqueness**: Profile IDs are globally unique
+3. **Entry ID Uniqueness**: Entry IDs must be unique across all heats
+4. **One Rating Per Profile**: Each profile can only have one rating per entry
 
-## Datarelationer
+### Validation
 
-```
-User (1) ←→ (N) Profile
-  ↓ email är unik identifierare
-  ↓ profiles[] innehåller alla profiler
+The system validates:
+- Entry IDs are present and unique
+- Artist and song names exist
+- Heat and date information is complete
+- Entry numbers are valid (1-6 per heat)
 
-Profile (1) ←→ (N) UserRating
-  ↓ profileId refererar till Profile.id
-  ↓ profileName kopieras för prestanda
+## Performance Considerations
 
-Entry (1) ←→ (N) UserRating
-  ↓ userRatings[] innehåller alla profilers betyg
-  ↓ Ett Entry kan ha 0 till många UserRatings
+### Optimizations
 
-UserRating (1) ←→ (6) CategoryRating
-  ↓ ratings.{category} innehåller betyg för varje kategori
-  ↓ Alltid exakt 6 kategorier per UserRating
-```
+1. **Single Array Storage**: All entries in one array for atomic updates
+2. **Denormalized Names**: Profile names stored in ratings to avoid lookups
+3. **Computed Total Scores**: Pre-calculated for sorting/display
+4. **Functional Updates**: Using React state updater functions to avoid stale closures
 
----
+### Trade-offs
 
-## Dataduplicering och Normalisering
+- **Storage Size**: Denormalization increases storage but improves read performance
+- **Update Complexity**: Atomic updates require full array replacement but ensure consistency
+- **Migration Time**: Comprehensive matching takes time but prevents data loss
 
-### Accepterad Duplicering (för prestanda)
-1. **profileName i UserRating**: Kopieras från Profile.nickname för att undvika lookups vid visning
-2. **heatDate i Entry**: Kopieras från HEAT_DATES för att undvika lookups
+## Future Considerations
 
-### Eliminerad Duplicering
-1. **Betyg lagras ENDAST i Entry.userRatings[]**: Betyg lagras inte separat utan alltid som del av Entry
-2. **Profiler lagras ENDAST i User.profiles[]**: Profiler lagras inte separat utan alltid som del av User
-3. **Bidragsinformation dupliceras INTE**: Artist, song, heat, etc. finns endast i Entry, aldrig i UserRating
+### Potential Improvements
 
----
+1. **Batch Updates**: Group multiple rating updates into single KV write
+2. **Incremental Migration**: Only migrate changed entries
+3. **Backup System**: Automatic backups before migrations
+4. **Undo System**: Allow reverting recent changes
 
-## Datamigration
+### Scalability
 
-När bidragslistan uppdateras (t.ex. nya artister eller korrigeringar):
+Current design supports:
+- Unlimited users
+- Unlimited profiles per user
+- ~50 entries (Melodifestivalen scale)
+- Unlimited ratings
 
-1. Öka `CURRENT_DATA_VERSION` i App.tsx
-2. Ändra `MELODIFESTIVALEN_2026` i melodifestivalen-data.ts
-3. Vid nästa laddning körs `initializeEntries()` som:
-   - Skapar nya Entry-objekt från MELODIFESTIVALEN_2026
-   - **BEVARAR INTE gamla betyg** (betyg går förlorade vid datamigration)
-4. Uppdaterar `mello-data-version-v2`
-
-**OBS:** Betyg bevaras INTE vid datamigration. Överväg att implementera migration-logik om betyg ska bevaras.
-
----
-
-## KV Store Struktur
-
-```
-spark.kv
-├── "mello-users-v2": User[]
-│   └── Varje User innehåller profiles[]
-│
-├── "mello-entries-v2": Entry[]
-│   └── Varje Entry innehåller userRatings[]
-│       └── Varje UserRating innehåller ratings{}
-│
-└── "mello-data-version-v2": number
-    └── Versionsnummer för datamigration
-```
-
----
-
-## Beräkningar
-
-### Total Score
-Summan av alla 6 kategori-ratings för en UserRating:
-```typescript
-totalScore = song.rating + clothes.rating + scenography.rating + 
-             vocals.rating + lyrics.rating + postcard.rating
-```
-Min: 0, Max: 60
-
-### Global Leaderboard
-Visar alla bidrag sorterade efter genomsnittligt totalScore från alla profiler:
-```typescript
-averageScore = sum(entry.userRatings[].totalScore) / entry.userRatings.length
-```
-
-### Personal Leaderboard
-Visar alla bidrag sorterade efter en specifik profils totalScore.
-
-### Group Leaderboard
-Visar alla bidrag sorterade efter genomsnittligt totalScore från alla profiler i samma User (alla profiler som delar samma GitHub-konto).
-
----
-
-## Säkerhetsaspekter
-
-1. **GitHub SSO**: Autentisering via GitHub, ingen lösenordshantering
-2. **Email som identifierare**: GitHub email används som unik identifierare för Users
-3. **Ingen data-isolation**: Alla betyg är synliga för alla användare (ingen ACL)
-4. **Ingen audit log**: Ingen historik över ändringar sparas
-
----
-
-## Prestandaoptimering
-
-1. **Denormaliserad profileName**: Undviker O(n) lookup vid rendering av betyg
-2. **In-memory state**: React state används för UI, synkroniseras till KV store
-3. **Functional updates**: Alla KV-uppdateringar använder functional updates för att undvika race conditions
-
----
-
-## Förbättringsförslag
-
-### Kritiska förbättringar
-1. **Bevara betyg vid datamigration**: Implementera merge-logik för att behålla betyg när bidragslistan uppdateras
-2. **Validering av Entry.id**: Säkerställ att id-generering är konsekvent och unik
-3. **Orphan cleanup**: Ta bort UserRatings för profiler som inte längre existerar
-
-### Icke-kritiska förbättringar
-1. **Timestamps på betyg**: Lägg till createdAt/updatedAt på UserRating
-2. **Audit log**: Spåra ändringar för troubleshooting
-3. **Profile deletion**: Lägg till möjlighet att ta bort profiler (och deras betyg)
-4. **Backup/Export**: Exportera all användardata till JSON
+For larger scales, consider:
+- Pagination of entries
+- Lazy loading of ratings
+- Indexed lookups
+- Separate rating storage
