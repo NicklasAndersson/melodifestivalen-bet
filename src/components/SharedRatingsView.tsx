@@ -191,7 +191,7 @@ export function SharedRatingsView({ userName, userAvatar, entries, userId }: Sha
   return (
     <div className="min-h-screen bg-background">
       <div className="relative">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,oklch(0.45_0.22_300/0.15),transparent_50%),radial-gradient(circle_at_bottom_left,oklch(0.65_0.25_350/0.15),transparent_50%)] pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,hsla(270,60%,35%,0.15),transparent_50%),radial-gradient(circle_at_bottom_left,hsla(330,70%,55%,0.15),transparent_50%)] pointer-events-none" />
         
         <div className="relative max-w-7xl mx-auto px-6 py-8">
           <motion.div

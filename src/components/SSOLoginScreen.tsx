@@ -10,7 +10,7 @@ interface SSOLoginScreenProps {
 export function SSOLoginScreen({ onSSOLogin }: SSOLoginScreenProps) {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-6">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,oklch(0.45_0.22_300/0.15),transparent_50%),radial-gradient(circle_at_bottom_left,oklch(0.65_0.25_350/0.15),transparent_50%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,hsla(270,60%,35%,0.15),transparent_50%),radial-gradient(circle_at_bottom_left,hsla(330,70%,55%,0.15),transparent_50%)] pointer-events-none" />
       
       <motion.div
         initial={{ opacity: 0, y: 20 }}
