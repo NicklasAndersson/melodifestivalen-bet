@@ -142,18 +142,19 @@ export function GroupLeaderboard({ entries, users }: GroupLeaderboardProps) {
         </Button>
       </div>
 
-      <div ref={leaderboardRef} className="space-y-4 p-3 sm:p-6 bg-background rounded-lg">
-        <div className="mb-6 sm:mb-8 text-center">
-          <h1 className="font-serif text-2xl sm:text-4xl font-bold text-foreground mb-2 flex items-center justify-center gap-2 sm:gap-3">
-            <Sparkle size={24} weight="duotone" className="text-primary sm:w-8 sm:h-8" />
-            Melodifestivalen 2026
-          </h1>
-          <p className="font-body text-base sm:text-xl text-muted-foreground">
-            Gruppens topplista
-          </p>
-        </div>
+      <div className="space-y-4">
+        <div ref={leaderboardRef} className="space-y-4 p-4 sm:p-8 bg-background rounded-lg">
+          <div className="mb-6 sm:mb-8 text-center">
+            <h1 className="font-serif text-2xl sm:text-4xl font-bold text-foreground mb-2 flex items-center justify-center gap-2 sm:gap-3">
+              <Sparkle size={24} weight="duotone" className="text-primary sm:w-8 sm:h-8" />
+              Melodifestivalen 2026
+            </h1>
+            <p className="font-body text-base sm:text-xl text-muted-foreground">
+              Gruppens topplista
+            </p>
+          </div>
 
-        {entriesWithGroupAverage.map((item, index) => (
+          {entriesWithGroupAverage.map((item, index) => (
           <motion.div
             key={item.entry.id}
             initial={{ opacity: 0, y: 20 }}
@@ -254,6 +255,7 @@ export function GroupLeaderboard({ entries, users }: GroupLeaderboardProps) {
             </Card>
           </motion.div>
         ))}
+        </div>
       </div>
     </div>
   );
