@@ -24,13 +24,11 @@ import { PersonalLeaderboard } from '@/components/PersonalLeaderboard';
 import { GroupLeaderboard } from '@/components/GroupLeaderboard';
 import { ExportRatingsDialog } from '@/components/ExportRatingsDialog';
 import { MigrationDebug } from '@/components/MigrationDebug';
-import { BackupReminder } from '@/components/BackupReminder';
 import { DataRecoveryBanner } from '@/components/DataRecoveryBanner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster, toast } from 'sonner';
 import { MELODIFESTIVALEN_2026 } from '@/lib/melodifestivalen-data';
 import { migrateEntries, validateEntries, getDataVersion } from '@/lib/migration';
-import { shouldShowBackupWarning, getTotalRatingsCount } from '@/lib/backup';
 import { saveSession, getSessionUserId, getSessionProfileId, clearSession, findUserById, findProfileById } from '@/lib/session';
 
 function App() {
@@ -48,23 +46,10 @@ function App() {
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [showMigrationDebug, setShowMigrationDebug] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
-  const [showBackupWarning, setShowBackupWarning] = useState(false);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
   
   const CURRENT_DATA_VERSION = getDataVersion();
   const [isInitialized, setIsInitialized] = useState(false);
-
-  useEffect(() => {
-    const checkBackupWarning = async () => {
-      const shouldShow = await shouldShowBackupWarning();
-      const hasRatings = getTotalRatingsCount(entries || []) > 0;
-      setShowBackupWarning(shouldShow && hasRatings);
-    };
-    
-    if (selectedProfile && entries) {
-      checkBackupWarning();
-    }
-  }, [selectedProfile, entries]);
 
   useEffect(() => {
     const restoreSession = async () => {
@@ -682,11 +667,6 @@ function App() {
               });
             }}
             onExportBackup={() => setExportDialogOpen(true)}
-          />
-
-          <BackupReminder
-            show={showBackupWarning}
-            onBackupClick={() => setExportDialogOpen(true)}
           />
 
           <Tabs value={selectedHeat} onValueChange={setSelectedHeat} className="w-full">
