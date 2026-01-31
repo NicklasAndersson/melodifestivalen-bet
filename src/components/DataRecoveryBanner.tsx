@@ -24,9 +24,15 @@ export function DataRecoveryBanner({
 
   useEffect(() => {
     const loadBackup = async () => {
-      const data = await getAutoBackup();
-      setBackup(data);
-      setLoading(false);
+      try {
+        const data = await getAutoBackup();
+        setBackup(data);
+      } catch (error) {
+        console.warn('Could not load backup data:', error);
+        setBackup(null);
+      } finally {
+        setLoading(false);
+      }
     };
     loadBackup();
   }, []);

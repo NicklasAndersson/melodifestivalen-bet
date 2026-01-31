@@ -95,79 +95,93 @@ function App() {
     if (isInitialized) return;
     
     const initData = async () => {
-      const storedEntries = await window.spark.kv.get<Entry[]>('mello-entries-v2');
-      const storedVersion = await window.spark.kv.get<number>('mello-data-version-v2');
-      
-      const currentEntries = storedEntries || [];
-      const currentVersion = storedVersion || 0;
-      const needsMigration = currentEntries.length === 0 || currentVersion !== CURRENT_DATA_VERSION;
-      
-      if (needsMigration) {
-        await initializeEntries(currentEntries, currentVersion);
+      try {
+        const storedEntries = await window.spark.kv.get<Entry[]>('mello-entries-v2');
+        const storedVersion = await window.spark.kv.get<number>('mello-data-version-v2');
+        
+        const currentEntries = storedEntries || [];
+        const currentVersion = storedVersion || 0;
+        const needsMigration = currentEntries.length === 0 || currentVersion !== CURRENT_DATA_VERSION;
+        
+        if (needsMigration) {
+          await initializeEntries(currentEntries, currentVersion);
+        }
+      } catch (error) {
+        console.error('Failed to initialize data:', error);
+        toast.error('Kunde inte ladda data', {
+          description: 'Försöker igen...',
+        });
+      } finally {
+        setIsInitialized(true);
       }
-      
-      setIsInitialized(true);
     };
     
     initData();
   }, [isInitialized]);
 
   const initializeEntries = async (currentEntries: Entry[], currentVersion: number) => {
-    if (currentEntries.length === 0 && currentVersion === 0) {
-      const initialEntries: Entry[] = MELODIFESTIVALEN_2026.map((entry) => ({
-        id: `${entry.artist}-${entry.song}`.toLowerCase().replace(/\s+/g, '-'),
-        number: entry.number,
-        artist: entry.artist,
-        song: entry.song,
-        heat: entry.heat,
-        heatDate: entry.heatDate,
-        userRatings: [],
-      }));
-      
-      await window.spark.kv.set('mello-entries-v2', initialEntries);
-      await window.spark.kv.set('mello-data-version-v2', CURRENT_DATA_VERSION);
-      setEntries(initialEntries);
-      setDataVersion(CURRENT_DATA_VERSION);
-      return;
-    }
-
-    const { entries: migratedEntries, result } = migrateEntries(currentEntries);
-    
-    const validation = validateEntries(migratedEntries);
-    if (!validation.valid) {
-      console.error('Entry validation failed:', validation.errors);
-      toast.error('Datavalidering misslyckades', {
-        description: 'Vänligen kontakta support',
-      });
-      return;
-    }
-    
-    await window.spark.kv.set('mello-entries-v2', migratedEntries);
-    await window.spark.kv.set('mello-data-version-v2', CURRENT_DATA_VERSION);
-    setEntries(migratedEntries);
-    setDataVersion(CURRENT_DATA_VERSION);
-    
-    if (result.totalRatings > 0) {
-      if (result.migratedCount === result.totalRatings) {
-        toast.success('Data uppdaterad!', {
-          description: `Alla ${result.migratedCount} betyg migrerades`,
-        });
-      } else if (result.migratedCount > 0) {
-        toast.warning('Delvis migrering', {
-          description: `${result.migratedCount}/${result.totalRatings} betyg migrerades`,
-        });
+    try {
+      if (currentEntries.length === 0 && currentVersion === 0) {
+        const initialEntries: Entry[] = MELODIFESTIVALEN_2026.map((entry) => ({
+          id: `${entry.artist}-${entry.song}`.toLowerCase().replace(/\s+/g, '-'),
+          number: entry.number,
+          artist: entry.artist,
+          song: entry.song,
+          heat: entry.heat,
+          heatDate: entry.heatDate,
+          userRatings: [],
+        }));
         
-        if (result.unmatchedEntries.length > 0) {
-          console.warn('Unmatched entries:', result.unmatchedEntries);
+        await window.spark.kv.set('mello-entries-v2', initialEntries);
+        await window.spark.kv.set('mello-data-version-v2', CURRENT_DATA_VERSION);
+        setEntries(initialEntries);
+        setDataVersion(CURRENT_DATA_VERSION);
+        return;
+      }
+
+      const { entries: migratedEntries, result } = migrateEntries(currentEntries);
+      
+      const validation = validateEntries(migratedEntries);
+      if (!validation.valid) {
+        console.error('Entry validation failed:', validation.errors);
+        toast.error('Datavalidering misslyckades', {
+          description: 'Vänligen kontakta support',
+        });
+        return;
+      }
+      
+      await window.spark.kv.set('mello-entries-v2', migratedEntries);
+      await window.spark.kv.set('mello-data-version-v2', CURRENT_DATA_VERSION);
+      setEntries(migratedEntries);
+      setDataVersion(CURRENT_DATA_VERSION);
+      
+      if (result.totalRatings > 0) {
+        if (result.migratedCount === result.totalRatings) {
+          toast.success('Data uppdaterad!', {
+            description: `Alla ${result.migratedCount} betyg migrerades`,
+          });
+        } else if (result.migratedCount > 0) {
+          toast.warning('Delvis migrering', {
+            description: `${result.migratedCount}/${result.totalRatings} betyg migrerades`,
+          });
+          
+          if (result.unmatchedEntries.length > 0) {
+            console.warn('Unmatched entries:', result.unmatchedEntries);
+          }
+        } else {
+          toast.error('Migrering misslyckades', {
+            description: 'Inga betyg kunde överföras',
+          });
         }
-      } else {
-        toast.error('Migrering misslyckades', {
-          description: 'Inga betyg kunde överföras',
+      } else if (currentVersion !== 0) {
+        toast.success('Data uppdaterad!', {
+          description: 'Melodifestivalen 2026-bidrag har laddats',
         });
       }
-    } else if (currentVersion !== 0) {
-      toast.success('Data uppdaterad!', {
-        description: 'Melodifestivalen 2026-bidrag har laddats',
+    } catch (error) {
+      console.error('Failed to initialize entries:', error);
+      toast.error('Kunde inte initiera bidrag', {
+        description: 'Vänligen ladda om sidan',
       });
     }
   };

@@ -37,6 +37,7 @@ export async function getAutoBackup(): Promise<LocalBackup | null> {
     
     return backup;
   } catch (error) {
+    console.warn('Could not fetch auto backup (this is normal on first run):', error);
     return null;
   }
 }
