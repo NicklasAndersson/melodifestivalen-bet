@@ -37,7 +37,6 @@ export async function getAutoBackup(): Promise<LocalBackup | null> {
     
     return backup;
   } catch (error) {
-    console.error('Failed to get auto backup:', error);
     return null;
   }
 }
@@ -56,7 +55,6 @@ export async function getLastBackupDate(): Promise<number | null> {
     const timestamp = await window.spark.kv.get<number>(LAST_BACKUP_KEY);
     return timestamp || null;
   } catch (error) {
-    console.error('Failed to get last backup date:', error);
     return null;
   }
 }
@@ -72,7 +70,6 @@ export async function shouldShowBackupWarning(): Promise<boolean> {
     const daysSinceBackup = (Date.now() - lastBackup) / (1000 * 60 * 60 * 24);
     return daysSinceBackup > 7;
   } catch (error) {
-    console.error('Failed to check backup warning:', error);
     return true;
   }
 }
