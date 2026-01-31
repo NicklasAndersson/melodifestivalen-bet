@@ -23,6 +23,7 @@ import { Toaster, toast } from 'sonner';
 import { MELODIFESTIVALEN_2026 } from '@/lib/melodifestivalen-data';
 import { migrateEntries, validateEntries, getDataVersion } from '@/lib/migration';
 import { shouldShowBackupWarning, getTotalRatingsCount } from '@/lib/backup';
+import { saveSession, getSessionUserId, getSessionProfileId, clearSession, findUserById, findProfileById } from '@/lib/session';
 
 function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -40,6 +41,7 @@ function App() {
   const [showMigrationDebug, setShowMigrationDebug] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [showBackupWarning, setShowBackupWarning] = useState(false);
+  const [isRestoringSession, setIsRestoringSession] = useState(true);
   
   const CURRENT_DATA_VERSION = getDataVersion();
   const [isInitialized, setIsInitialized] = useState(false);
@@ -55,6 +57,46 @@ function App() {
       checkBackupWarning();
     }
   }, [selectedProfile, entries]);
+
+  useEffect(() => {
+    const restoreSession = async () => {
+      if (!users || users.length === 0) {
+        setIsRestoringSession(false);
+        return;
+      }
+
+      try {
+        const sessionUserId = await getSessionUserId();
+        if (!sessionUserId) {
+          setIsRestoringSession(false);
+          return;
+        }
+
+        const user = findUserById(users, sessionUserId);
+        if (!user) {
+          await clearSession();
+          setIsRestoringSession(false);
+          return;
+        }
+
+        setCurrentUser(user);
+
+        const sessionProfileId = await getSessionProfileId();
+        if (sessionProfileId) {
+          const profile = findProfileById(user, sessionProfileId);
+          if (profile) {
+            setSelectedProfile(profile);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to restore session:', error);
+      } finally {
+        setIsRestoringSession(false);
+      }
+    };
+
+    restoreSession();
+  }, [users]);
 
   useEffect(() => {
     if (isInitialized) return;
@@ -152,6 +194,7 @@ function App() {
 
       if (foundUser) {
         setCurrentUser(foundUser);
+        await saveSession(foundUser.id, null);
         toast.success('Välkommen tillbaka!', {
           description: `Inloggad som ${githubUser.login}`,
         });
@@ -167,6 +210,7 @@ function App() {
 
         setUsers((current) => [...(current || []), newUser]);
         setCurrentUser(newUser);
+        await saveSession(newUser.id, null);
         
         toast.success('Konto skapat!', {
           description: `Välkommen ${githubUser.login}`,
@@ -180,13 +224,14 @@ function App() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await clearSession();
     setCurrentUser(null);
     setSelectedProfile(null);
     toast.success('Utloggad');
   };
 
-  const handleCreateProfile = (nickname: string) => {
+  const handleCreateProfile = async (nickname: string) => {
     if (!currentUser) return;
 
     const newProfile: Profile = {
@@ -211,22 +256,29 @@ function App() {
     });
 
     setSelectedProfile(newProfile);
+    await saveSession(currentUser.id, newProfile.id);
     
     toast.success('Profil skapad!', {
       description: `${nickname} är redo`,
     });
   };
 
-  const handleSelectProfile = (profile: Profile) => {
+  const handleSelectProfile = async (profile: Profile) => {
     setSelectedProfile(profile);
+    if (currentUser) {
+      await saveSession(currentUser.id, profile.id);
+    }
     toast.success('Profil vald', {
       description: profile.nickname,
     });
   };
 
-  const handleBackToProfiles = () => {
+  const handleBackToProfiles = async () => {
     setSelectedProfile(null);
     setShowComparison(false);
+    if (currentUser) {
+      await saveSession(currentUser.id, null);
+    }
   };
 
   const handleRating = async (entryId: string, category: CategoryKey, rating: number, comment: string) => {
@@ -343,6 +395,17 @@ function App() {
     if (!selectedProfile) return undefined;
     return entry.userRatings.find((ur) => ur.profileId === selectedProfile.id);
   };
+
+  if (isRestoringSession) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Sparkle size={48} weight="duotone" className="text-primary animate-pulse mx-auto mb-4" />
+          <p className="text-muted-foreground">Laddar...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!currentUser) {
     return (
