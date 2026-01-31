@@ -50,10 +50,8 @@ export function GroupLeaderboard({ entries, users }: GroupLeaderboardProps) {
         description: 'Vänta ett ögonblick',
       });
 
-      const computedBgColor = getComputedStyle(leaderboardRef.current).backgroundColor;
-
       const canvas = await html2canvas(leaderboardRef.current, {
-        backgroundColor: computedBgColor,
+        backgroundColor: '#f8f3f6',
         scale: 2,
         logging: false,
         useCORS: true,
@@ -166,13 +164,28 @@ export function GroupLeaderboard({ entries, users }: GroupLeaderboardProps) {
             <Card
               className={`p-3 sm:p-6 border-2 relative overflow-hidden ${
                 index === 0
-                  ? 'border-gold/50 bg-gradient-to-br from-gold/10 via-gold/5 to-transparent'
+                  ? 'border-[#e8cd8c80]'
                   : index === 1
-                  ? 'border-[#87CEEB]/30 bg-gradient-to-br from-[#87CEEB]/5 to-transparent'
+                  ? 'border-[#87CEEB4d]'
                   : index === 2
-                  ? 'border-[#CD7F32]/30 bg-gradient-to-br from-[#CD7F32]/5 to-transparent'
+                  ? 'border-[#CD7F324d]'
                   : 'border-border'
               }`}
+              style={
+                index === 0
+                  ? {
+                      background: 'linear-gradient(to bottom right, rgba(232, 205, 140, 0.1) 0%, rgba(232, 205, 140, 0.05) 50%, transparent 100%)',
+                    }
+                  : index === 1
+                  ? {
+                      background: 'linear-gradient(to bottom right, rgba(135, 206, 235, 0.05) 0%, transparent 100%)',
+                    }
+                  : index === 2
+                  ? {
+                      background: 'linear-gradient(to bottom right, rgba(205, 127, 50, 0.05) 0%, transparent 100%)',
+                    }
+                  : undefined
+              }
             >
               <div className="flex items-center gap-3 sm:gap-6">
                 <div className="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 shrink-0">
