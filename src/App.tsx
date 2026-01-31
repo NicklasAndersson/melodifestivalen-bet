@@ -203,58 +203,55 @@ function App() {
 
     setEntries((currentEntries) => {
       return (currentEntries || []).map((entry) => {
-        if (entry.id === entryId) {
-          let updatedUserRatings: UserRating[];
-          
-          const existingRating = entry.userRatings.find((ur) => ur.profileId === selectedProfile.id);
+        if (entry.id !== entryId) return entry;
 
-          if (existingRating) {
-            const updatedRatings = {
-              ...existingRating.ratings,
-              [category]: { rating, comment },
-            };
-            const totalScore = Object.values(updatedRatings).reduce((sum, r) => sum + r.rating, 0);
-            
-            updatedUserRatings = entry.userRatings.map((ur) =>
-              ur.profileId === selectedProfile.id
-                ? { ...ur, ratings: updatedRatings, totalScore }
-                : ur
-            );
-          } else {
-            const newRatings = {
-              song: { rating: 0, comment: '' },
-              scenography: { rating: 0, comment: '' },
-              clothes: { rating: 0, comment: '' },
-              vocals: { rating: 0, comment: '' },
-              lyrics: { rating: 0, comment: '' },
-              postcard: { rating: 0, comment: '' },
-              [category]: { rating, comment },
-            };
-            const totalScore = Object.values(newRatings).reduce((sum, r) => sum + r.rating, 0);
-            
-            updatedUserRatings = [
-              ...entry.userRatings,
-              {
-                profileId: selectedProfile.id,
-                profileName: selectedProfile.nickname,
-                ratings: newRatings,
-                totalScore,
-              },
-            ];
-          }
+        // Separera andra profilers ratings (bevaras alltid oförändrade)
+        const otherProfileRatings = entry.userRatings.filter(
+          (ur) => ur.profileId !== selectedProfile.id
+        );
+        
+        // Hämta eller skapa vår profils rating
+        const existingRating = entry.userRatings.find(
+          (ur) => ur.profileId === selectedProfile.id
+        );
 
-          const updatedEntry = {
-            ...entry,
-            userRatings: updatedUserRatings,
-          };
+        const baseRatings = existingRating?.ratings || {
+          song: { rating: 0, comment: '' },
+          scenography: { rating: 0, comment: '' },
+          clothes: { rating: 0, comment: '' },
+          vocals: { rating: 0, comment: '' },
+          lyrics: { rating: 0, comment: '' },
+          postcard: { rating: 0, comment: '' },
+        };
 
-          if (selectedEntry?.id === entryId) {
-            setSelectedEntry(updatedEntry);
-          }
+        const updatedRatings = {
+          ...baseRatings,
+          [category]: { rating, comment },
+        };
+        
+        const totalScore = Object.values(updatedRatings).reduce(
+          (sum, r) => sum + r.rating, 
+          0
+        );
 
-          return updatedEntry;
+        const myRating: UserRating = {
+          profileId: selectedProfile.id,
+          profileName: selectedProfile.nickname,
+          ratings: updatedRatings,
+          totalScore,
+        };
+
+        // Kombinera: andra profilers ratings + vår uppdaterade rating
+        const updatedEntry = {
+          ...entry,
+          userRatings: [...otherProfileRatings, myRating],
+        };
+
+        if (selectedEntry?.id === entryId) {
+          setSelectedEntry(updatedEntry);
         }
-        return entry;
+
+        return updatedEntry;
       });
     });
   };
