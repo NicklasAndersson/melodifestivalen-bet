@@ -11,7 +11,9 @@
         "optimize": "vite optimize",
         "preview": "vite preview",
         "test": "vitest",
-        "test:run": "vitest run"
+        "test:run": "vitest run",
+        "test:colors": "vitest run src/components/color-format-validation.test.ts",
+        "validate:colors": "vitest run src/components/color-format-validation.test.ts"
     },
     "dependencies": {
         "@github/spark": ">=0.43.1 <1",

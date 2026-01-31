@@ -99,11 +99,39 @@ Om data går förlorad:
 - Framer Motion animations
 - Shadcn UI components
 
+## 🎨 Färgformat-validering
+
+**VIKTIGT för utvecklare**: Denna app använder html2canvas för bildexport, som INTE stödjer moderna färgformat som `oklch()` eller `oklab()`.
+
+### Automatisk validering
+
+Ett enhetstest (`src/components/color-format-validation.test.ts`) säkerställer att endast säkra färgformat används:
+
+```bash
+# Kör färgvalidering
+npm run test:colors
+# eller
+npm run validate:colors
+```
+
+### Godkända färgformat
+- ✅ Hex: `#FFFFFF`, `#87CEEB`
+- ✅ HSL: `hsl(340, 50%, 60%)`
+- ✅ RGB: `rgb(255, 255, 255)`
+- ✅ Named: `gold`, `silver`
+
+### Förbjudna färgformat
+- ❌ `oklch()` - Orsakar exportfel
+- ❌ `oklab()` - Orsakar exportfel
+
+Se `docs/COLOR_FORMAT_GUIDELINES.md` för fullständig dokumentation.
+
 ## 📄 Dokumentation
 
 - `DATA_MODEL.md`: Fullständig datamodell och backup-strategi
 - `MIGRATION.md`: Migrations-system för uppdateringar
 - `PRD.md`: Produkt-specifikation
+- `docs/COLOR_FORMAT_GUIDELINES.md`: Färgformat-riktlinjer
 
 ## 📄 License For Spark Template Resources 
 

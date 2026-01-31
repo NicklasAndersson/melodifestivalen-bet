@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 
-const UNSAFE_COLOR_FORMATS = ['oklch(', 'oklab('];
+const UNSAFE_COLOR_FORMATS = ['oklch(', 'oklab(', 'oklch', 'oklab'];
 const COMPONENT_DIR = join(__dirname, '../components');
 
 function getAllComponentFiles(dir: string, files: string[] = []): string[] {
@@ -21,11 +21,67 @@ function getAllComponentFiles(dir: string, files: string[] = []): string[] {
   return files;
 }
 
+function findColorFormatIssues(content: string, fileName: string): string[] {
+  const issues: string[] = [];
+  const lines = content.split('\n');
+  
+  lines.forEach((line, lineNumber) => {
+    if (line.includes('oklch') || line.includes('oklab')) {
+      if (
+        line.includes('className') ||
+        line.includes('style=') ||
+        line.includes('background') ||
+        line.includes('color:') ||
+        line.includes('border')
+      ) {
+        issues.push(
+          `${fileName}:${lineNumber + 1} - Found unsafe color format: ${line.trim()}`
+        );
+      }
+    }
+  });
+  
+  return issues;
+}
+
 describe('Color format validation across all components', () => {
   const componentFiles = getAllComponentFiles(COMPONENT_DIR);
   
   it('should find component files to test', () => {
     expect(componentFiles.length).toBeGreaterThan(0);
+  });
+
+  it('CRITICAL: No component should contain oklch or oklab color formats', () => {
+    const allIssues: string[] = [];
+    
+    componentFiles.forEach((filePath) => {
+      const fileName = filePath.split('/').pop() || filePath;
+      const fileContent = readFileSync(filePath, 'utf-8');
+      const issues = findColorFormatIssues(fileContent, fileName);
+      allIssues.push(...issues);
+    });
+
+    if (allIssues.length > 0) {
+      throw new Error(
+        `\n${'='.repeat(80)}\n` +
+        `CRITICAL ERROR: Unsafe color formats detected!\n` +
+        `oklch/oklab causes "Attempting to parse an unsupported color function" error in html2canvas\n` +
+        `${'='.repeat(80)}\n\n` +
+        `Found ${allIssues.length} issue(s):\n\n` +
+        allIssues.join('\n') +
+        `\n\n${'='.repeat(80)}\n` +
+        `SOLUTION: Use these safe color formats instead:\n` +
+        `  ✅ Hex colors: #FFFFFF, #87CEEB, #CD7F32\n` +
+        `  ✅ HSL colors: hsl(320, 30%, 96%)\n` +
+        `  ✅ RGB colors: rgb(255, 255, 255)\n` +
+        `  ✅ RGBA colors: rgba(255, 255, 255, 0.5)\n` +
+        `  ✅ Named colors: gold, silver, bronze\n` +
+        `  ✅ CSS variables: var(--color-name)\n` +
+        `${'='.repeat(80)}\n`
+      );
+    }
+
+    expect(allIssues.length).toBe(0);
   });
 
   componentFiles.forEach((filePath) => {
@@ -156,5 +212,67 @@ describe('Export compatibility checks', () => {
     UNSAFE_COLOR_FORMATS.forEach((format) => {
       expect(content).not.toContain(format);
     });
+  });
+});
+
+describe('CSS files validation', () => {
+  it('ensures index.css uses only HSL color format', () => {
+    const cssPath = join(__dirname, '../index.css');
+    const content = readFileSync(cssPath, 'utf-8');
+    
+    const issues: string[] = [];
+    const lines = content.split('\n');
+    
+    lines.forEach((line, lineNumber) => {
+      if (line.includes('oklch') || line.includes('oklab')) {
+        if (line.trim().startsWith('*') || line.trim().startsWith('//')) {
+          return;
+        }
+        issues.push(`Line ${lineNumber + 1}: ${line.trim()}`);
+      }
+    });
+    
+    if (issues.length > 0) {
+      throw new Error(
+        `\n${'='.repeat(80)}\n` +
+        `CRITICAL: index.css contains unsafe color formats!\n` +
+        `${'='.repeat(80)}\n\n` +
+        `These will cause export failures with html2canvas:\n\n` +
+        issues.join('\n') +
+        `\n\n${'='.repeat(80)}\n` +
+        `REQUIRED: Use HSL format in index.css:\n` +
+        `  Example: --primary: 340 50% 60%;\n` +
+        `  NOT: --primary: oklch(0.6 0.12 340);\n` +
+        `${'='.repeat(80)}\n`
+      );
+    }
+    
+    expect(issues.length).toBe(0);
+  });
+
+  it('ensures all CSS color variables use HSL format', () => {
+    const cssPath = join(__dirname, '../index.css');
+    const content = readFileSync(cssPath, 'utf-8');
+    
+    const colorVarPattern = /--[\w-]+:\s*([^;]+);/g;
+    let match;
+    const invalidVars: string[] = [];
+    
+    while ((match = colorVarPattern.exec(content)) !== null) {
+      const value = match[1].trim();
+      if (value.includes('oklch') || value.includes('oklab')) {
+        invalidVars.push(`${match[0]} (contains ${value.includes('oklch') ? 'oklch' : 'oklab'})`);
+      }
+    }
+    
+    if (invalidVars.length > 0) {
+      throw new Error(
+        `Found CSS variables with unsafe color formats:\n` +
+        invalidVars.join('\n') +
+        `\n\nUse HSL format instead: --color: 340 50% 60%;`
+      );
+    }
+    
+    expect(invalidVars.length).toBe(0);
   });
 });
