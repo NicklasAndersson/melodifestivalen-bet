@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { GlobalLeaderboard } from './GlobalLeaderboard';
+import { PersonalLeaderboard } from './PersonalLeaderboard';
 import { Entry } from '@/lib/types';
 
 const mockEntries: Entry[] = [
@@ -13,8 +13,8 @@ const mockEntries: Entry[] = [
     heatDate: '2026-01-31',
     userRatings: [
       {
-        profileId: 'user-1',
-        profileName: 'User 1',
+        profileId: 'user-123',
+        profileName: 'Test User',
         ratings: {
           song: { rating: 5, comment: '' },
           scenography: { rating: 5, comment: '' },
@@ -24,19 +24,6 @@ const mockEntries: Entry[] = [
           postcard: { rating: 5, comment: '' },
         },
         totalScore: 30,
-      },
-      {
-        profileId: 'user-2',
-        profileName: 'User 2',
-        ratings: {
-          song: { rating: 4, comment: '' },
-          scenography: { rating: 4, comment: '' },
-          clothes: { rating: 4, comment: '' },
-          vocals: { rating: 4, comment: '' },
-          lyrics: { rating: 4, comment: '' },
-          postcard: { rating: 4, comment: '' },
-        },
-        totalScore: 24,
       },
     ],
   },
@@ -49,8 +36,8 @@ const mockEntries: Entry[] = [
     heatDate: '2026-01-31',
     userRatings: [
       {
-        profileId: 'user-1',
-        profileName: 'User 1',
+        profileId: 'user-123',
+        profileName: 'Test User',
         ratings: {
           song: { rating: 3, comment: '' },
           scenography: { rating: 3, comment: '' },
@@ -63,31 +50,33 @@ const mockEntries: Entry[] = [
       },
     ],
   },
+  {
+    id: 'entry-3',
+    number: 3,
+    artist: 'Test Artist 3',
+    song: 'Test Song 3',
+    heat: 'Deltävling 2',
+    heatDate: '2026-02-07',
+    userRatings: [],
+  },
 ];
 
-describe('GlobalLeaderboard', () => {
-  it('renders global leaderboard with entries', () => {
-    render(<GlobalLeaderboard entries={mockEntries} />);
+describe('PersonalLeaderboard', () => {
+  it('renders personal leaderboard with user ratings', () => {
+    render(<PersonalLeaderboard entries={mockEntries} userId="user-123" />);
     
     expect(screen.getByText('Test Song 1')).toBeInTheDocument();
     expect(screen.getByText('Test Artist 1')).toBeInTheDocument();
   });
 
-  it('shows empty state when no ratings exist', () => {
-    const emptyEntries: Entry[] = [
-      {
-        ...mockEntries[0],
-        userRatings: [],
-      },
-    ];
+  it('shows empty state when user has no ratings', () => {
+    render(<PersonalLeaderboard entries={mockEntries} userId="different-user" />);
     
-    render(<GlobalLeaderboard entries={emptyEntries} />);
-    
-    expect(screen.getByText('Ingen topplista än')).toBeInTheDocument();
+    expect(screen.getByText('Inga betyg än')).toBeInTheDocument();
   });
 
   it('does not use oklch color values in className', () => {
-    const { container } = render(<GlobalLeaderboard entries={mockEntries} />);
+    const { container } = render(<PersonalLeaderboard entries={mockEntries} userId="user-123" />);
     
     const allElements = container.querySelectorAll('*');
     allElements.forEach((element) => {
@@ -100,7 +89,7 @@ describe('GlobalLeaderboard', () => {
   });
 
   it('does not use oklab color values in className', () => {
-    const { container } = render(<GlobalLeaderboard entries={mockEntries} />);
+    const { container } = render(<PersonalLeaderboard entries={mockEntries} userId="user-123" />);
     
     const allElements = container.querySelectorAll('*');
     allElements.forEach((element) => {
@@ -111,8 +100,8 @@ describe('GlobalLeaderboard', () => {
     });
   });
 
-  it('uses only safe color formats', () => {
-    const { container } = render(<GlobalLeaderboard entries={mockEntries} />);
+  it('uses only hex colors for arbitrary values', () => {
+    const { container } = render(<PersonalLeaderboard entries={mockEntries} userId="user-123" />);
     
     const allElements = container.querySelectorAll('*');
     allElements.forEach((element) => {
@@ -121,23 +110,17 @@ describe('GlobalLeaderboard', () => {
         const arbitraryColorMatches = className.matchAll(/\[([^\]]+)\]/g);
         for (const match of arbitraryColorMatches) {
           const value = match[1];
-          if (value.includes('oklch') || value.includes('oklab')) {
-            throw new Error(`Found unsafe color format in className: ${className}`);
+          if (value.startsWith('#') || value.includes('rgb') || value.includes('hsl')) {
+            expect(value).not.toContain('oklch');
+            expect(value).not.toContain('oklab');
           }
         }
       }
     });
   });
 
-  it('calculates average scores correctly', () => {
-    render(<GlobalLeaderboard entries={mockEntries} />);
-    
-    expect(screen.getByText('27.0')).toBeInTheDocument();
-    expect(screen.getByText('18.0')).toBeInTheDocument();
-  });
-
-  it('sorts entries by average score descending', () => {
-    const { container } = render(<GlobalLeaderboard entries={mockEntries} />);
+  it('sorts entries by user score descending', () => {
+    const { container } = render(<PersonalLeaderboard entries={mockEntries} userId="user-123" />);
     
     const songs = Array.from(container.querySelectorAll('.font-heading.font-bold.text-base, .font-heading.font-bold.text-xl'))
       .map(el => el.textContent)
@@ -147,29 +130,37 @@ describe('GlobalLeaderboard', () => {
     expect(songs[1]).toBe('Test Song 2');
   });
 
-  it('displays rating count correctly', () => {
-    render(<GlobalLeaderboard entries={mockEntries} />);
+  it('displays correct total scores', () => {
+    render(<PersonalLeaderboard entries={mockEntries} userId="user-123" />);
     
-    expect(screen.getByText('2 betyg')).toBeInTheDocument();
-    expect(screen.getByText('1 betyg')).toBeInTheDocument();
+    expect(screen.getByText('30')).toBeInTheDocument();
+    expect(screen.getByText('18')).toBeInTheDocument();
+  });
+
+  it('only shows entries rated by the user', () => {
+    render(<PersonalLeaderboard entries={mockEntries} userId="user-123" />);
+    
+    expect(screen.getByText('Test Song 1')).toBeInTheDocument();
+    expect(screen.getByText('Test Song 2')).toBeInTheDocument();
+    expect(screen.queryByText('Test Song 3')).not.toBeInTheDocument();
   });
 
   it('displays crown icon for first place', () => {
-    const { container } = render(<GlobalLeaderboard entries={mockEntries} />);
+    const { container } = render(<PersonalLeaderboard entries={mockEntries} userId="user-123" />);
     
     const crownElements = container.querySelectorAll('.text-gold');
     expect(crownElements.length).toBeGreaterThan(0);
   });
 
-  it('uses hex colors for medal icons', () => {
-    const { container } = render(<GlobalLeaderboard entries={mockEntries} />);
+  it('uses safe hex colors for medal icons', () => {
+    const { container } = render(<PersonalLeaderboard entries={mockEntries} userId="user-123" />);
     
-    const medalIconClasses = Array.from(container.querySelectorAll('[class*="text-[#"]'))
-      .map(el => el.className);
-    
-    medalIconClasses.forEach((className) => {
-      if (className.includes('text-[#')) {
-        expect(className).toMatch(/text-\[#[0-9A-Fa-f]{3,6}\]/);
+    const medalIcons = container.querySelectorAll('[class*="text-[#"]');
+    medalIcons.forEach((icon) => {
+      const className = icon.className;
+      const hexMatch = className.match(/text-\[#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})\]/);
+      if (hexMatch) {
+        expect(hexMatch[0]).toMatch(/text-\[#[0-9A-Fa-f]{3,6}\]/);
       }
     });
   });

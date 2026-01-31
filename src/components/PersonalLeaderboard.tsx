@@ -46,9 +46,9 @@ export function PersonalLeaderboard({ entries, userId }: PersonalLeaderboardProp
       case 0:
         return <Crown size={24} weight="fill" className="text-gold" />;
       case 1:
-        return <Medal size={24} weight="fill" className="text-[oklch(0.7_0.1_200)]" />;
+        return <Medal size={24} weight="fill" className="text-[#87CEEB]" />;
       case 2:
-        return <Medal size={24} weight="fill" className="text-[oklch(0.6_0.12_30)]" />;
+        return <Medal size={24} weight="fill" className="text-[#CD7F32]" />;
       default:
         return (
           <span className="font-heading font-bold text-2xl text-muted-foreground">
@@ -72,9 +72,9 @@ export function PersonalLeaderboard({ entries, userId }: PersonalLeaderboardProp
               index === 0
                 ? 'border-gold/50 bg-gradient-to-br from-gold/10 via-gold/5 to-transparent'
                 : index === 1
-                ? 'border-[oklch(0.7_0.1_200)]/30 bg-gradient-to-br from-[oklch(0.7_0.1_200)]/5 to-transparent'
+                ? 'border-[#87CEEB]/30 bg-gradient-to-br from-[#87CEEB]/5 to-transparent'
                 : index === 2
-                ? 'border-[oklch(0.6_0.12_30)]/30 bg-gradient-to-br from-[oklch(0.6_0.12_30)]/5 to-transparent'
+                ? 'border-[#CD7F32]/30 bg-gradient-to-br from-[#CD7F32]/5 to-transparent'
                 : 'border-border'
             }`}
           >
