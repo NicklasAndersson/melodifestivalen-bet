@@ -50,8 +50,10 @@ export function GroupLeaderboard({ entries, users }: GroupLeaderboardProps) {
         description: 'Vänta ett ögonblick',
       });
 
+      const computedBgColor = getComputedStyle(leaderboardRef.current).backgroundColor;
+
       const canvas = await html2canvas(leaderboardRef.current, {
-        backgroundColor: '#fef9f5',
+        backgroundColor: computedBgColor,
         scale: 2,
         logging: false,
         useCORS: true,
