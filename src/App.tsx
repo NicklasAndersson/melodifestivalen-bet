@@ -5,7 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { SignOut, ArrowLeft, Sparkle, Star, Trophy, Heart, Download, Globe, UserCircle, Users } from '@phosphor-icons/react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { SignOut, ArrowLeft, Sparkle, Star, Trophy, Heart, Download, Globe, UserCircle, Users, CaretDown, Plus } from '@phosphor-icons/react';
 import { SSOLoginScreen } from '@/components/SSOLoginScreen';
 import { ProfileSelector } from '@/components/ProfileSelector';
 import { EntryCard } from '@/components/EntryCard';
@@ -561,10 +569,40 @@ function App() {
                   <Sparkle size={32} weight="duotone" className="text-primary" />
                   Melodifestivalen 2026
                 </h1>
-                <p className="font-body text-muted-foreground text-lg flex items-center gap-2">
-                  <UserCircle size={20} weight="duotone" />
-                  {selectedProfile.nickname}
-                </p>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="font-body text-muted-foreground text-lg flex items-center gap-2 px-0 h-auto hover:text-foreground transition-colors"
+                    >
+                      <UserCircle size={20} weight="duotone" />
+                      {selectedProfile.nickname}
+                      <CaretDown size={16} weight="bold" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-56">
+                    <DropdownMenuLabel>Byt profil</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {currentUser.profiles.map((profile) => (
+                      <DropdownMenuItem
+                        key={profile.id}
+                        onClick={() => handleSelectProfile(profile)}
+                        className={profile.id === selectedProfile.id ? 'bg-accent' : ''}
+                      >
+                        <UserCircle size={18} weight={profile.id === selectedProfile.id ? 'fill' : 'regular'} className="mr-2" />
+                        {profile.nickname}
+                        {profile.id === selectedProfile.id && (
+                          <span className="ml-auto text-xs text-muted-foreground">Aktiv</span>
+                        )}
+                      </DropdownMenuItem>
+                    ))}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleBackToProfiles}>
+                      <Plus size={18} weight="bold" className="mr-2" />
+                      Skapa ny profil
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
               <div className="flex items-center gap-3">
                 {currentUser.avatarUrl ? (
@@ -580,26 +618,15 @@ function App() {
                     </span>
                   </div>
                 )}
-                <div className="flex flex-col gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setExportDialogOpen(true)}
-                    className="gap-2 border-accent/30 hover:bg-accent/5"
-                  >
-                    <Download size={18} weight="duotone" />
-                    Backup
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleBackToProfiles}
-                    className="gap-2"
-                  >
-                    <ArrowLeft size={18} />
-                    Profiler
-                  </Button>
-                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setExportDialogOpen(true)}
+                  className="gap-2 border-accent/30 hover:bg-accent/5"
+                >
+                  <Download size={18} weight="duotone" />
+                  <span className="hidden sm:inline">Backup</span>
+                </Button>
               </div>
               {isOwner && (
                 <Button
