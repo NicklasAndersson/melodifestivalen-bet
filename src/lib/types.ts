@@ -44,12 +44,12 @@ export interface User {
 }
 
 export const CATEGORIES = [
-  { key: 'song', label: 'Låt', icon: 'MusicNotes' },
+  { key: 'postcard', label: 'Vykort', icon: 'Television' },
   { key: 'clothes', label: 'Kläder', icon: 'Palette' },
   { key: 'scenography', label: 'Scenografi', icon: 'Television' },
+  { key: 'song', label: 'Låt', icon: 'MusicNotes' },
   { key: 'vocals', label: 'Sång', icon: 'Microphone' },
   { key: 'lyrics', label: 'Text', icon: 'TextAa' },
-  { key: 'postcard', label: 'Vykort', icon: 'Television' },
 ] as const;
 
 export type CategoryKey = typeof CATEGORIES[number]['key'];
