@@ -164,25 +164,28 @@ export function GroupLeaderboard({ entries, users }: GroupLeaderboardProps) {
             <Card
               className={`p-3 sm:p-6 border-2 relative overflow-hidden ${
                 index === 0
-                  ? 'border-[#e8cd8c80]'
+                  ? ''
                   : index === 1
-                  ? 'border-[#87CEEB4d]'
+                  ? ''
                   : index === 2
-                  ? 'border-[#CD7F324d]'
+                  ? ''
                   : 'border-border'
               }`}
               style={
                 index === 0
                   ? {
                       background: 'linear-gradient(to bottom right, rgba(232, 205, 140, 0.1) 0%, rgba(232, 205, 140, 0.05) 50%, transparent 100%)',
+                      borderColor: 'rgba(232, 205, 140, 0.5)',
                     }
                   : index === 1
                   ? {
                       background: 'linear-gradient(to bottom right, rgba(135, 206, 235, 0.05) 0%, transparent 100%)',
+                      borderColor: 'rgba(135, 206, 235, 0.3)',
                     }
                   : index === 2
                   ? {
                       background: 'linear-gradient(to bottom right, rgba(205, 127, 50, 0.05) 0%, transparent 100%)',
+                      borderColor: 'rgba(205, 127, 50, 0.3)',
                     }
                   : undefined
               }

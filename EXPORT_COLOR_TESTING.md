@@ -58,12 +58,17 @@ npm test color-format-validation.test.ts
 ```tsx
 className="text-[oklch(0.7_0.1_200)]"
 className="border-[oklab(0.6_0.12_30)]"
+className="border-[#e8cd8c80]" // Hex+alpha in arbitrary values may fail
 ```
 
 ✅ Use instead:
 ```tsx
 className="text-[#87CEEB]"
 className="border-[#CD7F32]"
+// For colors with opacity, use inline styles with rgba():
+style={{ borderColor: 'rgba(232, 205, 140, 0.5)' }}
+// Or use Tailwind opacity utilities:
+className="border-[#e8cd8c] border-opacity-50"
 ```
 
 ## Color Reference for Medals
@@ -83,5 +88,12 @@ This issue was introduced and fixed multiple times:
 3. Reintroduced `oklch` in PersonalLeaderboard during a refactor
 4. Fixed again with hex colors
 5. Comprehensive tests added to prevent future regressions
+6. **2025-01**: Fixed hex+alpha format issue in GroupLeaderboard (e.g., `#e8cd8c80`) - moved to inline style with rgba() format
+
+### Latest Fix (GroupLeaderboard.tsx)
+The issue occurred because Tailwind's arbitrary value syntax with hex+alpha (e.g., `border-[#e8cd8c80]`) may not parse correctly in html2canvas. The solution was to:
+- Remove hex+alpha from className
+- Move border colors to inline style objects using proper `rgba()` format
+- Keep background gradients using `rgba()` which is fully supported
 
 The tests now ensure this pattern cannot be reintroduced without immediate detection.
