@@ -1,7 +1,8 @@
+import { useState } from 'react';
 import { Entry, UserRating } from '@/lib/types';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Sparkle, Star, LockKey, LinkSimple } from '@phosphor-icons/react';
+import { Sparkle, Star, LockKey, LinkSimple, Eye, EyeSlash } from '@phosphor-icons/react';
 import { motion } from 'framer-motion';
 import { isVotingAllowed, getMellopediaUrl } from '@/lib/melodifestivalen-data';
 
@@ -12,6 +13,7 @@ interface EntryCardProps {
 }
 
 export function EntryCard({ entry, userRating, onClick }: EntryCardProps) {
+  const [showSongTitle, setShowSongTitle] = useState(true);
   const totalScore = userRating?.totalScore || 0;
   const ratedCategories = userRating 
     ? Object.values(userRating.ratings).filter(r => r.rating > 0).length 
@@ -46,21 +48,23 @@ export function EntryCard({ entry, userRating, onClick }: EntryCardProps) {
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 mb-1">
-                  <h3 className="font-heading font-bold text-xl text-foreground truncate">
-                    {entry.song}
-                  </h3>
-                  <a
-                    href={getMellopediaUrl(entry.song)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-primary hover:text-primary/80 transition-colors shrink-0"
-                    title="Öppna på Mellopedia"
-                  >
-                    <LinkSimple size={18} weight="bold" />
-                  </a>
-                </div>
+                {showSongTitle && (
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <h3 className="font-heading font-bold text-xl text-foreground truncate">
+                      {entry.song}
+                    </h3>
+                    <a
+                      href={getMellopediaUrl(entry.song)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-primary hover:text-primary/80 transition-colors shrink-0"
+                      title="Öppna på Mellopedia"
+                    >
+                      <LinkSimple size={18} weight="bold" />
+                    </a>
+                  </div>
+                )}
                 <div className="flex items-center gap-1.5">
                   <p className="text-muted-foreground font-body text-sm truncate">
                     {entry.artist}
@@ -78,9 +82,25 @@ export function EntryCard({ entry, userRating, onClick }: EntryCardProps) {
                 </div>
               </div>
             </div>
-            <Badge variant="secondary" className="shrink-0 font-body">
-              {entry.heat}
-            </Badge>
+            <div className="flex gap-2 shrink-0">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowSongTitle(!showSongTitle);
+                }}
+                className="w-8 h-8 rounded-lg bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
+                title={showSongTitle ? 'Dölj låttitel' : 'Visa låttitel'}
+              >
+                {showSongTitle ? (
+                  <EyeSlash size={18} weight="duotone" className="text-muted-foreground" />
+                ) : (
+                  <Eye size={18} weight="duotone" className="text-muted-foreground" />
+                )}
+              </button>
+              <Badge variant="secondary" className="shrink-0 font-body">
+                {entry.heat}
+              </Badge>
+            </div>
           </div>
 
           <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
