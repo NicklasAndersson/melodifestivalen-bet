@@ -16,10 +16,13 @@ import { PersonalLeaderboard } from '@/components/PersonalLeaderboard';
 import { GroupLeaderboard } from '@/components/GroupLeaderboard';
 import { ExportRatingsDialog } from '@/components/ExportRatingsDialog';
 import { MigrationDebug } from '@/components/MigrationDebug';
+import { BackupReminder } from '@/components/BackupReminder';
+import { DataRecoveryBanner } from '@/components/DataRecoveryBanner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster, toast } from 'sonner';
 import { MELODIFESTIVALEN_2026 } from '@/lib/melodifestivalen-data';
 import { migrateEntries, validateEntries, getDataVersion } from '@/lib/migration';
+import { shouldShowBackupWarning, getTotalRatingsCount } from '@/lib/backup';
 
 function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -36,22 +39,46 @@ function App() {
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [showMigrationDebug, setShowMigrationDebug] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
+  const [showBackupWarning, setShowBackupWarning] = useState(false);
   
   const CURRENT_DATA_VERSION = getDataVersion();
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    const currentEntries = entries || [];
-    const needsMigration = currentEntries.length === 0 || dataVersion !== CURRENT_DATA_VERSION;
+    const checkBackupWarning = async () => {
+      const shouldShow = await shouldShowBackupWarning();
+      const hasRatings = getTotalRatingsCount(entries || []) > 0;
+      setShowBackupWarning(shouldShow && hasRatings);
+    };
     
-    if (needsMigration) {
-      initializeEntries();
+    if (selectedProfile && entries) {
+      checkBackupWarning();
     }
-  }, []);
+  }, [selectedProfile, entries]);
 
-  const initializeEntries = () => {
-    const currentEntries = entries || [];
+  useEffect(() => {
+    if (isInitialized) return;
     
-    if (currentEntries.length === 0) {
+    const initData = async () => {
+      const storedEntries = await window.spark.kv.get<Entry[]>('mello-entries-v2');
+      const storedVersion = await window.spark.kv.get<number>('mello-data-version-v2');
+      
+      const currentEntries = storedEntries || [];
+      const currentVersion = storedVersion || 0;
+      const needsMigration = currentEntries.length === 0 || currentVersion !== CURRENT_DATA_VERSION;
+      
+      if (needsMigration) {
+        await initializeEntries(currentEntries, currentVersion);
+      }
+      
+      setIsInitialized(true);
+    };
+    
+    initData();
+  }, [isInitialized]);
+
+  const initializeEntries = async (currentEntries: Entry[], currentVersion: number) => {
+    if (currentEntries.length === 0 && currentVersion === 0) {
       const initialEntries: Entry[] = MELODIFESTIVALEN_2026.map((entry) => ({
         id: `${entry.artist}-${entry.song}`.toLowerCase().replace(/\s+/g, '-'),
         number: entry.number,
@@ -62,6 +89,8 @@ function App() {
         userRatings: [],
       }));
       
+      await window.spark.kv.set('mello-entries-v2', initialEntries);
+      await window.spark.kv.set('mello-data-version-v2', CURRENT_DATA_VERSION);
       setEntries(initialEntries);
       setDataVersion(CURRENT_DATA_VERSION);
       return;
@@ -78,6 +107,8 @@ function App() {
       return;
     }
     
+    await window.spark.kv.set('mello-entries-v2', migratedEntries);
+    await window.spark.kv.set('mello-data-version-v2', CURRENT_DATA_VERSION);
     setEntries(migratedEntries);
     setDataVersion(CURRENT_DATA_VERSION);
     
@@ -99,7 +130,7 @@ function App() {
           description: 'Inga betyg kunde överföras',
         });
       }
-    } else if (dataVersion !== 0) {
+    } else if (currentVersion !== 0) {
       toast.success('Data uppdaterad!', {
         description: 'Melodifestivalen 2026-bidrag har laddats',
       });
@@ -198,19 +229,17 @@ function App() {
     setShowComparison(false);
   };
 
-  const handleRating = (entryId: string, category: CategoryKey, rating: number, comment: string) => {
+  const handleRating = async (entryId: string, category: CategoryKey, rating: number, comment: string) => {
     if (!selectedProfile) return;
 
     setEntries((currentEntries) => {
-      return (currentEntries || []).map((entry) => {
+      const updatedEntries = (currentEntries || []).map((entry) => {
         if (entry.id !== entryId) return entry;
 
-        // Separera andra profilers ratings (bevaras alltid oförändrade)
         const otherProfileRatings = entry.userRatings.filter(
           (ur) => ur.profileId !== selectedProfile.id
         );
         
-        // Hämta eller skapa vår profils rating
         const existingRating = entry.userRatings.find(
           (ur) => ur.profileId === selectedProfile.id
         );
@@ -241,7 +270,6 @@ function App() {
           totalScore,
         };
 
-        // Kombinera: andra profilers ratings + vår uppdaterade rating
         const updatedEntry = {
           ...entry,
           userRatings: [...otherProfileRatings, myRating],
@@ -253,7 +281,20 @@ function App() {
 
         return updatedEntry;
       });
+
+      createAutoBackupAsync(updatedEntries, users || []);
+      
+      return updatedEntries;
     });
+  };
+
+  const createAutoBackupAsync = async (currentEntries: Entry[], currentUsers: User[]) => {
+    try {
+      const { createAutoBackup } = await import('@/lib/backup');
+      await createAutoBackup(currentEntries, currentUsers);
+    } catch (error) {
+      console.error('Failed to create auto backup:', error);
+    }
   };
 
   const handleDeleteRating = (entryId: string) => {
@@ -288,7 +329,11 @@ function App() {
         entriesMap.set(importedEntry.id, importedEntry);
       });
       
-      return Array.from(entriesMap.values());
+      const updatedEntries = Array.from(entriesMap.values());
+      
+      createAutoBackupAsync(updatedEntries, users || []);
+      
+      return updatedEntries;
     });
   };
 
@@ -536,6 +581,24 @@ function App() {
         </div>
 
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
+          <DataRecoveryBanner
+            currentEntries={entries || []}
+            currentUsers={users || []}
+            onRestore={(restoredEntries, restoredUsers) => {
+              setEntries(restoredEntries);
+              setUsers(restoredUsers);
+              toast.success('Data återställd!', {
+                description: 'Dina betyg har återställts från backup',
+              });
+            }}
+            onExportBackup={() => setExportDialogOpen(true)}
+          />
+
+          <BackupReminder
+            show={showBackupWarning}
+            onBackupClick={() => setExportDialogOpen(true)}
+          />
+
           <Tabs value={selectedHeat} onValueChange={setSelectedHeat} className="w-full">
             <ScrollArea className="w-full pb-2">
               <TabsList className="w-full grid grid-cols-3 sm:grid-cols-7 h-auto p-1 gap-1">

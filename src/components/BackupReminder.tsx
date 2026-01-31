@@ -14,13 +14,13 @@ export function BackupReminder({ onBackupClick, show }: BackupReminderProps) {
 
   if (dismissed || !show) return null;
 
-  const handleDismiss = () => {
-    dismissBackupWarning();
+  const handleDismiss = async () => {
+    await dismissBackupWarning();
     setDismissed(true);
   };
 
-  const handleBackup = () => {
-    clearBackupWarningDismissal();
+  const handleBackup = async () => {
+    await clearBackupWarningDismissal();
     onBackupClick();
     setDismissed(true);
   };
@@ -35,8 +35,8 @@ export function BackupReminder({ onBackupClick, show }: BackupReminderProps) {
           </AlertTitle>
           <AlertDescription className="font-body space-y-3">
             <p className="text-yellow-900 dark:text-yellow-100">
-              <strong>Viktigt:</strong> Din data sparas lokalt i webbläsaren. Om du rensar webbläsardata, 
-              byter enhet, eller om appen uppdateras kan dina betyg gå förlorade.
+              <strong>Viktigt:</strong> Din data sparas i appen. Om appen uppdateras kan dina betyg 
+              påverkas om de inte migreras korrekt.
             </p>
             <p className="text-yellow-900 dark:text-yellow-100 text-sm">
               Exportera dina betyg regelbundet för att säkerställa att du inte förlorar dem.

@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { CloudArrowUp, X, Database, Download } from '@phosphor-icons/react';
-import { getLocalBackup, clearLocalBackup, getTotalRatingsCount } from '@/lib/backup';
+import { getAutoBackup, clearAutoBackup, getTotalRatingsCount } from '@/lib/backup';
 import { Entry, User } from '@/lib/types';
 
 interface DataRecoveryBannerProps {
@@ -19,9 +19,19 @@ export function DataRecoveryBanner({
   onExportBackup
 }: DataRecoveryBannerProps) {
   const [dismissed, setDismissed] = useState(false);
-  const backup = getLocalBackup();
+  const [backup, setBackup] = useState<Awaited<ReturnType<typeof getAutoBackup>> | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadBackup = async () => {
+      const data = await getAutoBackup();
+      setBackup(data);
+      setLoading(false);
+    };
+    loadBackup();
+  }, []);
   
-  if (dismissed || !backup) return null;
+  if (loading || dismissed || !backup) return null;
   
   const currentRatingsCount = getTotalRatingsCount(currentEntries);
   const backupRatingsCount = getTotalRatingsCount(backup.entries);
@@ -34,7 +44,7 @@ export function DataRecoveryBanner({
 
   const handleRestore = () => {
     const confirmRestore = confirm(
-      `Lokalt backup hittat med ${backupRatingsCount} betyg!\n\n` +
+      `Automatiskt backup hittat med ${backupRatingsCount} betyg!\n\n` +
       `Du har för närvarande ${currentRatingsCount} betyg.\n\n` +
       `Vill du återställa backupen? Detta kommer skriva över dina nuvarande data.`
     );
@@ -74,6 +84,13 @@ export function DataRecoveryBanner({
     }
   };
 
+  const handleIgnore = async () => {
+    if (confirm('Är du säker på att du vill ignorera backupen? Detta kan inte ångras.')) {
+      await clearAutoBackup();
+      setDismissed(true);
+    }
+  };
+
   const backupDate = new Date(backup.timestamp).toLocaleString('sv-SE', {
     year: 'numeric',
     month: 'long',
@@ -93,7 +110,7 @@ export function DataRecoveryBanner({
           </AlertTitle>
           <AlertDescription className="font-body space-y-3">
             <p>
-              Ett lokalt backup hittades från <strong>{backupDate}</strong> med <strong>{backupRatingsCount} betyg</strong>.
+              Ett automatiskt backup hittades från <strong>{backupDate}</strong> med <strong>{backupRatingsCount} betyg</strong>.
             </p>
             <p className="text-sm text-muted-foreground">
               Du har för närvarande bara {currentRatingsCount} betyg. Det verkar som om data har gått förlorad.
@@ -126,12 +143,7 @@ export function DataRecoveryBanner({
                 Backup nuvarande data
               </Button>
               <Button 
-                onClick={() => {
-                  if (confirm('Är du säker på att du vill ignorera backupen? Detta kan inte ångras.')) {
-                    clearLocalBackup();
-                    setDismissed(true);
-                  }
-                }}
+                onClick={handleIgnore}
                 size="sm"
                 variant="ghost"
               >
