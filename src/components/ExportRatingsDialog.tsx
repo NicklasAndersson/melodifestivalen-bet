@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Entry } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Download } from '@phosphor-icons/react';
+import { Download, Upload, FileJs, Image } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { CATEGORIES, CategoryKey } from '@/lib/types';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 interface ExportRatingsDialogProps {
   open: boolean;
@@ -12,10 +13,13 @@ interface ExportRatingsDialogProps {
   entries: Entry[];
   userId: string;
   userName: string;
+  onImportRatings?: (importedEntries: Entry[]) => void;
 }
 
-export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userName }: ExportRatingsDialogProps) {
+export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userName, onImportRatings }: ExportRatingsDialogProps) {
   const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const entriesWithUserRating = entries
     .map((entry) => {
@@ -30,6 +34,127 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
     .filter((item): item is { entry: Entry; rating: NonNullable<typeof item>['rating'] } => item !== null)
     .sort((a, b) => b.rating.totalScore - a.rating.totalScore)
     .slice(0, 10);
+
+  const exportAsJSON = () => {
+    try {
+      const backupData = {
+        version: 1,
+        exportDate: new Date().toISOString(),
+        profileId: userId,
+        profileName: userName,
+        entries: entries.map(entry => ({
+          id: entry.id,
+          number: entry.number,
+          artist: entry.artist,
+          song: entry.song,
+          heat: entry.heat,
+          heatDate: entry.heatDate,
+          userRatings: entry.userRatings.filter(ur => ur.profileId === userId)
+        })).filter(entry => entry.userRatings.length > 0)
+      };
+
+      const jsonString = JSON.stringify(backupData, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const timestamp = new Date().toISOString().split('T')[0];
+      link.download = `melodifestivalen-2026-backup-${userName.toLowerCase().replace(/\s+/g, '-')}-${timestamp}.json`;
+      link.href = url;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 1000);
+      
+      toast.success('Backup nedladdad!', {
+        description: 'Dina betyg har exporterats som JSON',
+      });
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Kunde inte exportera betyg', {
+        description: 'Försök igen',
+      });
+    }
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+
+    try {
+      const text = await file.text();
+      const backupData = JSON.parse(text);
+
+      if (!backupData.version || !backupData.entries || !Array.isArray(backupData.entries)) {
+        throw new Error('Ogiltigt backup-format');
+      }
+
+      if (backupData.profileId !== userId) {
+        const confirmed = confirm(
+          `Denna backup är från profilen "${backupData.profileName || 'okänd'}".\n\n` +
+          `Du importerar till profilen "${userName}".\n\n` +
+          'Vill du fortsätta? Detta kommer skriva över dina nuvarande betyg för dessa bidrag.'
+        );
+        
+        if (!confirmed) {
+          setIsImporting(false);
+          return;
+        }
+      }
+
+      const importedEntries = backupData.entries.map((backupEntry: any) => {
+        const existingEntry = entries.find(e => e.id === backupEntry.id);
+        
+        if (!existingEntry) {
+          return null;
+        }
+
+        const otherUserRatings = existingEntry.userRatings.filter(ur => ur.profileId !== userId);
+        const importedUserRatings = backupEntry.userRatings.map((ur: any) => ({
+          ...ur,
+          profileId: userId,
+          profileName: userName
+        }));
+
+        return {
+          ...existingEntry,
+          userRatings: [...otherUserRatings, ...importedUserRatings]
+        };
+      }).filter((entry): entry is Entry => entry !== null);
+
+      if (importedEntries.length === 0) {
+        throw new Error('Inga betyg kunde importeras');
+      }
+
+      if (onImportRatings) {
+        onImportRatings(importedEntries);
+      }
+
+      toast.success('Betyg importerade!', {
+        description: `${importedEntries.length} bidrag har återställts`,
+      });
+
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Import error:', error);
+      toast.error('Kunde inte importera betyg', {
+        description: error instanceof Error ? error.message : 'Kontrollera att filen är korrekt',
+      });
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
 
   const exportAsImage = async () => {
     setIsExporting(true);
@@ -244,11 +369,31 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-heading text-2xl">Exportera betyg</DialogTitle>
+            <DialogTitle className="font-heading text-2xl">Säkerhetskopiera betyg</DialogTitle>
             <DialogDescription className="font-body">
-              Du har inga betyg att exportera än. Börja betygsätta bidragen först!
+              Du har inga betyg att exportera än. Men du kan importera en tidigare säkerhetskopia om du har en!
             </DialogDescription>
           </DialogHeader>
+          
+          <div className="space-y-4">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              onChange={handleFileImport}
+              className="hidden"
+            />
+            
+            <Button
+              onClick={handleImportClick}
+              disabled={isImporting}
+              variant="outline"
+              className="w-full gap-2"
+            >
+              <Upload size={20} weight="duotone" />
+              {isImporting ? 'Importerar...' : 'Importera backup'}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     );
@@ -258,33 +403,112 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-heading text-2xl">Exportera dina betyg</DialogTitle>
+          <DialogTitle className="font-heading text-2xl">Säkerhetskopiera & Återställ</DialogTitle>
           <DialogDescription className="font-body">
-            Ladda ner din topplista som en bild
+            Exportera dina betyg som backup eller dela din topplista
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
-          <div className="flex gap-3">
-            <Button
-              onClick={exportAsImage}
-              disabled={isExporting}
-              className="w-full gap-2"
-            >
-              <Download size={20} weight="duotone" />
-              {isExporting ? 'Exporterar...' : 'Ladda ner som bild'}
-            </Button>
-          </div>
+        <Tabs defaultValue="backup" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="backup">Säkerhetskopiera</TabsTrigger>
+            <TabsTrigger value="share">Dela topplista</TabsTrigger>
+          </TabsList>
 
-          <div className="border-2 border-dashed border-border rounded-lg p-8 bg-muted/30 text-center">
-            <p className="text-sm text-muted-foreground font-body mb-2">
-              Din topplista exporteras som en högkvalitativ PNG-bild
-            </p>
-            <p className="text-xs text-muted-foreground font-body">
-              Perfekt för att dela på sociala medier eller spara för framtiden
-            </p>
-          </div>
-        </div>
+          <TabsContent value="backup" className="space-y-6 mt-6">
+            <div className="space-y-4">
+              <div className="border-2 border-dashed border-border rounded-lg p-6 bg-muted/30">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 rounded-lg bg-primary/10">
+                    <FileJs size={24} weight="duotone" className="text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-heading font-semibold text-lg mb-1">Exportera betyg</h3>
+                    <p className="text-sm text-muted-foreground font-body mb-4">
+                      Ladda ner alla dina betyg som en JSON-fil. Använd denna för att återställa dina betyg senare eller flytta dem till en annan enhet.
+                    </p>
+                    <Button
+                      onClick={exportAsJSON}
+                      className="w-full gap-2"
+                    >
+                      <Download size={20} weight="duotone" />
+                      Exportera alla betyg (JSON)
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-2 border-dashed border-border rounded-lg p-6 bg-muted/30">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 rounded-lg bg-accent/10">
+                    <Upload size={24} weight="duotone" className="text-accent" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-heading font-semibold text-lg mb-1">Importera betyg</h3>
+                    <p className="text-sm text-muted-foreground font-body mb-4">
+                      Återställ dina betyg från en tidigare backup. Detta kommer skriva över dina nuvarande betyg för de importerade bidragen.
+                    </p>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".json"
+                      onChange={handleFileImport}
+                      className="hidden"
+                    />
+                    <Button
+                      onClick={handleImportClick}
+                      disabled={isImporting}
+                      variant="outline"
+                      className="w-full gap-2"
+                    >
+                      <Upload size={20} weight="duotone" />
+                      {isImporting ? 'Importerar...' : 'Välj backup-fil'}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <p className="text-xs text-blue-900 dark:text-blue-100 font-body">
+                  <strong>Tips:</strong> Exportera dina betyg regelbundet för att säkerställa att du inte förlorar dem. 
+                  Backup-filer kan användas för att återställa betyg även om du byter enhet eller webbläsare.
+                </p>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="share" className="space-y-6 mt-6">
+            <div className="space-y-4">
+              <div className="border-2 border-dashed border-border rounded-lg p-6 bg-muted/30">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 rounded-lg bg-primary/10">
+                    <Image size={24} weight="duotone" className="text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-heading font-semibold text-lg mb-1">Dela som bild</h3>
+                    <p className="text-sm text-muted-foreground font-body mb-4">
+                      Ladda ner din topplista som en vacker bild perfekt för sociala medier. Visar dina topp 10 betygsatta bidrag.
+                    </p>
+                    <Button
+                      onClick={exportAsImage}
+                      disabled={isExporting}
+                      className="w-full gap-2"
+                    >
+                      <Download size={20} weight="duotone" />
+                      {isExporting ? 'Skapar bild...' : 'Ladda ner som bild'}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+                <p className="text-xs text-purple-900 dark:text-purple-100 font-body">
+                  Bilden innehåller dina topp 10 bidrag med alla betyg och är optimerad för delning!
+                </p>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

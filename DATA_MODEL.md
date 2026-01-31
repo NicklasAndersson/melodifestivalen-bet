@@ -215,6 +215,80 @@ The system validates:
 - Heat and date information is complete
 - Entry numbers are valid (1-6 per heat)
 
+## Backup & Restore System
+
+### Export Format
+
+The backup system exports ratings in JSON format:
+
+```typescript
+interface BackupData {
+  version: number;               // Backup format version (currently 1)
+  exportDate: string;            // ISO timestamp of export
+  profileId: string;             // Profile that created the backup
+  profileName: string;           // Profile nickname at export time
+  entries: Array<{
+    id: string;                  // Entry ID
+    number: number;              // Entry number
+    artist: string;              // Artist name
+    song: string;                // Song title
+    heat: string;                // Heat name
+    heatDate: string;            // Heat date
+    userRatings: UserRating[];   // Only ratings from exporting profile
+  }>;
+}
+```
+
+### Export Features
+
+1. **Selective Export**: Only exports entries that have ratings
+2. **Profile Scoped**: Only includes ratings from the exporting profile
+3. **Metadata Included**: Entry details preserved for validation
+4. **Timestamped**: Export date recorded for tracking
+5. **Human Readable**: JSON formatted with indentation
+
+### Import Features
+
+1. **Cross-Profile Import**: Can import backups from different profiles
+2. **Overwrite Protection**: Confirms before overwriting existing ratings
+3. **Merge Strategy**: Preserves other profiles' ratings during import
+4. **Validation**: Checks backup format and data structure
+5. **Error Handling**: Clear error messages for invalid backups
+
+### Import Process
+
+```
+File Selection → JSON Parse → Validation → Profile Check
+                                                  ↓
+                                    (Different Profile?)
+                                         ↓          ↓
+                                       Yes         No
+                                         ↓          ↓
+                                   Confirmation  Continue
+                                         ↓          ↓
+                                    Entry Matching
+                                         ↓
+                                   Rating Merge
+                                         ↓
+                                    KV Storage Update
+```
+
+### Backup Use Cases
+
+1. **Device Migration**: Transfer ratings to new device/browser
+2. **Disaster Recovery**: Restore after data loss
+3. **Profile Cloning**: Duplicate ratings to new profile
+4. **Sharing**: Share ratings with friends (manual transfer)
+5. **Version Control**: Keep snapshots of ratings over time
+
+### Best Practices
+
+1. **Regular Exports**: Export after each rating session
+2. **Secure Storage**: Keep backup files in safe location
+3. **File Naming**: Default includes profile name and date
+4. **Verification**: Test imports in safe environment first
+5. **Cross-Check**: Compare imported data after restore
+
 ## Performance Considerations
 
 ### Optimizations
@@ -236,8 +310,9 @@ The system validates:
 
 1. **Batch Updates**: Group multiple rating updates into single KV write
 2. **Incremental Migration**: Only migrate changed entries
-3. **Backup System**: Automatic backups before migrations
+3. **Automatic Backups**: Scheduled or trigger-based automatic exports
 4. **Undo System**: Allow reverting recent changes
+5. **Cloud Sync**: Synchronize backups across devices
 
 ### Scalability
 

@@ -283,6 +283,18 @@ function App() {
     toast.success('Betyg raderat');
   };
 
+  const handleImportRatings = (importedEntries: Entry[]) => {
+    setEntries((currentEntries) => {
+      const entriesMap = new Map((currentEntries || []).map(e => [e.id, e]));
+      
+      importedEntries.forEach(importedEntry => {
+        entriesMap.set(importedEntry.id, importedEntry);
+      });
+      
+      return Array.from(entriesMap.values());
+    });
+  };
+
   const heatEntries = (entries || []).filter((e) => e.heat === selectedHeat).sort((a, b) => a.number - b.number);
   
   const getUserRating = (entry: Entry) => {
@@ -471,7 +483,7 @@ function App() {
                     className="gap-2 border-accent/30 hover:bg-accent/5"
                   >
                     <Download size={18} weight="duotone" />
-                    Exportera
+                    Backup
                   </Button>
                   <Button
                     variant="outline"
@@ -575,6 +587,7 @@ function App() {
         entries={entries || []}
         userId={selectedProfile.id}
         userName={selectedProfile.nickname}
+        onImportRatings={handleImportRatings}
       />
 
       <Toaster position="top-center" />
