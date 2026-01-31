@@ -647,6 +647,7 @@ function App() {
         entries={entries || []}
         userId={selectedProfile.id}
         userName={selectedProfile.nickname}
+        currentUser={currentUser}
         onImportRatings={handleImportRatings}
       />
 

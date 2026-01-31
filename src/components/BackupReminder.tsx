@@ -36,10 +36,10 @@ export function BackupReminder({ onBackupClick, show }: BackupReminderProps) {
           <AlertDescription className="font-body space-y-3">
             <p className="text-yellow-900 dark:text-yellow-100">
               <strong>Viktigt:</strong> Din data sparas i appen. Om appen uppdateras kan dina betyg 
-              påverkas om de inte migreras korrekt.
+              påverkas om de inte migreras korrekt. Backupen omfattar alla dina profilers betyg.
             </p>
             <p className="text-yellow-900 dark:text-yellow-100 text-sm">
-              Exportera dina betyg regelbundet för att säkerställa att du inte förlorar dem.
+              Exportera alla dina profilers betyg regelbundet för att säkerställa att du inte förlorar dem.
             </p>
             <div className="flex flex-wrap gap-2 mt-3">
               <Button 

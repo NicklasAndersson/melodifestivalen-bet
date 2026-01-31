@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Entry } from '@/lib/types';
+import { Entry, User } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Download, Upload, FileJs, Image } from '@phosphor-icons/react';
@@ -13,10 +13,11 @@ interface ExportRatingsDialogProps {
   entries: Entry[];
   userId: string;
   userName: string;
+  currentUser: User;
   onImportRatings?: (importedEntries: Entry[]) => void;
 }
 
-export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userName, onImportRatings }: ExportRatingsDialogProps) {
+export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userName, currentUser, onImportRatings }: ExportRatingsDialogProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -37,11 +38,19 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
 
   const exportAsJSON = () => {
     try {
+      const profileIds = currentUser.profiles.map(p => p.id);
+      
       const backupData = {
-        version: 1,
+        version: 2,
         exportDate: new Date().toISOString(),
-        profileId: userId,
-        profileName: userName,
+        accountId: currentUser.id,
+        accountEmail: currentUser.email,
+        githubLogin: currentUser.githubLogin,
+        profiles: currentUser.profiles.map(p => ({
+          id: p.id,
+          nickname: p.nickname,
+          createdAt: p.createdAt,
+        })),
         entries: entries.map(entry => ({
           id: entry.id,
           number: entry.number,
@@ -49,7 +58,7 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
           song: entry.song,
           heat: entry.heat,
           heatDate: entry.heatDate,
-          userRatings: entry.userRatings.filter(ur => ur.profileId === userId)
+          userRatings: entry.userRatings.filter(ur => profileIds.includes(ur.profileId))
         })).filter(entry => entry.userRatings.length > 0)
       };
 
@@ -58,7 +67,7 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       const timestamp = new Date().toISOString().split('T')[0];
-      link.download = `melodifestivalen-2026-backup-${userName.toLowerCase().replace(/\s+/g, '-')}-${timestamp}.json`;
+      link.download = `melodifestivalen-2026-backup-${currentUser.githubLogin.toLowerCase().replace(/\s+/g, '-')}-${timestamp}.json`;
       link.href = url;
       document.body.appendChild(link);
       link.click();
@@ -68,8 +77,10 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
         URL.revokeObjectURL(url);
       }, 1000);
       
+      const totalRatings = backupData.entries.reduce((sum, e) => sum + e.userRatings.length, 0);
+      
       toast.success('Backup nedladdad!', {
-        description: 'Dina betyg har exporterats som JSON',
+        description: `${currentUser.profiles.length} profil(er) och ${totalRatings} betyg exporterade`,
       });
     } catch (error) {
       console.error('Export error:', error);
@@ -97,52 +108,134 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
         throw new Error('Ogiltigt backup-format');
       }
 
-      if (backupData.profileId !== userId) {
+      if (backupData.version === 2 && backupData.accountId && backupData.profiles) {
+        if (backupData.accountId !== currentUser.id) {
+          const confirmed = confirm(
+            `Denna backup är från kontot "${backupData.githubLogin || backupData.accountEmail}".\n\n` +
+            `Du importerar till kontot "${currentUser.githubLogin}".\n\n` +
+            `Backupen innehåller ${backupData.profiles.length} profil(er).\n\n` +
+            'Vill du fortsätta? Detta kommer skriva över befintliga betyg för dessa bidrag.'
+          );
+          
+          if (!confirmed) {
+            setIsImporting(false);
+            return;
+          }
+        }
+
+        const importedEntries = backupData.entries.map((backupEntry: any) => {
+          const existingEntry = entries.find(e => e.id === backupEntry.id);
+          
+          if (!existingEntry) {
+            return null;
+          }
+
+          const profileIdMapping = new Map<string, string>();
+          backupData.profiles.forEach((backupProfile: any) => {
+            const matchingProfile = currentUser.profiles.find(p => 
+              p.nickname === backupProfile.nickname || p.id === backupProfile.id
+            );
+            if (matchingProfile) {
+              profileIdMapping.set(backupProfile.id, matchingProfile.id);
+            }
+          });
+
+          const allProfileIds = currentUser.profiles.map(p => p.id);
+          const otherUserRatings = existingEntry.userRatings.filter(
+            ur => !allProfileIds.includes(ur.profileId)
+          );
+
+          const importedUserRatings = backupEntry.userRatings
+            .map((ur: any) => {
+              const newProfileId = profileIdMapping.get(ur.profileId) || ur.profileId;
+              const matchingProfile = currentUser.profiles.find(p => p.id === newProfileId);
+              
+              if (!matchingProfile) {
+                return null;
+              }
+
+              return {
+                ...ur,
+                profileId: newProfileId,
+                profileName: matchingProfile.nickname
+              };
+            })
+            .filter((ur: any) => ur !== null);
+
+          return {
+            ...existingEntry,
+            userRatings: [...otherUserRatings, ...importedUserRatings]
+          };
+        }).filter((entry): entry is Entry => entry !== null);
+
+        if (importedEntries.length === 0) {
+          throw new Error('Inga betyg kunde importeras');
+        }
+
+        if (onImportRatings) {
+          onImportRatings(importedEntries);
+        }
+
+        const totalImportedRatings = importedEntries.reduce(
+          (sum, e) => sum + e.userRatings.filter(ur => 
+            currentUser.profiles.some(p => p.id === ur.profileId)
+          ).length, 
+          0
+        );
+
+        toast.success('Betyg importerade!', {
+          description: `${importedEntries.length} bidrag och ${totalImportedRatings} betyg återställda`,
+        });
+
+        onOpenChange(false);
+      } else if (backupData.version === 1 || backupData.profileId) {
         const confirmed = confirm(
-          `Denna backup är från profilen "${backupData.profileName || 'okänd'}".\n\n` +
-          `Du importerar till profilen "${userName}".\n\n` +
-          'Vill du fortsätta? Detta kommer skriva över dina nuvarande betyg för dessa bidrag.'
+          `Detta är en gammal backup (version 1) från en enskild profil "${backupData.profileName || 'okänd'}".\n\n` +
+          `Vilken profil vill du importera till?\n\n` +
+          `Aktuell profil: "${userName}"`
         );
         
         if (!confirmed) {
           setIsImporting(false);
           return;
         }
-      }
 
-      const importedEntries = backupData.entries.map((backupEntry: any) => {
-        const existingEntry = entries.find(e => e.id === backupEntry.id);
-        
-        if (!existingEntry) {
-          return null;
+        const importedEntries = backupData.entries.map((backupEntry: any) => {
+          const existingEntry = entries.find(e => e.id === backupEntry.id);
+          
+          if (!existingEntry) {
+            return null;
+          }
+
+          const otherUserRatings = existingEntry.userRatings.filter(ur => ur.profileId !== userId);
+          const importedUserRatings = backupEntry.userRatings.map((ur: any) => ({
+            ...ur,
+            profileId: userId,
+            profileName: userName
+          }));
+
+          return {
+            ...existingEntry,
+            userRatings: [...otherUserRatings, ...importedUserRatings]
+          };
+        }).filter((entry): entry is Entry => entry !== null);
+
+        if (importedEntries.length === 0) {
+          throw new Error('Inga betyg kunde importeras');
         }
 
-        const otherUserRatings = existingEntry.userRatings.filter(ur => ur.profileId !== userId);
-        const importedUserRatings = backupEntry.userRatings.map((ur: any) => ({
-          ...ur,
-          profileId: userId,
-          profileName: userName
-        }));
+        if (onImportRatings) {
+          onImportRatings(importedEntries);
+        }
 
-        return {
-          ...existingEntry,
-          userRatings: [...otherUserRatings, ...importedUserRatings]
-        };
-      }).filter((entry): entry is Entry => entry !== null);
+        toast.success('Betyg importerade!', {
+          description: `${importedEntries.length} bidrag har återställts`,
+        });
 
-      if (importedEntries.length === 0) {
-        throw new Error('Inga betyg kunde importeras');
+        onOpenChange(false);
+      } else {
+        throw new Error('Okänt backup-format');
       }
-
-      if (onImportRatings) {
-        onImportRatings(importedEntries);
-      }
-
-      toast.success('Betyg importerade!', {
-        description: `${importedEntries.length} bidrag har återställts`,
-      });
-
-      onOpenChange(false);
     } catch (error) {
       console.error('Import error:', error);
       toast.error('Kunde inte importera betyg', {
@@ -425,7 +518,7 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
                   <div className="flex-1">
                     <h3 className="font-heading font-semibold text-lg mb-1">Exportera betyg</h3>
                     <p className="text-sm text-muted-foreground font-body mb-4">
-                      Ladda ner alla dina betyg som en JSON-fil. Använd denna för att återställa dina betyg senare eller flytta dem till en annan enhet.
+                      Ladda ner alla betyg för alla dina profiler ({currentUser.profiles.length} st) som en JSON-fil. Använd denna för att återställa alla dina profilers betyg senare eller flytta dem till en annan enhet.
                     </p>
                     <Button
                       onClick={exportAsJSON}
@@ -446,7 +539,7 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
                   <div className="flex-1">
                     <h3 className="font-heading font-semibold text-lg mb-1">Importera betyg</h3>
                     <p className="text-sm text-muted-foreground font-body mb-4">
-                      Återställ dina betyg från en tidigare backup. Detta kommer skriva över dina nuvarande betyg för de importerade bidragen.
+                      Återställ alla dina profilers betyg från en tidigare backup. Detta kommer matcha profiler baserat på smeknamn och återställa alla betyg.
                     </p>
                     <input
                       ref={fileInputRef}

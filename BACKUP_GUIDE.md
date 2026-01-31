@@ -21,6 +21,8 @@ Din data sparas i applikationens storage-system som **kan nollställas** när ap
 3. Klicka **"Exportera alla betyg (JSON)"**
 4. Spara filen på ett säkert ställe (t.ex. Google Drive, Dropbox, eller lokal disk)
 
+**Viktigt:** Backupen omfattar **ALLA dina profilers betyg** på kontot. En enda backup-fil innehåller betyg från alla profiler du har skapat.
+
 **Gör detta:**
 - ✅ Efter varje gång du satt betyg
 - ✅ Innan du stänger webbläsaren
@@ -41,6 +43,60 @@ Appen skapar automatiskt en backup i webbläsarens localStorage. Detta är **INT
 - ✅ Snabb återställning om något går fel
 - ✅ Upptäcka dataförlust
 - ✅ Tillfällig säkerhet mellan manuella backups
+
+## Backup-format (Version 2)
+
+Din backup-fil innehåller:
+- **accountId**: Ditt unika konto-ID
+- **accountEmail**: Din e-postadress
+- **githubLogin**: Ditt GitHub-användarnamn
+- **profiles**: Lista över alla dina profiler (ID, smeknamn, skapandedatum)
+- **entries**: Alla bidrag med betyg från ALLA dina profiler
+
+### Exempel på backup-struktur:
+
+```json
+{
+  "version": 2,
+  "exportDate": "2026-02-01T10:30:00.000Z",
+  "accountId": "user-1234",
+  "accountEmail": "user@example.com",
+  "githubLogin": "myusername",
+  "profiles": [
+    {
+      "id": "profile-1",
+      "nickname": "Alice",
+      "createdAt": 1704067200000
+    },
+    {
+      "id": "profile-2",
+      "nickname": "Bob",
+      "createdAt": 1704153600000
+    }
+  ],
+  "entries": [
+    {
+      "id": "entry-1",
+      "artist": "Artist Name",
+      "song": "Song Name",
+      "userRatings": [
+        {
+          "profileId": "profile-1",
+          "profileName": "Alice",
+          "ratings": { ... },
+          "totalScore": 24
+        },
+        {
+          "profileId": "profile-2",
+          "profileName": "Bob",
+          "ratings": { ... },
+          "totalScore": 22
+        }
+      ]
+    }
+  ]
+}
+```
 
 ## Hur återställer jag data?
 
@@ -63,9 +119,11 @@ Om appen upptäcker att data har försvunnit men en localStorage backup finns, v
 5. Bekräfta återställningen
 
 **Viktigt:**
-- Återställning skriver över dina nuvarande betyg för de importerade bidragen
-- Andra profilers betyg påverkas inte
-- Du kan importera från en annan profil (du får en varning)
+- Vid återställning av Version 2 backup importeras **ALLA profilers betyg**
+- Profiler matchas automatiskt baserat på smeknamn eller ID
+- Om en profil med samma smeknamn finns, återställs betygen till den profilen
+- Återställning skriver över nuvarande betyg för de importerade bidragen
+- Andra användares betyg (utanför ditt konto) påverkas inte
 
 ### Scenario 3: Ingen backup finns
 
@@ -82,7 +140,7 @@ Om du inte har exporterat på 7 dagar, visas en påminnelse:
 
 **"Säkerhetskopiera dina betyg"**
 - Detta är en viktig påminnelse
-- Klicka **"Säkerhetskopiera nu"** för att skydda din data
+- Klicka **"Säkerhetskopiera nu"** för att skydda alla dina profilers data
 - **"Påminn senare"** - Får påminnelse igen senare
 
 ## Best Practices
@@ -91,22 +149,23 @@ Om du inte har exporterat på 7 dagar, visas en påminnelse:
 
 1. **Exportera efter varje session**
    - Ta för vana att exportera när du är klar
+   - En backup innehåller alla profilers betyg
    
 2. **Spara på flera ställen**
    - Google Drive, Dropbox, email till dig själv
    - Ha minst 2 kopior på olika platser
 
 3. **Namnge filer tydligt**
-   - Standard: `melodifestivalen-2026-backup-[namn]-[datum].json`
+   - Standard: `melodifestivalen-2026-backup-[användarnamn]-[datum].json`
    - Behåll detta format för att enkelt hitta rätt backup
 
 4. **Testa återställning**
    - Prova att importera din backup i en annan webbläsare
-   - Bekräfta att allt finns med
+   - Bekräfta att alla profilers betyg finns med
 
-5. **Dela med gruppen**
-   - Om du är gruppägare, dela din backup med andra
-   - Be andra i gruppen att också exportera regelbundet
+5. **En backup räcker per konto**
+   - Eftersom backupen innehåller alla profiler behöver du bara en backup per konto
+   - Alla profilers betyg återställs tillsammans
 
 ### ❌ UNDVIK
 
@@ -129,10 +188,10 @@ För att dela din topplista på sociala medier:
 1. Klicka på **"Backup"**
 2. Välj fliken **"Dela topplista"**
 3. Klicka **"Ladda ner som bild"**
-4. Bilden innehåller dina topp 10 bidrag
+4. Bilden innehåller dina topp 10 bidrag (för nuvarande profil)
 5. Dela på Instagram, Facebook, etc.
 
-**OBS:** Detta är INTE en backup! Det är bara för delning.
+**OBS:** Detta är INTE en backup! Det är bara för delning av en enskild profils topplista.
 
 ## Felsökning
 
@@ -147,11 +206,12 @@ För att dela din topplista på sociala medier:
 1. Kontrollera att det är rätt fil (`.json`)
 2. Försök öppna filen i en text-editor - ska innehålla JSON
 3. Försök en äldre backup om du har flera
+4. Version 1 backups (gamla, en profil) stöds fortfarande men importerar bara till nuvarande profil
 
 ### "Ingen data att exportera"
 
 **Orsak:**
-- Du har inte satt några betyg än
+- Inga av dina profiler har satt några betyg än
 
 **Lösning:**
 - Börja betygsätta bidrag först
@@ -179,10 +239,13 @@ Om du fortfarande har problem:
 
 ## Sammanfattning
 
-| Vad | När | Var | Viktig? |
-|-----|-----|-----|---------|
-| **Manuell JSON Export** | Efter varje session | Google Drive, lokal disk | ⭐⭐⭐⭐⭐ KRITISK |
-| **localStorage backup** | Automatiskt | Webbläsare | ⭐⭐⭐ Nödlösning |
-| **Bildexport** | För delning | Sociala medier | ⭐ Ej backup |
+| Vad | När | Omfattning | Viktig? |
+|-----|-----|------------|---------|
+| **Manuell JSON Export** | Efter varje session | Alla profilers betyg | ⭐⭐⭐⭐⭐ KRITISK |
+| **localStorage backup** | Automatiskt | Alla profilers betyg | ⭐⭐⭐ Nödlösning |
+| **Bildexport** | För delning | Nuvarande profils topplista | ⭐ Ej backup |
 
-**VIKTIGAST:** Exportera JSON regelbundet! Det är din enda garanti att behålla dina betyg.
+**VIKTIGAST:** 
+- Exportera JSON regelbundet! Det är din enda garanti att behålla alla dina profilers betyg.
+- En enda backup-fil innehåller alla profiler - du behöver inte exportera separat för varje profil.
+- Vid import återställs alla profilers betyg samtidigt.
