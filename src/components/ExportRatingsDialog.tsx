@@ -276,17 +276,17 @@ export function ExportRatingsDialog({ open, onOpenChange, entries, userId, userN
         const categories = CATEGORIES;
         const categoryWidth = (cardWidth - 60) / 3;
         
+        const emojiMap: Record<string, string> = {
+          MusicNotes: '🎵',
+          Palette: '🎨',
+          Television: '📺',
+          Microphone: '🎤',
+          TextAa: '📝',
+        };
+        
         categories.forEach((category, catIndex) => {
           const catX = x + 30 + (catIndex % 3) * categoryWidth;
-          <div className="border-2 border-dashed border-border rounded-lg p-8 bg-muted/30 text-center">
-            <p className="text-sm text-muted-foreground font-body mb-2">
-          const emojiMap: Record<string, string> = {
-            MusicNotes: '🎵',
-            Palette: '🎨',
-            Television: '📺',
-            Microphone: '🎤',
-            TextAa: '📝',
-          };
+          const catY = y + 95 + Math.floor(catIndex / 3) * 40;
           
           const emoji = emojiMap[category.icon];
           
