@@ -1,8 +1,6 @@
-import { useState } from 'react';
 import { Entry, UserRating } from '@/lib/types';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Sparkle, Star, LockKey, LinkSimple, Eye, EyeSlash } from '@phosphor-icons/react';
+import { Sparkle, Star, LockKey, LinkSimple } from '@phosphor-icons/react';
 import { motion } from 'framer-motion';
 import { isVotingAllowed, getMellopediaUrl } from '@/lib/melodifestivalen-data';
 
@@ -13,7 +11,6 @@ interface EntryCardProps {
 }
 
 export function EntryCard({ entry, userRating, onClick }: EntryCardProps) {
-  const [showHeatBadge, setShowHeatBadge] = useState(true);
   const totalScore = userRating?.totalScore || 0;
   const ratedCategories = userRating 
     ? Object.values(userRating.ratings).filter(r => r.rating > 0).length 
@@ -79,27 +76,6 @@ export function EntryCard({ entry, userRating, onClick }: EntryCardProps) {
                   </a>
                 </div>
               </div>
-            </div>
-            <div className="flex gap-2 shrink-0">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowHeatBadge(!showHeatBadge);
-                }}
-                className="w-8 h-8 rounded-lg bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
-                title={showHeatBadge ? 'Dölj deltävling' : 'Visa deltävning'}
-              >
-                {showHeatBadge ? (
-                  <EyeSlash size={18} weight="duotone" className="text-muted-foreground" />
-                ) : (
-                  <Eye size={18} weight="duotone" className="text-muted-foreground" />
-                )}
-              </button>
-              {showHeatBadge && (
-                <Badge variant="secondary" className="shrink-0 font-body">
-                  {entry.heat}
-                </Badge>
-              )}
             </div>
           </div>
 
