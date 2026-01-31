@@ -488,63 +488,66 @@ function App() {
               onBackupClick={() => setExportDialogOpen(true)}
             />
             
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="font-serif text-3xl sm:text-4xl font-bold text-foreground mb-1 flex items-center gap-2">
-                  <Sparkle size={32} weight="duotone" className="text-primary" />
-                  Melodifestivalen 2026
-                </h1>
-                <p className="font-body text-muted-foreground text-lg flex items-center gap-2">
-                  <UserCircle size={20} weight="duotone" />
-                  {selectedProfile.nickname}
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                {currentUser.avatarUrl ? (
-                  <img
-                    src={currentUser.avatarUrl}
-                    alt={currentUser.githubLogin}
-                    className="w-10 h-10 rounded-full border-2 border-border"
-                  />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center border-2 border-border">
-                    <span className="font-heading font-bold text-foreground text-sm">
-                      {currentUser.githubLogin.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                )}
-                <div className="flex flex-col gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setExportDialogOpen(true)}
-                    className="gap-2 border-accent/30 hover:bg-accent/5"
-                  >
-                    <Download size={18} weight="duotone" />
-                    Backup
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleBackToProfiles}
-                    className="gap-2"
-                  >
-                    <ArrowLeft size={18} />
-                    Profiler
-                  </Button>
+            <div className="flex flex-col gap-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-1 flex items-center gap-2">
+                    <Sparkle size={28} weight="duotone" className="text-primary flex-shrink-0 sm:size-8" />
+                    <span className="truncate">Melodifestivalen 2026</span>
+                  </h1>
+                  <p className="font-body text-muted-foreground text-base sm:text-lg flex items-center gap-2">
+                    <UserCircle size={18} className="sm:size-5 flex-shrink-0" weight="duotone" />
+                    <span className="truncate">{selectedProfile.nickname}</span>
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {currentUser.avatarUrl ? (
+                    <img
+                      src={currentUser.avatarUrl}
+                      alt={currentUser.githubLogin}
+                      className="w-10 h-10 rounded-full border-2 border-border"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center border-2 border-border">
+                      <span className="font-heading font-bold text-foreground text-sm">
+                        {currentUser.githubLogin.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  {isOwner && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowMigrationDebug(true)}
+                      className="gap-2 text-xs opacity-50 hover:opacity-100 hidden sm:flex"
+                      title="Debug (endast ägare)"
+                    >
+                      Debug
+                    </Button>
+                  )}
                 </div>
               </div>
-              {isOwner && (
+              
+              <div className="flex items-center gap-2">
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  onClick={() => setShowMigrationDebug(true)}
-                  className="gap-2 text-xs opacity-50 hover:opacity-100"
-                  title="Debug (endast ägare)"
+                  onClick={() => setExportDialogOpen(true)}
+                  className="gap-2 border-accent/30 hover:bg-accent/5 flex-1 sm:flex-initial"
                 >
-                  Debug
+                  <Download size={18} weight="duotone" />
+                  <span className="hidden xs:inline">Backup</span>
                 </Button>
-              )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleBackToProfiles}
+                  className="gap-2 flex-1 sm:flex-initial"
+                >
+                  <ArrowLeft size={18} />
+                  <span className="hidden xs:inline">Profiler</span>
+                </Button>
+              </div>
             </div>
 
             <div className="mt-6 flex gap-3">
