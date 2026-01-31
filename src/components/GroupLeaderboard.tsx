@@ -122,32 +122,33 @@ export function GroupLeaderboard({ entries, users }: GroupLeaderboardProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="font-heading font-bold text-2xl text-foreground mb-1">
+          <h2 className="font-heading font-bold text-xl sm:text-2xl text-foreground mb-1">
             Gruppens topplista
           </h2>
-          <p className="font-body text-muted-foreground text-sm">
+          <p className="font-body text-muted-foreground text-xs sm:text-sm">
             Genomsnitt av alla {allProfiles.length} {allProfiles.length === 1 ? 'profil' : 'profiler'}
           </p>
         </div>
         <Button
           onClick={handleExportImage}
           variant="outline"
-          className="gap-2"
+          className="gap-2 w-full sm:w-auto"
+          size="sm"
         >
           <Download size={18} weight="duotone" />
-          Exportera som bild
+          <span className="sm:inline">Exportera</span>
         </Button>
       </div>
 
-      <div ref={leaderboardRef} className="space-y-4 p-6 bg-background rounded-lg">
-        <div className="mb-8 text-center">
-          <h1 className="font-serif text-4xl font-bold text-foreground mb-2 flex items-center justify-center gap-3">
-            <Sparkle size={32} weight="duotone" className="text-primary" />
+      <div ref={leaderboardRef} className="space-y-4 p-3 sm:p-6 bg-background rounded-lg">
+        <div className="mb-6 sm:mb-8 text-center">
+          <h1 className="font-serif text-2xl sm:text-4xl font-bold text-foreground mb-2 flex items-center justify-center gap-2 sm:gap-3">
+            <Sparkle size={24} weight="duotone" className="text-primary sm:w-8 sm:h-8" />
             Melodifestivalen 2026
           </h1>
-          <p className="font-body text-xl text-muted-foreground">
+          <p className="font-body text-base sm:text-xl text-muted-foreground">
             Gruppens topplista
           </p>
         </div>
@@ -160,7 +161,7 @@ export function GroupLeaderboard({ entries, users }: GroupLeaderboardProps) {
             transition={{ duration: 0.3, delay: index * 0.05 }}
           >
             <Card
-              className={`p-6 border-2 relative overflow-hidden ${
+              className={`p-3 sm:p-6 border-2 relative overflow-hidden ${
                 index === 0
                   ? 'border-gold/50 bg-gradient-to-br from-gold/10 via-gold/5 to-transparent'
                   : index === 1
@@ -170,23 +171,23 @@ export function GroupLeaderboard({ entries, users }: GroupLeaderboardProps) {
                   : 'border-border'
               }`}
             >
-              <div className="flex items-center gap-6">
-                <div className="flex items-center justify-center w-16 h-16 shrink-0">
+              <div className="flex items-center gap-3 sm:gap-6">
+                <div className="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 shrink-0">
                   {getPositionIcon(index)}
                 </div>
 
-                <div className="flex gap-3 flex-1 min-w-0">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center shrink-0">
-                    <span className="font-heading font-bold text-foreground text-base">
+                <div className="flex gap-2 sm:gap-3 flex-1 min-w-0">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center shrink-0">
+                    <span className="font-heading font-bold text-foreground text-sm sm:text-base">
                       {item.entry.number}
                     </span>
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-4 mb-2">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 mb-2">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 mb-1">
-                          <p className="text-muted-foreground font-body text-sm font-semibold">
+                          <p className="text-muted-foreground font-body text-xs sm:text-sm font-semibold truncate">
                             {item.entry.artist}
                           </p>
                           <a
@@ -196,11 +197,11 @@ export function GroupLeaderboard({ entries, users }: GroupLeaderboardProps) {
                             className="text-primary hover:text-primary/80 transition-colors shrink-0"
                             title="Öppna artist på Mellopedia"
                           >
-                            <LinkSimple size={16} weight="bold" />
+                            <LinkSimple size={14} weight="bold" className="sm:w-4 sm:h-4" />
                           </a>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <h3 className="font-heading font-bold text-xl text-foreground">
+                          <h3 className="font-heading font-bold text-base sm:text-xl text-foreground truncate">
                             {item.entry.song}
                           </h3>
                           <a
@@ -210,22 +211,22 @@ export function GroupLeaderboard({ entries, users }: GroupLeaderboardProps) {
                             className="text-primary hover:text-primary/80 transition-colors shrink-0"
                             title="Öppna på Mellopedia"
                           >
-                            <LinkSimple size={18} weight="bold" />
+                            <LinkSimple size={16} weight="bold" className="sm:w-[18px] sm:h-[18px]" />
                           </a>
                         </div>
                       </div>
-                      <Badge variant="secondary" className="shrink-0 font-body">
+                      <Badge variant="secondary" className="shrink-0 font-body text-xs w-fit">
                         {item.entry.heat}
                       </Badge>
                     </div>
 
-                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50">
-                      <div className="flex items-center gap-2">
-                        <div className="flex">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-3 pt-3 border-t border-border/50">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="flex shrink-0">
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
-                              size={16}
+                              size={14}
                               weight={i < Math.round(item.average / 6) ? 'fill' : 'regular'}
                               className={
                                 i < Math.round(item.average / 6)
@@ -235,14 +236,14 @@ export function GroupLeaderboard({ entries, users }: GroupLeaderboardProps) {
                             />
                           ))}
                         </div>
-                        <span className="text-xs text-muted-foreground font-body">
-                          {item.ratingsCount} {item.ratingsCount === 1 ? 'betyg' : 'betyg'}
+                        <span className="text-xs text-muted-foreground font-body truncate">
+                          {item.ratingsCount} betyg
                         </span>
                       </div>
 
                       <div className="flex items-center gap-1.5">
-                        <Sparkle size={20} weight="fill" className="text-gold" />
-                        <span className="font-heading font-bold text-2xl text-foreground">
+                        <Sparkle size={18} weight="fill" className="text-gold sm:w-5 sm:h-5" />
+                        <span className="font-heading font-bold text-xl sm:text-2xl text-foreground">
                           {item.average.toFixed(1)}
                         </span>
                       </div>
