@@ -34,23 +34,23 @@ export function createMockUseKV<T>(initialValue: T) {
  * Useful for testing components that use multiple key-value pairs
  */
 export function createMockKVStore() {
-  const store = new Map<string, { value: unknown; setValue: ReturnType<typeof vi.fn> }>();
+  const store = new Map<string, { value: unknown; setValue: (value: unknown | ((prev: unknown) => unknown)) => void }>();
   
   const mockUseKV = <T>(key: string, initialValue: T): [T, (value: T | ((prev: T) => T)) => void] => {
     if (!store.has(key)) {
-      const setValue = vi.fn((newValueOrFn: T | ((prev: T) => T)) => {
+      const setValue = (newValueOrFn: T | ((prev: T) => T)) => {
         const entry = store.get(key)!;
         if (typeof newValueOrFn === 'function') {
           entry.value = (newValueOrFn as (prev: T) => T)(entry.value as T);
         } else {
           entry.value = newValueOrFn;
         }
-      });
-      store.set(key, { value: initialValue, setValue });
+      };
+      store.set(key, { value: initialValue, setValue: setValue as (value: unknown | ((prev: unknown) => unknown)) => void });
     }
     
     const entry = store.get(key)!;
-    return [entry.value as T, entry.setValue];
+    return [entry.value as T, entry.setValue as (value: T | ((prev: T) => T)) => void];
   };
   
   const getValue = <T>(key: string): T | undefined => {

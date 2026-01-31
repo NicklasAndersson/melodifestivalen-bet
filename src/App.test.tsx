@@ -8,7 +8,7 @@ import type { User, Entry, Profile } from '@/lib/types';
 // Create mock store using vi.hoisted to avoid hoisting issues
 const { mockKVStore } = vi.hoisted(() => {
   function createMockKVStore() {
-    const store = new Map<string, { value: unknown; setValue: ReturnType<typeof vi.fn> }>();
+    const store = new Map<string, { value: unknown; setValue: (value: unknown | ((prev: unknown) => unknown)) => void }>();
     // Pre-set initial values that should be available before useKV is called
     const presetValues = new Map<string, unknown>();
     
@@ -16,19 +16,19 @@ const { mockKVStore } = vi.hoisted(() => {
       if (!store.has(key)) {
         // Check if there's a preset value
         const startValue = presetValues.has(key) ? presetValues.get(key) as T : initialValue;
-        const setValue = vi.fn((newValueOrFn: T | ((prev: T) => T)) => {
+        const setValue = (newValueOrFn: T | ((prev: T) => T)) => {
           const entry = store.get(key)!;
           if (typeof newValueOrFn === 'function') {
             entry.value = (newValueOrFn as (prev: T) => T)(entry.value as T);
           } else {
             entry.value = newValueOrFn;
           }
-        });
-        store.set(key, { value: startValue, setValue });
+        };
+        store.set(key, { value: startValue, setValue: setValue as (value: unknown | ((prev: unknown) => unknown)) => void });
       }
       
       const entry = store.get(key)!;
-      return [entry.value as T, entry.setValue];
+      return [entry.value as T, entry.setValue as (value: T | ((prev: T) => T)) => void];
     };
     
     const getValue = <T,>(key: string): T | undefined => {
@@ -128,13 +128,21 @@ describe('App', () => {
     mockKVStore.reset();
     
     // Reset window.spark mock
-    (window as typeof window & { spark: { user: () => Promise<unknown> } }).spark = {
+    (window as typeof window & { spark: Window['spark'] }).spark = {
+      llmPrompt: vi.fn((strings: string[], ...values: any[]) => strings.join('')),
+      llm: vi.fn().mockResolvedValue(''),
       user: vi.fn().mockResolvedValue({
         email: 'test@example.com',
         login: 'testuser',
         avatarUrl: 'https://example.com/avatar.png',
         isOwner: false,
       }),
+      kv: {
+        keys: vi.fn().mockResolvedValue([]),
+        get: vi.fn().mockResolvedValue(undefined),
+        set: vi.fn().mockResolvedValue(undefined),
+        delete: vi.fn().mockResolvedValue(undefined),
+      },
     };
   });
 
@@ -225,7 +233,7 @@ describe('App', () => {
 
     it('should handle SSO login error gracefully', async () => {
       const mockError = new Error('Auth failed');
-      (window as typeof window & { spark: { user: () => Promise<unknown> } }).spark.user = vi.fn().mockRejectedValue(mockError);
+      (window as typeof window & { spark: Window['spark'] }).spark.user = vi.fn().mockRejectedValue(mockError);
 
       render(<App />);
       
@@ -303,7 +311,7 @@ describe('App', () => {
 
     it('should update rating for an entry', async () => {
       // Mock to return existing user with profile
-      (window as typeof window & { spark: { user: () => Promise<unknown> } }).spark.user = vi.fn().mockResolvedValue({
+      (window as typeof window & { spark: Window['spark'] }).spark.user = vi.fn().mockResolvedValue({
         email: 'test@example.com',
         login: 'testuser',
         avatarUrl: 'https://example.com/avatar.png',
