@@ -16,10 +16,13 @@ import { PersonalLeaderboard } from '@/components/PersonalLeaderboard';
 import { GroupLeaderboard } from '@/components/GroupLeaderboard';
 import { ExportRatingsDialog } from '@/components/ExportRatingsDialog';
 import { MigrationDebug } from '@/components/MigrationDebug';
+import { DataRecoveryBanner } from '@/components/DataRecoveryBanner';
+import { BackupReminder } from '@/components/BackupReminder';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster, toast } from 'sonner';
 import { MELODIFESTIVALEN_2026 } from '@/lib/melodifestivalen-data';
 import { migrateEntries, validateEntries, getDataVersion } from '@/lib/migration';
+import { createLocalBackup, shouldShowBackupWarning, hasRatings } from '@/lib/backup';
 
 function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -36,6 +39,7 @@ function App() {
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [showMigrationDebug, setShowMigrationDebug] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
+  const [showBackupReminder, setShowBackupReminder] = useState(false);
   
   const CURRENT_DATA_VERSION = getDataVersion();
 
@@ -47,6 +51,22 @@ function App() {
       initializeEntries();
     }
   }, []);
+
+  useEffect(() => {
+    const currentEntries = entries || [];
+    const currentUsers = users || [];
+    
+    if (hasRatings(currentEntries)) {
+      createLocalBackup(currentEntries, currentUsers);
+    }
+  }, [entries, users]);
+
+  useEffect(() => {
+    const currentEntries = entries || [];
+    if (selectedProfile && hasRatings(currentEntries)) {
+      setShowBackupReminder(shouldShowBackupWarning());
+    }
+  }, [selectedProfile, entries]);
 
   const initializeEntries = () => {
     const currentEntries = entries || [];
@@ -292,6 +312,15 @@ function App() {
     });
   };
 
+  const handleRestoreFromLocalBackup = (restoredEntries: Entry[], restoredUsers: User[]) => {
+    setEntries(restoredEntries);
+    setUsers(restoredUsers);
+    
+    toast.success('Data återställd!', {
+      description: 'Dina betyg har återställts från lokal backup',
+    });
+  };
+
   const heatEntries = (entries || []).filter((e) => e.heat === selectedHeat).sort((a, b) => a.number - b.number);
   
   const getUserRating = (entry: Entry) => {
@@ -447,6 +476,18 @@ function App() {
       <div className="min-h-screen bg-background">
         <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">
+            <DataRecoveryBanner
+              currentEntries={entries || []}
+              currentUsers={users || []}
+              onRestore={handleRestoreFromLocalBackup}
+              onExportBackup={() => setExportDialogOpen(true)}
+            />
+            
+            <BackupReminder
+              show={showBackupReminder}
+              onBackupClick={() => setExportDialogOpen(true)}
+            />
+            
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="font-serif text-3xl sm:text-4xl font-bold text-foreground mb-1 flex items-center gap-2">

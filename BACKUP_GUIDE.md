@@ -1,0 +1,188 @@
+# Användarguide: Säkerhetskopiering & Data Recovery
+
+## Varför behöver jag säkerhetskopiera?
+
+Din data sparas i applikationens storage-system som **kan nollställas** när appen uppdateras eller publiceras på nytt. Detta är en begränsning i hur systemet fungerar.
+
+### När kan data gå förlorad?
+
+- 🔄 När appen uppdateras/publiceras
+- 🗑️ När du rensar webbläsardata
+- 💻 När du byter enhet eller webbläsare
+- 🔒 I privat/inkognito-läge
+- 📦 När storage-kvoten överskrids
+
+## Hur skyddar jag min data?
+
+### ✅ GÖR DETTA: Manuell backup (REKOMMENDERAT)
+
+1. Klicka på **"Backup"** knappen i huvudmenyn
+2. Välj fliken **"Säkerhetskopiera"**
+3. Klicka **"Exportera alla betyg (JSON)"**
+4. Spara filen på ett säkert ställe (t.ex. Google Drive, Dropbox, eller lokal disk)
+
+**Gör detta:**
+- ✅ Efter varje gång du satt betyg
+- ✅ Innan du stänger webbläsaren
+- ✅ Minst en gång i veckan
+- ✅ Innan du vet att appen ska uppdateras
+
+### 🆘 Automatisk backup (Nödlösning)
+
+Appen skapar automatiskt en backup i webbläsarens localStorage. Detta är **INTE** en ersättning för manuell backup!
+
+**Begränsningar:**
+- ❌ Försvinner om du rensar webbläsardata
+- ❌ Fungerar bara i samma webbläsare på samma enhet
+- ❌ Har begränsad storlek
+- ❌ Fungerar inte i privat/inkognito-läge
+
+**Används för:**
+- ✅ Snabb återställning om något går fel
+- ✅ Upptäcka dataförlust
+- ✅ Tillfällig säkerhet mellan manuella backups
+
+## Hur återställer jag data?
+
+### Scenario 1: Data har försvunnit (Automatisk recovery)
+
+Om appen upptäcker att data har försvunnit men en localStorage backup finns, visas en **gul banner** högst upp.
+
+**Alternativ:**
+1. **Återställ backup** - Återställer all data från localStorage
+2. **Ladda ner backup** - Sparar localStorage backup som JSON-fil
+3. **Backup nuvarande data** - Säkerhetskopiera vad som finns nu först
+4. **Ignorera** - Tar bort localStorage backup (varning: går ej ångra!)
+
+### Scenario 2: Manuell återställning från JSON-fil
+
+1. Klicka på **"Backup"** knappen
+2. Välj fliken **"Säkerhetskopiera"**
+3. Klicka **"Välj backup-fil"**
+4. Välj din JSON-fil
+5. Bekräfta återställningen
+
+**Viktigt:**
+- Återställning skriver över dina nuvarande betyg för de importerade bidragen
+- Andra profilers betyg påverkas inte
+- Du kan importera från en annan profil (du får en varning)
+
+### Scenario 3: Ingen backup finns
+
+Om du har förlorat all data och inte har någon backup:
+1. Kontakta andra i din grupp - de kan dela sina backups
+2. Om du är ägare och ingen har backup är data förlorad
+3. Du måste börja om från början
+
+## Backup-påminnelser
+
+### Gul varningsruta
+
+Om du inte har exporterat på 7 dagar, visas en påminnelse:
+
+**"Säkerhetskopiera dina betyg"**
+- Detta är en viktig påminnelse
+- Klicka **"Säkerhetskopiera nu"** för att skydda din data
+- **"Påminn senare"** - Får påminnelse igen senare
+
+## Best Practices
+
+### ✅ REKOMMENDERAT
+
+1. **Exportera efter varje session**
+   - Ta för vana att exportera när du är klar
+   
+2. **Spara på flera ställen**
+   - Google Drive, Dropbox, email till dig själv
+   - Ha minst 2 kopior på olika platser
+
+3. **Namnge filer tydligt**
+   - Standard: `melodifestivalen-2026-backup-[namn]-[datum].json`
+   - Behåll detta format för att enkelt hitta rätt backup
+
+4. **Testa återställning**
+   - Prova att importera din backup i en annan webbläsare
+   - Bekräfta att allt finns med
+
+5. **Dela med gruppen**
+   - Om du är gruppägare, dela din backup med andra
+   - Be andra i gruppen att också exportera regelbundet
+
+### ❌ UNDVIK
+
+1. **Räkna med localStorage**
+   - Använd det inte som enda backup
+   
+2. **Vänta för länge**
+   - Exportera ofta, inte bara när du kommer ihåg
+
+3. **Radera gamla backups**
+   - Behåll minst de senaste 3-5 backuperna
+
+4. **Ignorera varningar**
+   - Om appen varnar dig, agera direkt
+
+## Dela din topplista
+
+För att dela din topplista på sociala medier:
+
+1. Klicka på **"Backup"**
+2. Välj fliken **"Dela topplista"**
+3. Klicka **"Ladda ner som bild"**
+4. Bilden innehåller dina topp 10 bidrag
+5. Dela på Instagram, Facebook, etc.
+
+**OBS:** Detta är INTE en backup! Det är bara för delning.
+
+## Felsökning
+
+### "Kunde inte importera betyg"
+
+**Möjliga orsaker:**
+- Filen är korrupt eller fel format
+- Filen är inte en giltig JSON-fil
+- Backup-versionen är inkompatibel
+
+**Lösning:**
+1. Kontrollera att det är rätt fil (`.json`)
+2. Försök öppna filen i en text-editor - ska innehålla JSON
+3. Försök en äldre backup om du har flera
+
+### "Ingen data att exportera"
+
+**Orsak:**
+- Du har inte satt några betyg än
+
+**Lösning:**
+- Börja betygsätta bidrag först
+- Du kan fortfarande importera en backup om du har en
+
+### localStorage backup saknas
+
+**Orsak:**
+- Du har rensat webbläsardata
+- Private/incognito mode används
+- localStorage är fullt
+
+**Lösning:**
+- Använd din manuella JSON-backup
+- Starta webbläsaren i vanligt läge (inte private/incognito)
+
+## Support
+
+Om du fortfarande har problem:
+
+1. Kontrollera att du använder en modern webbläsare
+2. Försök i ett annat fönster/flik
+3. Kontakta app-ägaren för hjälp
+4. Kolla console (F12) för felmeddelanden
+
+## Sammanfattning
+
+| Vad | När | Var | Viktig? |
+|-----|-----|-----|---------|
+| **Manuell JSON Export** | Efter varje session | Google Drive, lokal disk | ⭐⭐⭐⭐⭐ KRITISK |
+| **localStorage backup** | Automatiskt | Webbläsare | ⭐⭐⭐ Nödlösning |
+| **Bildexport** | För delning | Sociala medier | ⭐ Ej backup |
+
+**VIKTIGAST:** Exportera JSON regelbundet! Det är din enda garanti att behålla dina betyg.

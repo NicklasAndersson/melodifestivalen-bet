@@ -2,15 +2,27 @@
 
 ## Overview
 
-This document describes the complete data model for the Melodifestivalen 2026 rating application. The application uses Spark's Key-Value (KV) storage for all persistence.
+This document describes the complete data model for the Melodifestivalen 2026 rating application. The application uses Spark's Key-Value (KV) storage for all persistence, with an additional localStorage-based backup system for data recovery.
 
 ## Storage Keys
+
+### Primary Storage (Spark KV)
 
 The application uses three primary KV storage keys:
 
 - `mello-users-v2`: Array of User objects
 - `mello-entries-v2`: Array of Entry objects (contains all ratings)
 - `mello-data-version-v2`: Number indicating the current data version
+
+### Backup Storage (localStorage)
+
+The application automatically creates local backups in the browser's localStorage:
+
+- `mello-local-backup-v2`: Complete backup of entries and users
+- `mello-last-backup-date-v2`: Timestamp of the last backup
+- `mello-backup-warning-dismissed-v2`: User preference for backup warnings
+
+**Important:** localStorage is NOT a replacement for manual backups. It serves as an emergency recovery mechanism only.
 
 ## Data Structures
 
@@ -217,7 +229,70 @@ The system validates:
 
 ## Backup & Restore System
 
+### Multi-Level Backup Strategy
+
+The application implements a comprehensive three-level backup strategy:
+
+#### 1. Automatic Local Backup (localStorage)
+- **Purpose**: Emergency recovery from accidental data loss
+- **Trigger**: Automatic on every data change
+- **Scope**: Complete application state (all entries and users)
+- **Limitations**: 
+  - Only available in the same browser/device
+  - Cleared if user clears browser data
+  - Not synced across devices
+  - **Not a replacement for manual backups**
+
+#### 2. Manual JSON Export
+- **Purpose**: User-controlled backup for long-term storage
+- **Trigger**: User clicks "Exportera alla betyg" button
+- **Scope**: Profile-specific ratings only
+- **Benefits**:
+  - Portable across devices and browsers
+  - Can be stored securely offline
+  - Versioned and timestamped
+  - Human-readable JSON format
+
+#### 3. Image Export (Share)
+- **Purpose**: Social sharing and visual backup
+- **Trigger**: User clicks "Ladda ner som bild" button
+- **Scope**: Top 10 rated entries with full details
+- **Format**: PNG image optimized for social media
+
+### Data Recovery System
+
+#### Automatic Recovery Detection
+
+When the application loads, it:
+1. Checks localStorage for recent backups
+2. Compares backup rating count with current KV storage
+3. If significant data loss detected, displays recovery banner
+4. Offers one-click restoration or manual download
+
+#### Recovery Banner Features
+
+The `DataRecoveryBanner` component appears when:
+- Local backup exists in localStorage
+- Backup contains more ratings than current state
+- User hasn't dismissed the recovery option
+
+Recovery options provided:
+1. **Återställ backup**: Restores complete state from localStorage
+2. **Ladda ner backup**: Downloads localStorage backup as JSON
+3. **Backup nuvarande data**: Exports current state before recovery
+4. **Ignorera**: Dismisses and clears the local backup
+
+#### Backup Reminder System
+
+The `BackupReminder` component:
+- Appears for users with ratings but no recent backup
+- Shows after 7 days without creating a manual backup
+- Can be dismissed with "Påminn senare"
+- Resets after user creates a manual backup
+
 ### Export Format
+
+#### Manual Backup (JSON)
 
 The backup system exports ratings in JSON format:
 
@@ -283,11 +358,54 @@ File Selection → JSON Parse → Validation → Profile Check
 
 ### Best Practices
 
-1. **Regular Exports**: Export after each rating session
+1. **Regular Exports**: Export after each rating session (manual backup)
 2. **Secure Storage**: Keep backup files in safe location
 3. **File Naming**: Default includes profile name and date
 4. **Verification**: Test imports in safe environment first
 5. **Cross-Check**: Compare imported data after restore
+6. **Don't Rely on localStorage**: Always create manual backups - localStorage is emergency recovery only
+7. **Before Publishing**: Export all data before any app updates or republishing
+
+### Data Loss Prevention
+
+#### Why Data Can Be Lost
+
+Data loss can occur when:
+1. **App Republishing**: New deployments may reset KV storage
+2. **Browser Data Clearing**: Removes localStorage backups
+3. **Device Change**: Data doesn't sync across devices
+4. **Storage Quota**: localStorage has size limits
+5. **Private/Incognito Mode**: Storage may not persist
+
+#### Protection Mechanisms
+
+1. **Automatic localStorage Backup**
+   - Created on every data change
+   - Provides safety net for accidental loss
+   - Limited to same browser/device
+
+2. **Recovery Detection**
+   - Compares current state with backup
+   - Alerts user to potential data loss
+   - Offers immediate restoration
+
+3. **Backup Reminders**
+   - Prompts users weekly to create manual backups
+   - Can be dismissed but reappears
+   - Emphasizes importance of exports
+
+4. **Export Warnings**
+   - Clear messaging about data persistence
+   - Instructions for backup before updates
+   - Multiple export format options
+
+#### User Education
+
+The application prominently displays:
+- Warning that data is stored locally
+- Instructions to backup regularly
+- Clear export/import workflows
+- Recovery options when data loss detected
 
 ## Performance Considerations
 
