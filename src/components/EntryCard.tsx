@@ -13,7 +13,7 @@ interface EntryCardProps {
 }
 
 export function EntryCard({ entry, userRating, onClick }: EntryCardProps) {
-  const [showSongTitle, setShowSongTitle] = useState(true);
+  const [showHeatBadge, setShowHeatBadge] = useState(true);
   const totalScore = userRating?.totalScore || 0;
   const ratedCategories = userRating 
     ? Object.values(userRating.ratings).filter(r => r.rating > 0).length 
@@ -48,23 +48,21 @@ export function EntryCard({ entry, userRating, onClick }: EntryCardProps) {
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                {showSongTitle && (
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <h3 className="font-heading font-bold text-xl text-foreground truncate">
-                      {entry.song}
-                    </h3>
-                    <a
-                      href={getMellopediaUrl(entry.song)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-primary hover:text-primary/80 transition-colors shrink-0"
-                      title="Öppna på Mellopedia"
-                    >
-                      <LinkSimple size={18} weight="bold" />
-                    </a>
-                  </div>
-                )}
+                <div className="flex items-center gap-1.5 mb-1">
+                  <h3 className="font-heading font-bold text-xl text-foreground truncate">
+                    {entry.song}
+                  </h3>
+                  <a
+                    href={getMellopediaUrl(entry.song)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-primary hover:text-primary/80 transition-colors shrink-0"
+                    title="Öppna på Mellopedia"
+                  >
+                    <LinkSimple size={18} weight="bold" />
+                  </a>
+                </div>
                 <div className="flex items-center gap-1.5">
                   <p className="text-muted-foreground font-body text-sm truncate">
                     {entry.artist}
@@ -86,20 +84,22 @@ export function EntryCard({ entry, userRating, onClick }: EntryCardProps) {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  setShowSongTitle(!showSongTitle);
+                  setShowHeatBadge(!showHeatBadge);
                 }}
                 className="w-8 h-8 rounded-lg bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
-                title={showSongTitle ? 'Dölj låttitel' : 'Visa låttitel'}
+                title={showHeatBadge ? 'Dölj deltävling' : 'Visa deltävning'}
               >
-                {showSongTitle ? (
+                {showHeatBadge ? (
                   <EyeSlash size={18} weight="duotone" className="text-muted-foreground" />
                 ) : (
                   <Eye size={18} weight="duotone" className="text-muted-foreground" />
                 )}
               </button>
-              <Badge variant="secondary" className="shrink-0 font-body">
-                {entry.heat}
-              </Badge>
+              {showHeatBadge && (
+                <Badge variant="secondary" className="shrink-0 font-body">
+                  {entry.heat}
+                </Badge>
+              )}
             </div>
           </div>
 
