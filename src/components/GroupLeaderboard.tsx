@@ -10,26 +10,27 @@ import { toast } from 'sonner';
 interface GroupLeaderboardProps {
   entries: Entry[];
   users: User[];
+  currentUser: User;
 }
 
-export function GroupLeaderboard({ entries, users }: GroupLeaderboardProps) {
-  const allProfiles = users.flatMap((user) =>
-    user.profiles.map((profile) => ({
-      ...profile,
-      userGithubLogin: user.githubLogin,
-    }))
-  );
+export function GroupLeaderboard({ entries, users, currentUser }: GroupLeaderboardProps) {
+  // Only include profiles from the current user's account
+  const accountProfiles = currentUser.profiles;
+  const accountProfileIds = new Set(accountProfiles.map(p => p.id));
 
   const entriesWithGroupAverage = entries
     .map((entry) => {
-      if (entry.userRatings.length === 0) {
+      // Filter to only include ratings from the current account's profiles
+      const accountRatings = entry.userRatings.filter(ur => accountProfileIds.has(ur.profileId));
+      
+      if (accountRatings.length === 0) {
         return { entry, average: 0, ratingsCount: 0 };
       }
 
-      const totalScore = entry.userRatings.reduce((sum, ur) => sum + ur.totalScore, 0);
-      const average = totalScore / entry.userRatings.length;
+      const totalScore = accountRatings.reduce((sum, ur) => sum + ur.totalScore, 0);
+      const average = totalScore / accountRatings.length;
 
-      return { entry, average, ratingsCount: entry.userRatings.length };
+      return { entry, average, ratingsCount: accountRatings.length };
     })
     .filter((item) => item.ratingsCount > 0)
     .sort((a, b) => b.average - a.average)
@@ -250,7 +251,7 @@ export function GroupLeaderboard({ entries, users }: GroupLeaderboardProps) {
             Gruppens topplista
           </h2>
           <p className="font-body text-muted-foreground text-xs sm:text-sm">
-            Genomsnitt av alla {allProfiles.length} {allProfiles.length === 1 ? 'profil' : 'profiler'}
+            Genomsnitt av {accountProfiles.length} {accountProfiles.length === 1 ? 'profil' : 'profiler'} i kontot
           </p>
         </div>
         <Button

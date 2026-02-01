@@ -589,7 +589,7 @@ function App() {
                 Tillbaka
               </Button>
             </div>
-            <GroupLeaderboard entries={entries || []} users={users || []} />
+            <GroupLeaderboard entries={entries || []} users={users || []} currentUser={currentUser} />
           </div>
         </div>
         <Toaster position="top-center" />
