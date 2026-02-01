@@ -97,6 +97,86 @@ För att verifiera att problemet är löst:
 - Använd migration-debug-verktyget (endast för ägare) vid problem
 - Testa alltid publicering i staging före production
 
+---
+
+## Fix: Session-isolering och multi-profil datakonsistens (2026-02-01)
+
+### Problem
+1. **Alla användare delade samma session** - Session-ID lagrades i global `spark.kv` istället för per-enhet
+2. **Profiler överskrevs** - När användare B loggade in fick användare A också användare B:s profil
+3. **Ingen datavalidering** - Korrupt eller felaktig data upptäcktes inte
+4. **Race condition vid laddning** - Session återställdes innan KV-data var helt laddat
+
+### Lösningar implementerade
+
+#### 1. Session-lagring flyttad till localStorage (session.ts)
+**Före:** Session sparades i global `spark.kv` (delad mellan alla användare)
+**Efter:** Session sparas i `localStorage` (per enhet/webbläsare)
+
+```typescript
+// NU: Varje enhet har sin egen session
+export function saveSession(userId: string, profileId: string | null): void {
+  localStorage.setItem(SESSION_USER_KEY, userId);
+  // ...
+}
+```
+
+#### 2. Städning av gamla globala sessioner
+Ny funktion `cleanupOldKVSession()` körs vid app-start för att ta bort gamla globala session-nycklar från `spark.kv`.
+
+#### 3. Komplett datavalidering med Zod (validation.ts)
+Ny fil med Zod-scheman för alla datatyper:
+- `UserSchema` - Validerar användare med email-format
+- `ProfileSchema` - Validerar profiler med userId-referens
+- `EntrySchema` - Validerar bidrag med betyg
+- `UserRatingSchema` - Validerar betyg (0-5 per kategori, totalScore 0-30)
+
+```typescript
+// Validerar all data vid laddning
+const validation = validateKVData(storedUsers, storedEntries);
+if (!validation.valid) {
+  // Visa felmeddelande
+}
+if (validation.orphanedRatings.length > 0) {
+  // Visa varning om övergivna betyg
+}
+```
+
+#### 4. Referentiell integritet
+Kontrollerar att:
+- Varje `Profile.userId` refererar till en existerande `User.id`
+- Varje `UserRating.profileId` refererar till en existerande `Profile.id`
+- Inga dubbletter av ID:n finns
+
+Övergivna betyg (från raderade profiler) visas som varning men bevaras.
+
+#### 5. KV-laddningstillstånd (App.tsx)
+Ny `isKVLoaded` state förhindrar race condition:
+```typescript
+// Väntar tills KV är laddat innan session återställs
+useEffect(() => {
+  const restoreSession = () => {
+    if (!isKVLoaded) return; // Vänta!
+    // ... återställ session
+  };
+}, [users, isKVLoaded]);
+```
+
+### Påverkade filer
+- `src/lib/session.ts` - Omskriven för localStorage
+- `src/lib/validation.ts` - Ny fil med Zod-validering
+- `src/App.tsx` - Uppdaterad sessionshantering och validering
+- `src/lib/migration.ts` - Deprecated-markering på gammal validering
+- Tester uppdaterade för nya API:er
+
+### Testning
+1. Logga in som användare A på enhet 1
+2. Logga in som användare B på enhet 2
+3. Uppdatera enhet 1 → Ska fortfarande vara användare A
+4. Skapa profiler → Varje användare har sina egna profiler
+
+---
+
 ## Teknisk sammanfattning
 
 **KV-nycklar som används:**
@@ -106,6 +186,10 @@ För att verifiera att problemet är löst:
 - `mello-auto-backup-v2` - Automatisk backup av entries + users
 - `mello-last-backup-date-v2` - Senaste backup-datum
 - `mello-backup-warning-dismissed-v2` - Om användaren avvisat varning
+
+**localStorage-nycklar (per enhet):**
+- `mello-session-user-id` - Inloggad användares ID
+- `mello-session-profile-id` - Vald profils ID
 
 **Dataflöde:**
 1. App startar → Läser direkt från spark.kv

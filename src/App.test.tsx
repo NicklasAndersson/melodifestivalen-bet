@@ -6,7 +6,7 @@ import { testFixtures } from './test-utils';
 import type { User, Entry, Profile } from '@/lib/types';
 
 // Create mock store using vi.hoisted to avoid hoisting issues
-const { mockKVStore } = vi.hoisted(() => {
+const { mockKVStore, localStorageMock } = vi.hoisted(() => {
   function createMockKVStore() {
     const store = new Map<string, { value: unknown; setValue: (value: unknown | ((prev: unknown) => unknown)) => void }>();
     // Pre-set initial values that should be available before useKV is called
@@ -53,7 +53,20 @@ const { mockKVStore } = vi.hoisted(() => {
     return { useKV: mockUseKV, getValue, setValue, reset, store };
   }
   
-  return { mockKVStore: createMockKVStore() };
+  // Mock localStorage for session management
+  function createLocalStorageMock() {
+    let store: Record<string, string> = {};
+    return {
+      getItem: (key: string) => store[key] ?? null,
+      setItem: (key: string, value: string) => { store[key] = value; },
+      removeItem: (key: string) => { delete store[key]; },
+      clear: () => { store = {}; },
+      get length() { return Object.keys(store).length; },
+      key: (index: number) => Object.keys(store)[index] ?? null,
+    };
+  }
+  
+  return { mockKVStore: createMockKVStore(), localStorageMock: createLocalStorageMock() };
 });
 
 vi.mock('@github/spark/hooks', () => ({
@@ -112,8 +125,12 @@ vi.mock('@/components/MigrationDebug', () => import('./__mocks__/components').th
 
 vi.mock('@/lib/migration', () => ({
   migrateEntries: (entries: Entry[]) => ({ entries, result: { totalRatings: 0, migratedCount: 0, unmatchedEntries: [] } }),
-  validateEntries: () => ({ valid: true, errors: [] }),
   getDataVersion: () => 1,
+}));
+
+vi.mock('@/lib/validation', () => ({
+  validateKVData: () => ({ valid: true, errors: [], warnings: [], orphanedRatings: [], validUsers: [], validEntries: [] }),
+  validateEntries: () => ({ valid: true, errors: [], warnings: [] }),
 }));
 
 // Import App after mocks are set up
@@ -126,6 +143,13 @@ describe('App', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockKVStore.reset();
+    localStorageMock.clear();
+    
+    // Mock localStorage globally
+    Object.defineProperty(global, 'localStorage', {
+      value: localStorageMock,
+      writable: true,
+    });
     
     // Reset window.spark mock
     (window as typeof window & { spark: Window['spark'] }).spark = {

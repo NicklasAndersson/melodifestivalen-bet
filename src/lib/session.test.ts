@@ -1,7 +1,19 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { saveSession, getSessionUserId, getSessionProfileId, clearSession, findUserById, findProfileById } from './session';
+import { saveSession, getSessionUserId, getSessionProfileId, clearSession, findUserById, findProfileById, cleanupOldKVSession } from './session';
 import { User, Profile } from './types';
 
+// Mock localStorage
+const localStorageMock = (() => {
+  let store: Record<string, string> = {};
+  return {
+    getItem: vi.fn((key: string) => store[key] ?? null),
+    setItem: vi.fn((key: string, value: string) => { store[key] = value; }),
+    removeItem: vi.fn((key: string) => { delete store[key]; }),
+    clear: vi.fn(() => { store = {}; }),
+  };
+})();
+
+// Mock spark.kv for cleanupOldKVSession
 const mockKV = {
   get: vi.fn(),
   set: vi.fn(),
@@ -11,6 +23,15 @@ const mockKV = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  localStorageMock.clear();
+  
+  // Mock localStorage
+  Object.defineProperty(global, 'localStorage', {
+    value: localStorageMock,
+    writable: true,
+  });
+  
+  // Mock window.spark for cleanupOldKVSession
   (global as any).window = {
     spark: {
       kv: mockKV,
@@ -20,49 +41,85 @@ beforeEach(() => {
 
 describe('session', () => {
   describe('saveSession', () => {
-    it('should save user id and profile id', async () => {
-      await saveSession('user-1', 'profile-1');
+    it('should save user id and profile id to localStorage', () => {
+      saveSession('user-1', 'profile-1');
       
-      expect(mockKV.set).toHaveBeenCalledWith('mello-session-user-id', 'user-1');
-      expect(mockKV.set).toHaveBeenCalledWith('mello-session-profile-id', 'profile-1');
+      expect(localStorageMock.setItem).toHaveBeenCalledWith('mello-session-user-id', 'user-1');
+      expect(localStorageMock.setItem).toHaveBeenCalledWith('mello-session-profile-id', 'profile-1');
     });
 
-    it('should delete profile id when null', async () => {
-      await saveSession('user-1', null);
+    it('should remove profile id when null', () => {
+      saveSession('user-1', null);
       
-      expect(mockKV.set).toHaveBeenCalledWith('mello-session-user-id', 'user-1');
-      expect(mockKV.delete).toHaveBeenCalledWith('mello-session-profile-id');
+      expect(localStorageMock.setItem).toHaveBeenCalledWith('mello-session-user-id', 'user-1');
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('mello-session-profile-id');
     });
   });
 
   describe('getSessionUserId', () => {
-    it('should retrieve user id', async () => {
-      mockKV.get.mockResolvedValue('user-1');
+    it('should retrieve user id from localStorage', () => {
+      localStorageMock.getItem.mockReturnValue('user-1');
       
-      const result = await getSessionUserId();
+      const result = getSessionUserId();
       
       expect(result).toBe('user-1');
-      expect(mockKV.get).toHaveBeenCalledWith('mello-session-user-id');
+      expect(localStorageMock.getItem).toHaveBeenCalledWith('mello-session-user-id');
+    });
+
+    it('should return undefined when no user id stored', () => {
+      localStorageMock.getItem.mockReturnValue(null);
+      
+      const result = getSessionUserId();
+      
+      expect(result).toBeUndefined();
     });
   });
 
   describe('getSessionProfileId', () => {
-    it('should retrieve profile id', async () => {
-      mockKV.get.mockResolvedValue('profile-1');
+    it('should retrieve profile id from localStorage', () => {
+      localStorageMock.getItem.mockReturnValue('profile-1');
       
-      const result = await getSessionProfileId();
+      const result = getSessionProfileId();
       
       expect(result).toBe('profile-1');
-      expect(mockKV.get).toHaveBeenCalledWith('mello-session-profile-id');
+      expect(localStorageMock.getItem).toHaveBeenCalledWith('mello-session-profile-id');
+    });
+
+    it('should return undefined when no profile id stored', () => {
+      localStorageMock.getItem.mockReturnValue(null);
+      
+      const result = getSessionProfileId();
+      
+      expect(result).toBeUndefined();
     });
   });
 
   describe('clearSession', () => {
-    it('should delete both session keys', async () => {
-      await clearSession();
+    it('should remove both session keys from localStorage', () => {
+      clearSession();
+      
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('mello-session-user-id');
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('mello-session-profile-id');
+    });
+  });
+
+  describe('cleanupOldKVSession', () => {
+    it('should delete old session keys from spark.kv if they exist', async () => {
+      mockKV.get.mockResolvedValueOnce('old-user-id');
+      mockKV.get.mockResolvedValueOnce('old-profile-id');
+      
+      await cleanupOldKVSession();
       
       expect(mockKV.delete).toHaveBeenCalledWith('mello-session-user-id');
       expect(mockKV.delete).toHaveBeenCalledWith('mello-session-profile-id');
+    });
+
+    it('should not delete if no old session keys exist', async () => {
+      mockKV.get.mockResolvedValue(undefined);
+      
+      await cleanupOldKVSession();
+      
+      expect(mockKV.delete).not.toHaveBeenCalled();
     });
   });
 

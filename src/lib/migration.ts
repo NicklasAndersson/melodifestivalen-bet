@@ -122,6 +122,13 @@ export function mergeUserRatings(existing: UserRating[], incoming: UserRating[])
   return merged;
 }
 
+/**
+ * Basic entry validation for migration purposes.
+ * For comprehensive validation including referential integrity,
+ * use validateKVData from '@/lib/validation' instead.
+ * 
+ * @deprecated Use validateKVData from validation.ts for comprehensive validation
+ */
 export function validateEntries(entries: Entry[]): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
   const ids = new Set<string>();

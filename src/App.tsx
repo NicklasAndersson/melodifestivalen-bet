@@ -28,8 +28,9 @@ import { DataRecoveryBanner } from '@/components/DataRecoveryBanner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster, toast } from 'sonner';
 import { MELODIFESTIVALEN_2026 } from '@/lib/melodifestivalen-data';
-import { migrateEntries, validateEntries, getDataVersion } from '@/lib/migration';
-import { saveSession, getSessionUserId, getSessionProfileId, clearSession, findUserById, findProfileById } from '@/lib/session';
+import { migrateEntries, getDataVersion } from '@/lib/migration';
+import { saveSession, getSessionUserId, getSessionProfileId, clearSession, findUserById, findProfileById, cleanupOldKVSession } from '@/lib/session';
+import { validateKVData, validateEntries } from '@/lib/validation';
 
 function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -50,16 +51,73 @@ function App() {
   
   const CURRENT_DATA_VERSION = getDataVersion();
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isKVLoaded, setIsKVLoaded] = useState(false);
 
+  // Clean up old global KV session keys on mount (one-time migration)
   useEffect(() => {
-    const restoreSession = async () => {
+    cleanupOldKVSession();
+  }, []);
+
+  // Validate KV data after it loads and show warnings for orphaned ratings
+  useEffect(() => {
+    if (isKVLoaded || !users || !entries) return;
+    
+    const validateData = async () => {
+      try {
+        // Wait for KV to be fully loaded by checking if we can read directly
+        const storedUsers = await window.spark.kv.get<unknown>('mello-users-v2');
+        const storedEntries = await window.spark.kv.get<unknown>('mello-entries-v2');
+        
+        // If KV has data, validate it
+        if (storedUsers && storedEntries) {
+          const validation = validateKVData(storedUsers, storedEntries);
+          
+          if (!validation.valid) {
+            console.error('KV data validation failed:', validation.errors);
+            toast.error('Datafel upptäcktes', {
+              description: 'Viss data kan vara korrupt. Kontakta support.',
+              duration: 10000,
+            });
+          }
+          
+          if (validation.warnings.length > 0) {
+            console.warn('KV data validation warnings:', validation.warnings);
+            // Show warning for orphaned ratings
+            if (validation.orphanedRatings.length > 0) {
+              const orphanedProfiles = [...new Set(validation.orphanedRatings.map(o => o.profileName))];
+              toast.warning('Hittade övergivna betyg', {
+                description: `Betyg från borttagna profiler hittades: ${orphanedProfiles.join(', ')}`,
+                duration: 8000,
+              });
+            }
+          }
+        }
+        
+        setIsKVLoaded(true);
+      } catch (error) {
+        console.error('Failed to validate KV data:', error);
+        setIsKVLoaded(true); // Continue even if validation fails
+      }
+    };
+    
+    validateData();
+  }, [users, entries, isKVLoaded]);
+
+  // Restore session from device-local localStorage (not global KV)
+  useEffect(() => {
+    const restoreSession = () => {
+      // Wait for KV to be loaded before restoring session
+      if (!isKVLoaded) {
+        return;
+      }
+      
       if (!users || users.length === 0) {
         setIsRestoringSession(false);
         return;
       }
 
       try {
-        const sessionUserId = await getSessionUserId();
+        const sessionUserId = getSessionUserId();
         if (!sessionUserId) {
           setIsRestoringSession(false);
           return;
@@ -67,18 +125,21 @@ function App() {
 
         const user = findUserById(users, sessionUserId);
         if (!user) {
-          await clearSession();
+          clearSession();
           setIsRestoringSession(false);
           return;
         }
 
         setCurrentUser(user);
 
-        const sessionProfileId = await getSessionProfileId();
+        const sessionProfileId = getSessionProfileId();
         if (sessionProfileId) {
           const profile = findProfileById(user, sessionProfileId);
           if (profile) {
             setSelectedProfile(profile);
+          } else {
+            // Profile not found - clear stale profile from session
+            saveSession(user.id, null);
           }
         }
       } catch (error) {
@@ -89,7 +150,7 @@ function App() {
     };
 
     restoreSession();
-  }, [users]);
+  }, [users, isKVLoaded]);
 
   useEffect(() => {
     if (isInitialized) return;
@@ -201,7 +262,7 @@ function App() {
 
       if (foundUser) {
         setCurrentUser(foundUser);
-        await saveSession(foundUser.id, null);
+        saveSession(foundUser.id, null);
         toast.success('Välkommen tillbaka!', {
           description: `Inloggad som ${githubUser.login}`,
         });
@@ -217,7 +278,7 @@ function App() {
 
         setUsers((current) => [...(current || []), newUser]);
         setCurrentUser(newUser);
-        await saveSession(newUser.id, null);
+        saveSession(newUser.id, null);
         
         toast.success('Konto skapat!', {
           description: `Välkommen ${githubUser.login}`,
@@ -231,14 +292,14 @@ function App() {
     }
   };
 
-  const handleLogout = async () => {
-    await clearSession();
+  const handleLogout = () => {
+    clearSession();
     setCurrentUser(null);
     setSelectedProfile(null);
     toast.success('Utloggad');
   };
 
-  const handleCreateProfile = async (nickname: string) => {
+  const handleCreateProfile = (nickname: string) => {
     if (!currentUser) return;
 
     const newProfile: Profile = {
@@ -263,28 +324,28 @@ function App() {
     });
 
     setSelectedProfile(newProfile);
-    await saveSession(currentUser.id, newProfile.id);
+    saveSession(currentUser.id, newProfile.id);
     
     toast.success('Profil skapad!', {
       description: `${nickname} är redo`,
     });
   };
 
-  const handleSelectProfile = async (profile: Profile) => {
+  const handleSelectProfile = (profile: Profile) => {
     setSelectedProfile(profile);
     if (currentUser) {
-      await saveSession(currentUser.id, profile.id);
+      saveSession(currentUser.id, profile.id);
     }
     toast.success('Profil vald', {
       description: profile.nickname,
     });
   };
 
-  const handleBackToProfiles = async () => {
+  const handleBackToProfiles = () => {
     setSelectedProfile(null);
     setShowComparison(false);
     if (currentUser) {
-      await saveSession(currentUser.id, null);
+      saveSession(currentUser.id, null);
     }
   };
 
