@@ -15,7 +15,7 @@ export function PersonalLeaderboard({ entries, userId }: PersonalLeaderboardProp
     .map((entry) => {
       const userRating = entry.userRatings.find((ur) => ur.profileId === userId);
       
-      if (!userRating) {
+      if (!userRating || userRating.totalScore === 0) {
         return null;
       }
 
