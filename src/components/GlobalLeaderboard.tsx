@@ -12,14 +12,16 @@ interface GlobalLeaderboardProps {
 export function GlobalLeaderboard({ entries }: GlobalLeaderboardProps) {
   const entriesWithGlobalAverage = entries
     .map((entry) => {
-      if (entry.userRatings.length === 0) {
+      const validRatings = entry.userRatings.filter((ur) => ur.totalScore > 0);
+      
+      if (validRatings.length === 0) {
         return { entry, average: 0, ratingsCount: 0 };
       }
 
-      const totalScore = entry.userRatings.reduce((sum, ur) => sum + ur.totalScore, 0);
-      const average = totalScore / entry.userRatings.length;
+      const totalScore = validRatings.reduce((sum, ur) => sum + ur.totalScore, 0);
+      const average = totalScore / validRatings.length;
 
-      return { entry, average, ratingsCount: entry.userRatings.length };
+      return { entry, average, ratingsCount: validRatings.length };
     })
     .filter((item) => item.ratingsCount > 0)
     .sort((a, b) => b.average - a.average)
