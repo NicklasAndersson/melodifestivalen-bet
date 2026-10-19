@@ -333,6 +333,8 @@ describe('App', () => {
       });
       mockKVStore.setValue('mello-entries-v2', [testEntry]);
       mockKVStore.setValue('mello-data-version-v2', 1);
+      // Match Spark's async backing store to the test's preloaded KV fixtures.
+      vi.mocked(window.spark.kv.get).mockImplementation(async (key: string) => mockKVStore.getValue(key));
     });
 
     it('should update rating for an entry', async () => {
@@ -555,6 +557,8 @@ describe('App', () => {
       });
       mockKVStore.setValue('mello-entries-v2', [testEntry]);
       mockKVStore.setValue('mello-data-version-v2', 1);
+      // Match Spark's async backing store to the test's preloaded KV fixtures.
+      vi.mocked(window.spark.kv.get).mockImplementation(async (key: string) => mockKVStore.getValue(key));
     });
 
     it('should navigate to rating view when entry is selected', async () => {
