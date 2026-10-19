@@ -249,7 +249,7 @@ describe('App', () => {
       await user.click(screen.getByTestId('logout-button'));
 
       await waitFor(() => {
-        expect(await screen.findByTestId('sso-login-screen')).toBeInTheDocument();
+        expect(screen.getByTestId('sso-login-screen')).toBeInTheDocument();
       });
 
       expect(toast.success).toHaveBeenCalledWith('Utloggad');
