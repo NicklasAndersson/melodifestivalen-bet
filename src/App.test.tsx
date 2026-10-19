@@ -108,6 +108,8 @@ vi.mock('@phosphor-icons/react', async () => {
     Globe: () => React.createElement('span', { 'data-testid': 'icon-globe' }, 'Globe'),
     UserCircle: () => React.createElement('span', { 'data-testid': 'icon-user-circle' }, 'UserCircle'),
     Users: () => React.createElement('span', { 'data-testid': 'icon-users' }, 'Users'),
+    CaretDown: () => React.createElement('span', { 'data-testid': 'icon-caret-down' }, 'CaretDown'),
+    Plus: () => React.createElement('span', { 'data-testid': 'icon-plus' }, 'Plus'),
   };
 });
 
@@ -175,15 +177,15 @@ describe('App', () => {
   });
 
   describe('Authentication (Login/Logout)', () => {
-    it('should render SSO login screen when no user is logged in', () => {
+    it('should render SSO login screen when no user is logged in', async () => {
       render(<App />);
-      expect(screen.getByTestId('sso-login-screen')).toBeInTheDocument();
+      expect(await screen.findByTestId('sso-login-screen')).toBeInTheDocument();
     });
 
     it('should call window.spark.user() and create new user on SSO login', async () => {
       render(<App />);
       
-      const loginButton = screen.getByTestId('sso-login-button');
+      const loginButton = await screen.findByTestId('sso-login-button');
       await user.click(loginButton);
 
       await waitFor(() => {
@@ -213,7 +215,7 @@ describe('App', () => {
 
       render(<App />);
       
-      const loginButton = screen.getByTestId('sso-login-button');
+      const loginButton = await screen.findByTestId('sso-login-button');
       await user.click(loginButton);
 
       await waitFor(() => {
@@ -228,7 +230,7 @@ describe('App', () => {
     it('should show profile selector after login', async () => {
       render(<App />);
       
-      await user.click(screen.getByTestId('sso-login-button'));
+      await user.click(await screen.findByTestId('sso-login-button'));
 
       await waitFor(() => {
         expect(screen.getByTestId('profile-selector')).toBeInTheDocument();
@@ -239,7 +241,7 @@ describe('App', () => {
       render(<App />);
       
       // Login first
-      await user.click(screen.getByTestId('sso-login-button'));
+      await user.click(await screen.findByTestId('sso-login-button'));
       
       await waitFor(() => {
         expect(screen.getByTestId('profile-selector')).toBeInTheDocument();
@@ -261,7 +263,7 @@ describe('App', () => {
 
       render(<App />);
       
-      await user.click(screen.getByTestId('sso-login-button'));
+      await user.click(await screen.findByTestId('sso-login-button'));
 
       // Wait for error toast - the app should catch the error and show toast
       await waitFor(() => {
@@ -269,14 +271,14 @@ describe('App', () => {
       }, { timeout: 3000 });
 
       // Should still show login screen
-      expect(screen.getByTestId('sso-login-screen')).toBeInTheDocument();
+      expect(await screen.findByTestId('sso-login-screen')).toBeInTheDocument();
     });
   });
 
   describe('Profile Management', () => {
     beforeEach(async () => {
       render(<App />);
-      await user.click(screen.getByTestId('sso-login-button'));
+      await user.click(await screen.findByTestId('sso-login-button'));
       await waitFor(() => {
         expect(screen.getByTestId('profile-selector')).toBeInTheDocument();
       });
@@ -331,6 +333,8 @@ describe('App', () => {
       });
       mockKVStore.setValue('mello-entries-v2', [testEntry]);
       mockKVStore.setValue('mello-data-version-v2', 1);
+      // Match Spark's async backing store to the test's preloaded KV fixtures.
+      vi.mocked(window.spark.kv.get).mockImplementation(async (key: string) => mockKVStore.getValue(key));
     });
 
     it('should update rating for an entry', async () => {
@@ -345,7 +349,7 @@ describe('App', () => {
       render(<App />);
       
       // Login
-      await user.click(screen.getByTestId('sso-login-button'));
+      await user.click(await screen.findByTestId('sso-login-button'));
 
       // Wait for profile selector
       await waitFor(() => {
@@ -407,7 +411,7 @@ describe('App', () => {
       render(<App />);
       
       // Login and select profile
-      await user.click(screen.getByTestId('sso-login-button'));
+      await user.click(await screen.findByTestId('sso-login-button'));
       await waitFor(() => {
         expect(screen.getByTestId('profile-selector')).toBeInTheDocument();
       });
@@ -463,7 +467,7 @@ describe('App', () => {
       render(<App />);
       
       // Login and select profile
-      await user.click(screen.getByTestId('sso-login-button'));
+      await user.click(await screen.findByTestId('sso-login-button'));
       await waitFor(() => {
         expect(screen.getByTestId('profile-selector')).toBeInTheDocument();
       });
@@ -553,12 +557,14 @@ describe('App', () => {
       });
       mockKVStore.setValue('mello-entries-v2', [testEntry]);
       mockKVStore.setValue('mello-data-version-v2', 1);
+      // Match Spark's async backing store to the test's preloaded KV fixtures.
+      vi.mocked(window.spark.kv.get).mockImplementation(async (key: string) => mockKVStore.getValue(key));
     });
 
     it('should navigate to rating view when entry is selected', async () => {
       render(<App />);
       
-      await user.click(screen.getByTestId('sso-login-button'));
+      await user.click(await screen.findByTestId('sso-login-button'));
       await waitFor(() => {
         expect(screen.getByTestId('profile-selector')).toBeInTheDocument();
       });
@@ -579,7 +585,7 @@ describe('App', () => {
     it('should navigate back from rating view to entry list', async () => {
       render(<App />);
       
-      await user.click(screen.getByTestId('sso-login-button'));
+      await user.click(await screen.findByTestId('sso-login-button'));
       await waitFor(() => {
         expect(screen.getByTestId('profile-selector')).toBeInTheDocument();
       });
@@ -607,7 +613,7 @@ describe('App', () => {
     it('should show profile selector when going back to profiles', async () => {
       render(<App />);
       
-      await user.click(screen.getByTestId('sso-login-button'));
+      await user.click(await screen.findByTestId('sso-login-button'));
       await waitFor(() => {
         expect(screen.getByTestId('profile-selector')).toBeInTheDocument();
       });
