@@ -109,6 +109,7 @@ vi.mock('@phosphor-icons/react', async () => {
     UserCircle: () => React.createElement('span', { 'data-testid': 'icon-user-circle' }, 'UserCircle'),
     Users: () => React.createElement('span', { 'data-testid': 'icon-users' }, 'Users'),
     CaretDown: () => React.createElement('span', { 'data-testid': 'icon-caret-down' }, 'CaretDown'),
+    Plus: () => React.createElement('span', { 'data-testid': 'icon-plus' }, 'Plus'),
   };
 });
 
